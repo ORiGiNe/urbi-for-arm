@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 test -f /bin/ksh && test -z "$RUNNING_KSH" \
   && { UNAMES=`uname -s`; test "x$UNAMES" = xULTRIX; } 2>/dev/null \

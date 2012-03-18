@@ -11,7 +11,6 @@
 
 #include "Common.h"
 //#include "PortableUContext.h"
-#include "taskimpl.h"
 
 #if defined(__SYMBIAN32__)
 	#define CORO_STACK_SIZE     8192
@@ -55,17 +54,13 @@
 
 #endif
 
+#include "taskimpl.h"
+
 #if defined(USE_FIBERS)
 	#define CORO_IMPLEMENTATION "fibers"
 #elif defined(USE_UCONTEXT)
-	#ifdef __APPLE__
-	#  include <sys/ucontext.h>
-	#else
-	#  include <ucontext.h>
-	#endif
 	#define CORO_IMPLEMENTATION "ucontext"
 #elif defined(USE_SETJMP)
-	#include <setjmp.h>
 	#define CORO_IMPLEMENTATION "setjmp"
 #endif
 

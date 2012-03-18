@@ -49,13 +49,21 @@ extern "C"
 #	endif
 #	include <sched.h>
 #	include <signal.h>
-#	if USE_UCONTEXT
-#		include <ucontext.h>
-#	endif
+#       if defined(USE_UCONTEXT)
+#         ifdef __APPLE__
+#           include <sys/ucontext.h>
+#         else
+#           include <ucontext.h>
+#         endif
+#       endif
 #	ifndef __MINGW32__
 #		include <sys/utsname.h>
 #	endif
 #	include <inttypes.h>
+#endif
+
+#if defined(USE_SETJMP)
+#  include <setjmp.h>
 #endif
 
 //#include "task.h"
