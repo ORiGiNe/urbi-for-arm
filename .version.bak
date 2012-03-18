@@ -1,0 +1,13 @@
+Date: 2012-01-31 17:17:51 +0100
+Day: January 31, 2012
+Description: 2.7.5
+Id: 846b3de (2012-01-31 17:17:51 +0100 nottale@gostai.com: Socket: Fix a rare deadlock.)
+Major: 2
+Minor: 7
+Patch: 0
+Revision: 846b3de
+SubMinor: 5
+TarballVersion: 2.7.5
+Version: 2.7.5
+VersionRev: version 2.7.5 patch 0 revision 846b3de
+VersionValue: 2007005

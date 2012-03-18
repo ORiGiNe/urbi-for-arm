@@ -89,7 +89,7 @@ makecontext(ucontext_t *ucp, void (*func)(void), int argc, ...)
 
 #ifdef NEEDARMMAKECONTEXT
 
-#ifdef (__UCLIBC__ || __GLIBC__)
+#if 1
 void makecontext(ucontext_t *ucp, void (*func)(void), int argc, ...)
 {
   ucp->uc_mcontext.arm_ip = (unsigned long)func;
