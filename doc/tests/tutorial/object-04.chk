@@ -1,0 +1,29 @@
+syncline << "doc/tutorial/object.tex:178";
+[01234567:#] "doc/tutorial/object.tex:178"
+//#line 178 "doc/tutorial/object.tex"
+var proto1 = Object.clone;
+[00000000] Object_0x10000000
+var proto2 = Object.clone;
+[00000000] Object_0x20000000
+var o = Object.clone;
+[00000000] Object_0x30000000
+o.addProto(proto1);
+[00000000] Object_0x30000000
+o.addProto(proto2);
+[00000000] Object_0x30000000
+// We give o an x slot through proto1.
+var proto1.x = 0;
+[00000000] 0
+o.x;
+[00000000] 0
+// proto2 is visited first during lookup.
+// Thus its "x" slot takes precedence over proto1's.
+var proto2.x = 1;
+[00000000] 1
+o.x;
+[00000000] 1
+// Of course, o's own slots have the highest precedence.
+var o.x = 2;
+[00000000] 2
+o.x;
+[00000000] 2

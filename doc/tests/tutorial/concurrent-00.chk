@@ -1,0 +1,31 @@
+syncline << "doc/tutorial/concurrent.tex:41";
+[01234567:#] "doc/tutorial/concurrent.tex:41"
+//#line 41 "doc/tutorial/concurrent.tex"
+function test(name)
+{
+  echo(name + ": 1");
+  echo(name + ": 2");
+  echo(name + ": 3");
+} |;
+// Serialized executions
+test("left") ; test ("middle"); test ("right");
+[00000000] *** left: 1
+[00000000] *** left: 2
+[00000000] *** left: 3
+[00000000] *** middle: 1
+[00000000] *** middle: 2
+[00000000] *** middle: 3
+[00000000] *** right: 1
+[00000000] *** right: 2
+[00000000] *** right: 3
+// Parallel execution
+test("left") & test("middle") & test ("right");
+[00000000] *** left: 1
+[00000000] *** middle: 1
+[00000000] *** right: 1
+[00000000] *** left: 2
+[00000000] *** middle: 2
+[00000000] *** right: 2
+[00000000] *** left: 3
+[00000000] *** middle: 3
+[00000000] *** right: 3

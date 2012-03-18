@@ -1,0 +1,5 @@
+syncline << "doc/tutorial/object.tex:377";
+[01234567:#] "doc/tutorial/object.tex:377"
+//#line 377 "doc/tutorial/object.tex"
+var p = Pair.new("foo", false);
+[00000000] ("foo", false)

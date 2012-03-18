@@ -1,0 +1,38 @@
+//#roscore
+//#no-fast
+//#plug urbi/ros
+
+var ready = Ros.Topic.new("/ready") |
+ready.advertise("std_msgs/Bool");
+
+var t = Ros.Topic.new("/utests/complexStructure")|;
+var p = Process.new("rosrun", ["utopics", "complexStructure"])|;
+
+recv: at(t.onMessage?(var m))
+{
+  assert
+  {
+    m["coords"].size == 2;
+    m["coords"][0] == ["a" => 4, "b" => -8];
+    m["coords"][1] == ["a" => -15, "b" => 16];
+    m["name"] == "root";
+    m["robots"] == ["nao", "spykee", "LegoStorm NXT"];
+    m["messages"] == ["coin!", "meuh"];
+    m["port"] == 31337;
+    m["nodes"].size == 1;
+
+    // Beware of rounding errors on floats.
+    m["nodes"][0].asString ==
+      ["name" => "node1",
+       "port" => 4222,
+       "position" => [-1.72, 13.76, 2.54],
+       "stuff" => ["This is stuff!"]].asString;
+  };
+};
+p.run;
+Ros.waitForTopic("/utests/complexStructure");
+t.subscribe;
+
+sleep(500ms);
+ready << ["data" => 1] |
+sleep(4s);

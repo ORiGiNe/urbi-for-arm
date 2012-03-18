@@ -1,0 +1,93 @@
+var g1 = Group.new(41, "5");
+[00000001] Group [41, "5"]
+
+g1 + 1;
+[00000002] Group [42, "51"]
+
+g1.add(41, 68);
+[00000003] Group [41, "5", 41, 68]
+
+g1.remove(41);
+[00000004] Group ["5", 68]
+
+g1.remove(68, "5", 0);
+[00000005] Group []
+
+
+
+
+
+class C
+{
+  var val = 0;
+};
+[00000006] C
+
+var a = C.new;
+[00000007] C_0xADDR
+
+var b = C.new;
+[00000008] C_0xADDR
+
+var g2 = Group.new << a << b;
+[00000009] Group [C_0xADDR, C_0xADDR]
+
+g2.val = 42;
+[00000010] Group [42, 42]
+a.val;
+
+[00000011] 42
+
+b.val;
+[00000012] 42
+
+//# ------------------------------------------------- ##
+//# Check that properties are supported with groups.  ##
+//# ------------------------------------------------- ##
+
+g2.val->someProperty = 1664;
+[00000013] Group [1664, 1664]
+
+g2.val->someProperty;
+[00000014] Group [1664, 1664]
+
+a.val->someProperty;
+[00000015] 1664
+
+var g3 = Group.new << a << (Group.new << b);
+[00000016] Group [C_0xADDR, Group [C_0xADDR]]
+
+g3.val = 51;
+[00000017] Group [51, Group [51]]
+
+a.val;
+[00000018] 51
+
+b.val;
+[00000019] 51
+
+//# Check interaction with void
+
+function String.display () { void } | {};
+Group.new("st", "qh", "mn", "ad").display;
+
+// Check method are invoked in parallel on group members
+
+{
+  class Timed
+  {
+    function m()
+    {
+      echo("start");
+      sleep(10ms);
+      echo("end");
+    }
+  };
+
+  var g = Group.new(Timed, Timed);
+  g.m;
+};
+[00000020] *** start
+[00000021] *** start
+[00000022] *** end
+[00000023] *** end

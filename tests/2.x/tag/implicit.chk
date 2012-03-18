@@ -1,0 +1,26 @@
+t: detach ({loop {echo ("foo"); sleep(1s)}}) | {};
+[00000001] *** foo
+sleep(2.5s);
+[00000002] *** foo
+[00000003] *** foo
+t.block;
+sleep(10ms);
+echo ("bar");
+[00000004] *** bar
+
+t1.t2.t3: detach ({loop {echo ("foo"); sleep(1s)}}) | {};
+[00000005] *** foo
+sleep(2.5s);
+[00000006] *** foo
+[00000007] *** foo
+t1.t2.block;
+sleep(10ms);
+echo ("bar");
+[00000008] *** bar
+
+class C {};
+[00000009] C
+C.tag : 42;
+[00000010] 42
+C.tag;
+[00000011] Tag<tag>

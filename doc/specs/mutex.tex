@@ -1,0 +1,58 @@
+%% Copyright (C) 2009-2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Mutex}
+
+\dfn{Mutex} allow to define critical sections.
+
+\subsection{Prototypes}
+\begin{itemize}
+\item \refObject{Tag}
+\end{itemize}
+
+\subsection{Construction}
+A Mutex can be constructed like any other Tag but without name.
+
+\begin{urbiscript}[firstnumber=1]
+var m = Mutex.new;
+[00000000] Mutex_0x964ed40
+\end{urbiscript}
+
+You can define critical sections by tagging your code using the Mutex.
+
+\begin{urbiscript}[firstnumber=1]
+var m = Mutex.new|;
+m: echo("this is critical section");
+[00000001] *** this is critical section
+\end{urbiscript}
+
+As a critical section, two pieces of code tagged by the same ``Mutex''
+will never be executed at the same time.
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+\item[asMutex]  Return \this.
+\begin{urbiscript}
+var m1 = Mutex.new|;
+assert
+{
+  m1.asMutex === m1;
+};
+\end{urbiscript}
+\end{urbiscriptapi}
+
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

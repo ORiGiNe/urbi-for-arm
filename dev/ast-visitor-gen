@@ -1,0 +1,130 @@
+#!/usr/bin/env python
+
+import re
+import sys, os, os.path
+import ast, tools
+
+if len(sys.argv) != 2:
+  tools.error("Usage: .. SRCDIR")
+srcdir = sys.argv[1]
+
+## Abstract syntax tree C++ visitor - header ----------------------------------
+loader = ast.Loader ()
+nodes, ast_params = loader.load (sys.stdin)
+concrete = ast.concrete(nodes)
+
+visitor_hh = file("visitor.hh.tmp", "w")
+sys.stdout = visitor_hh
+
+print tools.banner(ast_params,
+                         "ast/visitor.hh",
+		   "Definition of ast::Visitor.") + """
+""" + ast_params['visitor_hh_prologue'] + """
+
+namespace ast
+{
+
+  /*----------------------------------------------------.
+  | Boost PP macros to ease the declaration of visits.  |
+  `----------------------------------------------------*/
+
+/// Declare an abstract visit method for Elem for a GenVisitor.
+/// Also, declare the node as a friend: it is allowed to call visit.
+/// It would be nice to declare only Elem::accept, but then we have
+/// a mutual recursion problem.  Maybe we can address this from the
+/// derived visitors, not from the abstract visitor.
+# define ABSTRACT_VISITOR_VISIT_NODE_(R, Data, Elem)                    \\
+  friend class ast::Elem;                                               \\
+  virtual void visit (typename Const<ast::Elem>::type* e) = 0;
+
+/// Declare abstract visits for an abstract GenVisitor.
+# define ABSTRACT_VISITOR_VISIT_NODES(Nodes)                    \\
+  BOOST_PP_SEQ_FOR_EACH(ABSTRACT_VISITOR_VISIT_NODE_, ~, Nodes)
+
+/// Required, or for some reason a space is inserted in the concatenation
+/// below (tested with gcc and vcxx).
+#ifndef CONCAT
+# define CONCAT(a,b) a##b
+#endif
+
+/// Declare a visit method for Elem for a GenVisitor.
+# define GEN_VISITOR_VISIT_NODE_(R, Data, Elem)                   \\
+    typedef typename Const<ast::Elem>::type CONCAT(Elem,_type);   \\
+    virtual void visit (CONCAT(Elem,_type)* e);
+
+/// Declare visits for a GenVisitor.
+# define GEN_VISITOR_VISIT_NODES(Nodes)                    \\
+  BOOST_PP_SEQ_FOR_EACH(GEN_VISITOR_VISIT_NODE_, ~, Nodes)
+
+/// Declare a visit method for Elem.  Pass Const = const or not.
+# define VISITOR_VISIT_NODE_(R, Const, Elem)            \\
+    virtual void visit (Const ast::Elem* e);
+
+/// Declare visit methods for Nodes.  Pass Const = const or not.
+# define VISITOR_VISIT_NODES_(Nodes, Const)             \\
+  BOOST_PP_SEQ_FOR_EACH(VISITOR_VISIT_NODE_, Const, Nodes)
+
+
+  /** \\brief Root class of all Ast visitors.
+   **
+   ** GenVisitor<CONSTIFY> is the root class of all Ast visitors. */
+  template <template <typename> class Const>
+  class GenVisitor : public std::unary_function<Ast, void>
+  {
+    /** \\name Ctor & dtor.
+     ** \\{ */
+  public:
+    /// Destroy a GenVisitor.
+    virtual ~GenVisitor ();
+    /** \\} */
+
+    /// This intermediate typedef is required by VCXX 2005
+    typedef typename Const<Ast>::type* ast_type;
+    /// The entry point: visit \\a e.
+    virtual void operator() (ast_type e);
+
+  protected:""" % ast_params
+
+print tools.indent(4, ast.visit(concrete, "ABSTRACT_VISITOR_VISIT_NODES"))
+
+print
+for dec_type in ast.subclasses(nodes, 'Dec'):
+  print "    virtual void visit (typename Const<%ss>::type&) = 0;"\
+      % dec_type.name
+print """\
+  };
+
+  /*----------.
+  | Visitor.  |
+  `----------*/
+
+  /// Shorthand for a non const visitor.
+  typedef GenVisitor<libport::id_traits> Visitor;
+
+  /// Declare visits for a non-const visitor.
+# define VISITOR_VISIT_NODES(Nodes)                     \\
+    VISITOR_VISIT_NODES_(Nodes, )
+
+
+  /*---------------.
+  | ConstVisitor.  |
+  `---------------*/
+
+  /// Shorthand for a const visitor.
+  typedef GenVisitor<libport::constify_traits> ConstVisitor;
+
+  /// Declare visits for a const visitor.
+# define CONST_VISITOR_VISIT_NODES(Nodes)               \\
+    VISITOR_VISIT_NODES_(Nodes, const)
+
+
+} // namespace ast
+
+# include <ast/visitor.hxx>
+
+#endif // !AST_VISITOR_HH""" % ast_params
+
+# Restore stdout and close files
+sys.stdout = sys.__stdout__
+visitor_hh.close ()
+tools.lazy_install (srcdir, "visitor.hh")

@@ -1,0 +1,12 @@
+//#uobject test/all
+
+var a = remall.new(0) |;
+remall.getDestructionCount();
+[00000001] 0
+
+a.destroy()|;
+a = 1|;
+// yield a bit just in case
+sleep(100ms);
+remall.getDestructionCount();
+[00000002] 1

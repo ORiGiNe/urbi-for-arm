@@ -1,0 +1,129 @@
+%% Copyright (C) 2009-2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Kernel1}
+
+This object plays the role of a name-space in which obsolete functions
+from \us 1.0 are provided for backward compatibility.  Do not use
+these functions, scheduled for removal.
+
+\subsection{Prototypes}
+\begin{refObjects}
+\item[Singleton]
+\end{refObjects}
+
+\subsection{Construction}
+
+Since it is a \refObject{Singleton}, you are not expected to build
+other instances.
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+\item[commands]
+  Ignored for backward compatibility.
+
+\item[connections]
+  Ignored for backward compatibility.
+
+\item[copy](<binary>)%
+  Obsolete syntax for \lstinline|\var{binary}.copy|, see
+  \refObject{Binary}.
+\begin{urbiscript}[firstnumber=1]
+// copy.
+var a = BIN 10;0123456789
+[00000001] BIN 10
+[:]0123456789
+
+var b = Kernel1.copy(a);
+[00000003:warning] !!! `copy(binary)' is deprecated, use `binary.copy'
+[00000004] BIN 10
+[:]0123456789
+
+echo (b);
+[00000005] *** BIN 10
+[:]0123456789
+\end{urbiscript}
+
+\item[devices]
+  Ignored for backward compatibility.
+
+\item[events]
+  Ignored for backward compatibility.
+
+\item[functions]
+  Ignored for backward compatibility.
+
+\item[isvoid](<obj>)%
+  Obsolete syntax for \lstinline|\var{obj}.isVoid|, see
+  \refObject{Object}.
+
+\item[noop]
+  Do nothing.  Use \lstinline|{}| instead.
+
+\item[ping]
+  Return \lstinline|time| verbosely, see \refObject{System}.
+\begin{urbiscript}
+Kernel1.ping;
+[00000421] *** pong time=0.12s
+\end{urbiscript}
+
+\item[reset]
+  Ignored for backward compatibility.
+
+\item[runningcommands]
+  Ignored for backward compatibility.
+
+\item[seq](<number>)%
+  Obsolete syntax for \lstinline|\var{number}.seq|, see
+  \refObject{Float}.
+
+\item[size](<list>)%
+  Obsolete syntax for \lstinline|\var{list}.size|, see
+  \refObject{List}.
+\begin{urbiassert}
+Kernel1.size([1, 2, 3]) == [1, 2, 3].size;
+[00000002:warning] !!! `size(list)' is deprecated, use `list.size'
+\end{urbiassert}
+
+\item[strict]
+  Ignored for backward compatibility.
+
+\item[strlen](<string>)%
+  Obsolete syntax for \lstinline|\var{string}.length|, see
+  \refObject{String}.
+\begin{urbiassert}
+Kernel1.strlen("123") == "123".length;
+[00000002:warning] !!! `strlen(string)' is deprecated, use `string.length'
+\end{urbiassert}
+
+\item[taglist]
+  Ignored for backward compatibility.
+
+\item[undefall]
+  Ignored for backward compatibility.
+
+\item[unstrict]
+  Ignored for backward compatibility.
+
+\item[uservars]
+  Ignored for backward compatibility.
+
+\item[vars]
+  Ignored for backward compatibility.
+\end{urbiscriptapi}
+
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

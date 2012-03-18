@@ -1,0 +1,8 @@
+// Check that an exception not thrown in an every interrupts it
+
+var t = 2 |
+every (1s) { echo (2 / t); t-- };
+sleep(5s);
+[00000001] *** 1
+[00000002] *** 2
+[00000003:error] !!! input.u:4.20-24: /: division by 0

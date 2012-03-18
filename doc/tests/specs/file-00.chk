@@ -1,0 +1,97 @@
+syncline << "doc/specs/file.tex:24";
+[01234567:#] "doc/specs/file.tex:24"
+//#line 24 "doc/specs/file.tex"
+File.create("file.txt");
+[00000001] File("file.txt")
+
+File.new(Path.new("file.txt"));
+[00000001] File("file.txt")
+
+syncline << "doc/specs/file.tex:40";
+[01234567:#] "doc/specs/file.tex:40"
+//#line 40 "doc/specs/file.tex"
+File.save("file.txt", "1\n2\n");
+assert(File.new("file.txt").asList == ["1", "2"]);
+
+syncline << "doc/specs/file.tex:48";
+[01234567:#] "doc/specs/file.tex:48"
+//#line 48 "doc/specs/file.tex"
+File.save("file.txt", "1\n2\n");
+assert(File.new("file.txt").asPrintable == "File(\"file.txt\")");
+
+syncline << "doc/specs/file.tex:55";
+[01234567:#] "doc/specs/file.tex:55"
+//#line 55 "doc/specs/file.tex"
+File.save("file.txt", "1\n2\n");
+assert(File.new("file.txt").asString == "file.txt");
+
+syncline << "doc/specs/file.tex:66";
+[01234567:#] "doc/specs/file.tex:66"
+//#line 66 "doc/specs/file.tex"
+File.save("file.txt", "1\n2\n");
+assert
+{
+  File.new("file.txt").content == Binary.new("", "1\n2\n");
+};
+
+syncline << "doc/specs/file.tex:76";
+[01234567:#] "doc/specs/file.tex:76"
+//#line 76 "doc/specs/file.tex"
+File.save("file", "content");
+var file = File.new("file");
+[00000001] File("file")
+var file2 = file.copy("file2");
+[00000002] File("file2")
+assert(file2.content == file.content);
+file.remove;
+file2.remove;
+
+syncline << "doc/specs/file.tex:91";
+[01234567:#] "doc/specs/file.tex:91"
+//#line 91 "doc/specs/file.tex"
+var dir = Directory.create("dir")|;
+file = File.create("file")|;
+file.copyInto(dir);
+[00000001] File("dir/file")
+file;
+[00000002] File("file")
+dir.content;
+[00000003] ["file"]
+dir.removeAll;
+file.remove;
+
+syncline << "doc/specs/file.tex:108";
+[01234567:#] "doc/specs/file.tex:108"
+//#line 108 "doc/specs/file.tex"
+var p = Path.new("create.txt") |
+assert (!p.exists);
+
+// Create the file, and put something in it.
+var f = File.create(p)|;
+var o = OutputStream.new(f)|;
+o << "Hello, World!"|;
+o.close;
+
+assert
+{
+  // The file exists, with the expect contents.
+  p.exists;
+  f.content.data == "Hello, World!";
+
+  // If we create is again, it is empty.
+  File.create(p).isA(File);
+  f.content.data == "";
+};
+
+syncline << "doc/specs/file.tex:139";
+[01234567:#] "doc/specs/file.tex:139"
+//#line 139 "doc/specs/file.tex"
+dir = Directory.create("dir")|;
+file = File.create("file")|;
+file.moveInto(dir);
+[00000001] File("dir/file")
+file;
+[00000001] File("dir/file")
+dir.content;
+[00000001] ["file"]
+dir.removeAll;

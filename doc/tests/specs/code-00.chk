@@ -1,0 +1,115 @@
+syncline << "doc/specs/code.tex:26";
+[01234567:#] "doc/specs/code.tex:26"
+//#line 26 "doc/specs/code.tex"
+assert {
+function(){}.protos[0] === &Code;
+closure (){}.protos[0] === &Code;
+};
+
+syncline << "doc/specs/code.tex:39";
+[01234567:#] "doc/specs/code.tex:39"
+//#line 39 "doc/specs/code.tex"
+assert {
+function () { 1 } == function () { 1 };
+function () { 1 } != closure  () { 1 };
+closure  () { 1 } != function () { 1 };
+closure  () { 1 } == closure  () { 1 };
+};
+
+syncline << "doc/specs/code.tex:47";
+[01234567:#] "doc/specs/code.tex:47"
+//#line 47 "doc/specs/code.tex"
+assert {
+function () { 1 + 1 } == function () { 1 + 1 };
+function () { 1 + 2 } != function () { 2 + 1 };
+};
+
+syncline << "doc/specs/code.tex:53";
+[01234567:#] "doc/specs/code.tex:53"
+//#line 53 "doc/specs/code.tex"
+assert {
+function (var ignored) {} != function () {};
+function (var x) { x }    != function (y) { y };
+};
+
+syncline << "doc/specs/code.tex:59";
+[01234567:#] "doc/specs/code.tex:59"
+//#line 59 "doc/specs/code.tex"
+assert {
+function () { 1 } != function { 1 };
+};
+
+syncline << "doc/specs/code.tex:64";
+[01234567:#] "doc/specs/code.tex:64"
+//#line 64 "doc/specs/code.tex"
+{
+  var x;
+  function Global.capture_x() { x };
+  function Global.capture_x_again () { x };
+  {
+    var x;
+    function Global.capture_another_x() { x };
+  }
+}|;
+assert
+{
+  &capture_x == &capture_x_again;
+  &capture_x != &capture_another_x;
+};
+
+syncline << "doc/specs/code.tex:82";
+[01234567:#] "doc/specs/code.tex:82"
+//#line 82 "doc/specs/code.tex"
+class Foo
+{
+  function makeFunction() { function () {} };
+  function makeClosure()  { closure () {} };
+}|;
+
+class Bar
+{
+  function makeFunction() { function () {} };
+  function makeClosure()  { closure () {} };
+}|;
+
+assert
+{
+  Foo.makeFunction() == Bar.makeFunction();
+  Foo.makeClosure()  != Bar.makeClosure();
+};
+
+syncline << "doc/specs/code.tex:106";
+[01234567:#] "doc/specs/code.tex:106"
+//#line 106 "doc/specs/code.tex"
+assert {
+function (x, y) { x+y }.apply([nil, 10, 20]) == 30;
+function () { this }.apply([123]) == 123;
+
+// There is Object.apply.
+1.apply([this]) == 1;
+};
+
+syncline << "doc/specs/code.tex:113";
+[01234567:#] "doc/specs/code.tex:113"
+//#line 113 "doc/specs/code.tex"
+function () {}.apply([]);
+[00000001:error] !!! apply: argument list must begin with `this'
+
+function () {}.apply([1, 2]);
+[00000002:error] !!! apply: expected 0 argument, given 1
+
+syncline << "doc/specs/code.tex:123";
+[01234567:#] "doc/specs/code.tex:123"
+//#line 123 "doc/specs/code.tex"
+assert {
+closure  () { 1 }.asString == "closure () { 1 }";
+function () { 1 }.asString == "function () { 1 }";
+};
+
+syncline << "doc/specs/code.tex:130";
+[01234567:#] "doc/specs/code.tex:130"
+//#line 130 "doc/specs/code.tex"
+assert {
+closure  () { 1 }.bodyString == "1";
+function () { 1 }.bodyString == "1";
+};

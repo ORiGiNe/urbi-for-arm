@@ -1,0 +1,67 @@
+syncline << "doc/specs/job.tex:27";
+[01234567:#] "doc/specs/job.tex:27"
+//#line 27 "doc/specs/job.tex"
+detach(sleep(10));
+[00202654] Job<shell_4>
+
+disown(sleep(10));
+[00204195] Job<shell_5>
+
+spawn (function () { sleep(10) }, false);
+[00274160] Job<shell_6>
+
+syncline << "doc/specs/job.tex:50";
+[01234567:#] "doc/specs/job.tex:50"
+//#line 50 "doc/specs/job.tex"
+//#push 1 "file.u"
+var s = detach(sleep(10))|;
+// Leave some time for s to be started.
+sleep(1);
+assert
+{
+  s.backtrace[0].asString == "file.u:1.16-24: sleep";
+  s.backtrace[1].asString == "file.u:1.16-24: detach";
+};
+//#pop
+
+syncline << "doc/specs/job.tex:69";
+[01234567:#] "doc/specs/job.tex:69"
+//#line 69 "doc/specs/job.tex"
+//#push 1 "file.u"
+var t = detach(sleep(10))|;
+// Leave some time for s to be started.
+sleep(1);
+t.dumpState;
+[00004295] *** Job: shell_10
+[00004295] ***   State: sleeping
+[00004295] ***   Tags:
+[00004295] ***     Tag<Lobby_1>
+[00004297] ***   Backtrace:
+[00004297] ***     file.u:1.16-24: sleep
+[00004297] ***     file.u:1.16-24: detach
+//#pop
+
+syncline << "doc/specs/job.tex:86";
+[01234567:#] "doc/specs/job.tex:86"
+//#line 86 "doc/specs/job.tex"
+detach(sleep(10)).name;
+[00004297] "shell_5"
+
+syncline << "doc/specs/job.tex:104";
+[01234567:#] "doc/specs/job.tex:104"
+//#line 104 "doc/specs/job.tex"
+var r = detach({ sleep(1s); echo("done") })|;
+assert (r in jobs);
+r.terminate;
+assert (r not in jobs);
+sleep(2s);
+
+syncline << "doc/specs/job.tex:114";
+[01234567:#] "doc/specs/job.tex:114"
+//#line 114 "doc/specs/job.tex"
+tag: r = detach({ sleep(3); echo("done") })|;
+tag.freeze();
+sleep(2);
+tag.unfreeze();
+Math.round(r.timeShift);
+[00000001] 2

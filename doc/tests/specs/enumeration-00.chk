@@ -1,0 +1,95 @@
+syncline << "doc/specs/enumeration.tex:30";
+[01234567:#] "doc/specs/enumeration.tex:30"
+//#line 30 "doc/specs/enumeration.tex"
+var Direction = Enumeration.new("Direction", ["up", "down", "left", "right"]);
+[00000001] Direction
+Direction.up;
+[00000002] up
+
+syncline << "doc/specs/enumeration.tex:52";
+[01234567:#] "doc/specs/enumeration.tex:52"
+//#line 52 "doc/specs/enumeration.tex"
+assert {
+Direction.isA(Enumeration);
+Direction.up.isA(Direction);
+};
+
+syncline << "doc/specs/enumeration.tex:62";
+[01234567:#] "doc/specs/enumeration.tex:62"
+//#line 62 "doc/specs/enumeration.tex"
+assert {
+Direction.asList
+  == [Direction.up, Direction.down, Direction.left, Direction.right];
+};
+
+syncline << "doc/specs/enumeration.tex:70";
+[01234567:#] "doc/specs/enumeration.tex:70"
+//#line 70 "doc/specs/enumeration.tex"
+Direction.each(function (var d) { echo(d) });
+[00000001] *** up
+[00000001] *** down
+[00000001] *** left
+[00000001] *** right
+
+for (var d in Direction)
+  echo(d);
+[00000001] *** up
+[00000001] *** down
+[00000001] *** left
+[00000001] *** right
+
+for| (var d in Direction)
+  echo(d);
+[00000001] *** up
+[00000001] *** down
+[00000001] *** left
+[00000001] *** right
+
+assert
+{
+  Direction.any(closure (var v) { v == Direction.up });
+};
+
+syncline << "doc/specs/enumeration.tex:100";
+[01234567:#] "doc/specs/enumeration.tex:100"
+//#line 100 "doc/specs/enumeration.tex"
+assert {
+Direction.asString    == "Direction";
+Direction.up.asString == "up";
+};
+
+syncline << "doc/specs/enumeration.tex:108";
+[01234567:#] "doc/specs/enumeration.tex:108"
+//#line 108 "doc/specs/enumeration.tex"
+enum CardinalDirection { north, east, south, west }|;
+
+assert
+{
+  Direction.has(Direction.up);
+  Direction.up in Direction;
+  12 not in Direction;
+  CardinalDirection.south not in Direction;
+};
+
+syncline << "doc/specs/enumeration.tex:123";
+[01234567:#] "doc/specs/enumeration.tex:123"
+//#line 123 "doc/specs/enumeration.tex"
+assert {
+Direction.name    == "Direction";
+Direction.up.name == "Direction";
+};
+
+syncline << "doc/specs/enumeration.tex:132";
+[01234567:#] "doc/specs/enumeration.tex:132"
+//#line 132 "doc/specs/enumeration.tex"
+assert {
+Direction.size == 4;
+};
+
+syncline << "doc/specs/enumeration.tex:139";
+[01234567:#] "doc/specs/enumeration.tex:139"
+//#line 139 "doc/specs/enumeration.tex"
+assert {
+Direction.values
+  == [Direction.up, Direction.down, Direction.left, Direction.right];
+};

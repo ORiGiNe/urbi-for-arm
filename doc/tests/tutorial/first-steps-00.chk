@@ -1,0 +1,188 @@
+syncline << "doc/tutorial/first-steps.tex:34";
+[01234567:#] "doc/tutorial/first-steps.tex:34"
+//#line 34 "doc/tutorial/first-steps.tex"
+1; // This is a C++ style comment.
+[00000000] 1
+
+2 + /* This is a C-style comment. */ 2;
+[00000000] 4
+
+"foo" /* You /* can /* nest */ */ comments. */ "bar";
+[00000000] "foobar"
+
+syncline << "doc/tutorial/first-steps.tex:64";
+[01234567:#] "doc/tutorial/first-steps.tex:64"
+//#line 64 "doc/tutorial/first-steps.tex"
+42; // Integer literal.
+[00000000] 42
+
+3.14; // Floating point number literal.
+[00000000] 3.14
+
+syncline << "doc/tutorial/first-steps.tex:73";
+[01234567:#] "doc/tutorial/first-steps.tex:73"
+//#line 73 "doc/tutorial/first-steps.tex"
+"string";
+[00000000] "string"
+
+syncline << "doc/tutorial/first-steps.tex:79";
+[01234567:#] "doc/tutorial/first-steps.tex:79"
+//#line 79 "doc/tutorial/first-steps.tex"
+[1, 2, "a", "b"];
+[00000000] [1, 2, "a", "b"]
+
+syncline << "doc/tutorial/first-steps.tex:86";
+[01234567:#] "doc/tutorial/first-steps.tex:86"
+//#line 86 "doc/tutorial/first-steps.tex"
+["a" => 1, "b" => 2, "3" => "three"];
+[00000000] ["3" => "three", "a" => 1, "b" => 2]
+
+syncline << "doc/tutorial/first-steps.tex:93";
+[01234567:#] "doc/tutorial/first-steps.tex:93"
+//#line 93 "doc/tutorial/first-steps.tex"
+nil;
+
+syncline << "doc/tutorial/first-steps.tex:99";
+[01234567:#] "doc/tutorial/first-steps.tex:99"
+//#line 99 "doc/tutorial/first-steps.tex"
+void;
+
+syncline << "doc/tutorial/first-steps.tex:119";
+[01234567:#] "doc/tutorial/first-steps.tex:119"
+//#line 119 "doc/tutorial/first-steps.tex"
+cos(0); // Compute cosine
+[00000000] 1
+max(1, 3); // Get the maximum of the arguments.
+[00000000] 3
+max(1, 3, 4, 2);
+[00000000] 4
+
+syncline << "doc/tutorial/first-steps.tex:133";
+[01234567:#] "doc/tutorial/first-steps.tex:133"
+//#line 133 "doc/tutorial/first-steps.tex"
+echo("Hello world!");
+[00000000] *** Hello world!
+
+syncline << "doc/tutorial/first-steps.tex:147";
+[01234567:#] "doc/tutorial/first-steps.tex:147"
+//#line 147 "doc/tutorial/first-steps.tex"
+var x = 42;
+[00000000] 42
+echo(x);
+[00000000] *** 42
+x = 51;
+[00000000] 51
+x;
+[00000000] 51
+
+syncline << "doc/tutorial/first-steps.tex:166";
+[01234567:#] "doc/tutorial/first-steps.tex:166"
+//#line 166 "doc/tutorial/first-steps.tex"
+var y;
+y;
+// Remember, the interpreter remains silent because void is printed out
+// as nothing.  You can convince yourself that y is actually void with
+// the following methods.
+y.asString;
+[00000000] "void"
+y.isVoid;
+[00000000] true
+
+syncline << "doc/tutorial/first-steps.tex:183";
+[01234567:#] "doc/tutorial/first-steps.tex:183"
+//#line 183 "doc/tutorial/first-steps.tex"
+removeSlots("x");
+
+syncline << "doc/tutorial/first-steps.tex:186";
+[01234567:#] "doc/tutorial/first-steps.tex:186"
+//#line 186 "doc/tutorial/first-steps.tex"
+{
+  var x = "test";
+  echo(x);
+};
+[00000000] *** test
+// x is no longer defined here
+x;
+[00000073:error] !!! lookup failed: x
+
+syncline << "doc/tutorial/first-steps.tex:207";
+[01234567:#] "doc/tutorial/first-steps.tex:207"
+//#line 207 "doc/tutorial/first-steps.tex"
+0.cos();
+[00000000] 1
+"a-b-c".split("-");
+[00000000] ["a", "b", "c"]
+// Empty parentheses are optional
+"foo".length();
+[00000000] 3
+"foo".length;
+[00000000] 3
+// Method call can be chained
+"".length.cos;
+[00000000] 1
+
+syncline << "doc/tutorial/first-steps.tex:233";
+[01234567:#] "doc/tutorial/first-steps.tex:233"
+//#line 233 "doc/tutorial/first-steps.tex"
+// Define myFunction
+function myFunction()
+{
+  echo("Hello world");
+  echo("from my function!");
+};
+[00000000] function () {
+[:]  echo("Hello world");
+[:]  echo("from my function!");
+[:]}
+
+// Invoke it
+myFunction();
+[00000000] *** Hello world
+[00000000] *** from my function!
+
+syncline << "doc/tutorial/first-steps.tex:261";
+[01234567:#] "doc/tutorial/first-steps.tex:261"
+//#line 261 "doc/tutorial/first-steps.tex"
+// Work in a scope.
+{
+  // Define f
+  function f()
+  {
+    echo("f")
+  };
+  // This does not invoke f, it returns its value.
+  f;
+};
+[00000000] function () { echo("f") }
+{
+  // Define f
+  function f()
+  {
+    echo("Hello World");
+  };
+  // This actually calls f
+  f();
+};
+[00000000] *** Hello World
+
+syncline << "doc/tutorial/first-steps.tex:303";
+[01234567:#] "doc/tutorial/first-steps.tex:303"
+//#line 303 "doc/tutorial/first-steps.tex"
+function sum(a, b, c)
+{
+  return a + b + c;
+};
+[00003553] function (var a, var b, var c) { return a.'+'(b).'+'(c) }
+function sum2(a, b, c)
+{
+  return a + b + c;
+}|;
+sum(20, 2, 20);
+[00003556] 42
+
+syncline << "doc/tutorial/first-steps.tex:328";
+[01234567:#] "doc/tutorial/first-steps.tex:328"
+//#line 328 "doc/tutorial/first-steps.tex"
+function succ(i) { i + 1 }|;
+succ(50);
+[00000000] 51

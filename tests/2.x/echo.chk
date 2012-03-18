@@ -1,0 +1,2 @@
+echo (12, 34);
+[00000001:error] !!! input.u:@.1-13: echo: argument 2: unexpected 34, expected a String

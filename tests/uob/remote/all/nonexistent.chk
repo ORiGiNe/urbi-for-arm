@@ -1,0 +1,4 @@
+//#uobject test/all
+
+remall.nonexistent;
+[00000001:error] !!! input.u:@.1-18: lookup failed: nonexistent

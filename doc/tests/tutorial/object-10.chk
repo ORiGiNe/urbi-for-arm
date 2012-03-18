@@ -1,0 +1,87 @@
+syncline << "doc/tutorial/object.tex:392";
+[01234567:#] "doc/tutorial/object.tex:392"
+//#line 392 "doc/tutorial/object.tex"
+class MyPair
+{
+  var first = nil;
+  var second = nil;
+  function init(f, s) { first = f;   second = s;  };
+  function asString() { "(" + first + ", " + second + ")"; };
+};
+[00000000] (nil, nil)
+MyPair.new(0, 1);
+[00000000] (0, 1)
+
+syncline << "doc/tutorial/object.tex:417";
+[01234567:#] "doc/tutorial/object.tex:417"
+//#line 417 "doc/tutorial/object.tex"
+class ArithPair
+{
+  var first = nil;
+  var second = nil;
+  function init(f, s) { first = f;   second = s;  };
+  function asString() { "(" + first + ", " + second + ")"; };
+  function '+'(rhs) { new(first + rhs.first, second + rhs.second); };
+  function '-'(rhs) { new(first - rhs.first, second - rhs.second); };
+  function '*'(rhs) { new(first * rhs.first, second * rhs.second); };
+  function '/'(rhs) { new(first / rhs.first, second / rhs.second); };
+};
+[00000000] (nil, nil)
+ArithPair.new(1, 10) + ArithPair.new(2, 20) * ArithPair.new(3, 30);
+[00000000] (7, 610)
+
+syncline << "doc/tutorial/object.tex:447";
+[01234567:#] "doc/tutorial/object.tex:447"
+//#line 447 "doc/tutorial/object.tex"
+var x = 123;
+[00000000] 123
+var x.foo = 42;
+[00000000] 42
+
+syncline << "doc/tutorial/object.tex:457";
+[01234567:#] "doc/tutorial/object.tex:457"
+//#line 457 "doc/tutorial/object.tex"
+var y = x;
+[00000000] 123
+y.foo;
+[00000000] 42
+
+syncline << "doc/tutorial/object.tex:468";
+[01234567:#] "doc/tutorial/object.tex:468"
+//#line 468 "doc/tutorial/object.tex"
+x = 456;
+[00000000] 456
+x.foo;
+[00000000:error] !!! lookup failed: foo
+
+syncline << "doc/tutorial/object.tex:478";
+[01234567:#] "doc/tutorial/object.tex:478"
+//#line 478 "doc/tutorial/object.tex"
+y.foo;
+[00000000] 42
+
+syncline << "doc/tutorial/object.tex:489";
+[01234567:#] "doc/tutorial/object.tex:489"
+//#line 489 "doc/tutorial/object.tex"
+x = 123;
+[00000000] 123
+x->foo = 42;
+[00000000] 42
+x->foo;
+[00000000] 42
+
+syncline << "doc/tutorial/object.tex:501";
+[01234567:#] "doc/tutorial/object.tex:501"
+//#line 501 "doc/tutorial/object.tex"
+y = x;
+[00000000] 123
+y->foo;
+[00000000:error] !!! property lookup failed: y->foo
+
+syncline << "doc/tutorial/object.tex:511";
+[01234567:#] "doc/tutorial/object.tex:511"
+//#line 511 "doc/tutorial/object.tex"
+x = 456;
+[00000000] 456
+x->foo = 42;
+[00000000] 42

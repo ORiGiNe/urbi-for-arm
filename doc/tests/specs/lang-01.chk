@@ -1,0 +1,66 @@
+syncline << "doc/specs/lang.tex:2040";
+[01234567:#] "doc/specs/lang.tex:2040"
+//#line 2040 "doc/specs/lang.tex"
+var x = []|;
+
+at (x->changed?)
+  echo("x->changed");
+
+x = [1]|;
+[00092656] *** x->changed
+x = [1, 2]|;
+[00092756] *** x->changed
+
+syncline << "doc/specs/lang.tex:2055";
+[01234567:#] "doc/specs/lang.tex:2055"
+//#line 2055 "doc/specs/lang.tex"
+x = x|;
+[00092856] *** x->changed
+
+syncline << "doc/specs/lang.tex:2062";
+[01234567:#] "doc/specs/lang.tex:2062"
+//#line 2062 "doc/specs/lang.tex"
+x << 3;
+[00092866] [1, 2, 3]
+
+syncline << "doc/specs/lang.tex:2075";
+[01234567:#] "doc/specs/lang.tex:2075"
+//#line 2075 "doc/specs/lang.tex"
+var c = 0;
+[00000000] 0
+c = 1;
+[00000000] 1
+
+c->constant = true;
+[00000000] true
+c = 2;
+[00000000:error] !!! cannot modify const slot
+
+c->constant = false;
+[00000000] false
+c = 3;
+[00000000] 3
+
+syncline << "doc/specs/lang.tex:2094";
+[01234567:#] "doc/specs/lang.tex:2094"
+//#line 2094 "doc/specs/lang.tex"
+const var two = 2;
+[00000036] 2
+two = 3;
+[00000037:error] !!! cannot modify const slot
+two->constant;
+[00000038] true
+
+syncline << "doc/specs/lang.tex:2118";
+[01234567:#] "doc/specs/lang.tex:2118"
+//#line 2118 "doc/specs/lang.tex"
+var ob = Object.new|
+assert (ob.protos == [Object]);
+
+ob.addProto(Pair);
+[00000000] (nil, nil)
+assert (ob.protos == [(nil, nil), Object]);
+
+ob.removeProto(Object);
+[00000000] (nil, nil)
+assert (ob.protos == [(nil, nil)]);

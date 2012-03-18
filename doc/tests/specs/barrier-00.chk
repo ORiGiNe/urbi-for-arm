@@ -1,0 +1,47 @@
+syncline << "doc/specs/barrier.tex:28";
+[01234567:#] "doc/specs/barrier.tex:28"
+//#line 28 "doc/specs/barrier.tex"
+Barrier.new;
+[00000000] Barrier_0x25d2280
+
+syncline << "doc/specs/barrier.tex:41";
+[01234567:#] "doc/specs/barrier.tex:41"
+//#line 41 "doc/specs/barrier.tex"
+do (Barrier.new)
+{
+  echo(wait) &
+  echo(wait) &
+  assert
+  {
+    signal(1) == 1;
+    signal(2) == 1;
+  }
+}|;
+[00000000] *** 1
+[00000000] *** 2
+
+syncline << "doc/specs/barrier.tex:61";
+[01234567:#] "doc/specs/barrier.tex:61"
+//#line 61 "doc/specs/barrier.tex"
+do (Barrier.new)
+{
+  echo(wait) &
+  echo(wait) &
+  assert
+  {
+    signalAll(1) == 2;
+    signalAll(2) == 0;
+  }
+}|;
+[00000000] *** 1
+[00000000] *** 1
+
+syncline << "doc/specs/barrier.tex:81";
+[01234567:#] "doc/specs/barrier.tex:81"
+//#line 81 "doc/specs/barrier.tex"
+do (Barrier.new)
+{
+  echo(wait) &
+  signal(1)
+}|;
+[00000000] *** 1

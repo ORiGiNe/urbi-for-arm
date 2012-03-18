@@ -1,0 +1,239 @@
+syncline << "doc/specs/ros.tex:80";
+[01234567:#] "doc/specs/ros.tex:80"
+//#line 80 "doc/specs/ros.tex"
+assert {
+"/rosout" in Ros.nodes;
+Ros.name in Ros.nodes;
+};
+
+syncline << "doc/specs/ros.tex:94";
+[01234567:#] "doc/specs/ros.tex:94"
+//#line 94 "doc/specs/ros.tex"
+//#roscore
+// no-fast seems to be needed on bf-macintel-1.  Otherwise the test
+// never passes the "waituntil(logService.initialized);".
+//#no-fast
+
+syncline << "doc/specs/ros.tex:100";
+[01234567:#] "doc/specs/ros.tex:100"
+//#line 100 "doc/specs/ros.tex"
+var services = Ros.services|
+var name = Ros.name|;
+assert
+{
+         "/rosout/get_loggers" in services;
+    "/rosout/set_logger_level" in services;
+       (name + "/get_loggers") in services;
+  (name + "/set_logger_level") in services;
+};
+
+syncline << "doc/specs/ros.tex:111";
+[01234567:#] "doc/specs/ros.tex:111"
+//#line 111 "doc/specs/ros.tex"
+removeSlots("services", "name");
+
+syncline << "doc/specs/ros.tex:125";
+[01234567:#] "doc/specs/ros.tex:125"
+//#line 125 "doc/specs/ros.tex"
+var topics = Ros.topics|;
+topics.keys;
+[03316144] ["/rosout_agg"]
+
+// The actual value of the "type" field depends on the ROS version
+// (the location changed, but the type is the same):
+// - "roslib/Log" for CTurtle.
+// - "rosgraph_msgs/Log" for Diamondback and later.
+topics["/rosout_agg"];
+[03325634] ["publishers" => ["/rosout"], \
+[:]    "subscribers" => [], \
+[:]    "type" => "rosgraph_msgs/Log"]
+
+syncline << "doc/specs/ros.tex:139";
+[01234567:#] "doc/specs/ros.tex:139"
+//#line 139 "doc/specs/ros.tex"
+removeSlots("topic", "topics");
+
+syncline << "doc/specs/ros.tex:176";
+[01234567:#] "doc/specs/ros.tex:176"
+//#line 176 "doc/specs/ros.tex"
+assert {
+Ros.Topic.new("/test").name == "/test";
+};
+
+syncline << "doc/specs/ros.tex:186";
+[01234567:#] "doc/specs/ros.tex:186"
+//#line 186 "doc/specs/ros.tex"
+var logTopic = Ros.Topic.new("/rosout_agg")|;
+logTopic.subscribe|;
+assert
+{
+  logTopic.structure.keys
+    == ["file", "function", "header", "level", "line", "msg", "name", "topics"];
+};
+
+syncline << "doc/specs/ros.tex:195";
+[01234567:#] "doc/specs/ros.tex:195"
+//#line 195 "doc/specs/ros.tex"
+removeSlots("logTopic");
+
+syncline << "doc/specs/ros.tex:219";
+[01234567:#] "doc/specs/ros.tex:219"
+//#line 219 "doc/specs/ros.tex"
+removeSlots("t");
+
+syncline << "doc/specs/ros.tex:242";
+[01234567:#] "doc/specs/ros.tex:242"
+//#line 242 "doc/specs/ros.tex"
+var stringPub = Ros.Topic.new("/mytest")|;
+stringPub.advertise("std_msgs/String");
+stringPub << ["data" => "Hello world!"];
+
+syncline << "doc/specs/ros.tex:247";
+[01234567:#] "doc/specs/ros.tex:247"
+//#line 247 "doc/specs/ros.tex"
+removeSlots("stringPub");
+
+syncline << "doc/specs/ros.tex:258";
+[01234567:#] "doc/specs/ros.tex:258"
+//#line 258 "doc/specs/ros.tex"
+var stringPub = Ros.Topic.new("/mytest")|;
+stringPub.advertise("std_msgs/String");
+stringPub.structure;
+[00670809] ["data" => ""]
+
+syncline << "doc/specs/ros.tex:264";
+[01234567:#] "doc/specs/ros.tex:264"
+//#line 264 "doc/specs/ros.tex"
+removeSlots("stringPub");
+
+syncline << "doc/specs/ros.tex:273";
+[01234567:#] "doc/specs/ros.tex:273"
+//#line 273 "doc/specs/ros.tex"
+var p = Ros.Topic.new("/test/publisher")|;
+at sync (p.onConnect?(var n))
+  echo("%s has subscribed to %s" % [n, p.name]);
+// The structure is not defined, yet.
+assert (p.structure.isVoid);
+p.advertise("std_msgs/String");
+// The structure is ready to be used.
+assert (p.structure == ["data" => ""]);
+
+var s = Ros.Topic.new("/test/publisher")|;
+
+syncline << "doc/specs/ros.tex:300";
+[01234567:#] "doc/specs/ros.tex:300"
+//#line 300 "doc/specs/ros.tex"
+{
+  waituntil (p.onConnect?),
+  s.subscribe;
+};
+[00077308] *** /urbi_1317980847216045000 has subscribed to /test/publisher
+
+syncline << "doc/specs/ros.tex:314";
+[01234567:#] "doc/specs/ros.tex:314"
+//#line 314 "doc/specs/ros.tex"
+at (p.onDisconnect?(var n))
+  echo("%s has unsubscribed to %s" % [n, p.name]);
+
+{
+  waituntil (p.onDisconnect?),
+  s.unsubscribe;
+};
+[00077308] *** /urbi_1317980847216045000 has unsubscribed to /test/publisher
+
+syncline << "doc/specs/ros.tex:324";
+[01234567:#] "doc/specs/ros.tex:324"
+//#line 324 "doc/specs/ros.tex"
+removeSlots("p", "s");
+
+syncline << "doc/specs/ros.tex:334";
+[01234567:#] "doc/specs/ros.tex:334"
+//#line 334 "doc/specs/ros.tex"
+var stringPub = Ros.Topic.new("/mytest")|;
+stringPub.advertise("std_msgs/String");
+stringPub.publish(["data" => "Hello world!"]);
+
+syncline << "doc/specs/ros.tex:339";
+[01234567:#] "doc/specs/ros.tex:339"
+//#line 339 "doc/specs/ros.tex"
+removeSlots("stringPub");
+
+syncline << "doc/specs/ros.tex:363";
+[01234567:#] "doc/specs/ros.tex:363"
+//#line 363 "doc/specs/ros.tex"
+var publisher = Ros.Topic.new("/example")|
+at (publisher.onConnect?(var name))
+  echo(name[0,5] + " is now listening on " + publisher.name);
+at (publisher.onDisconnect?(var name))
+  echo(name[0,5] + " is no longer listening on " + publisher.name);
+publisher.advertise("std_msgs/String");
+
+syncline << "doc/specs/ros.tex:377";
+[01234567:#] "doc/specs/ros.tex:377"
+//#line 377 "doc/specs/ros.tex"
+var subscriber = Ros.Topic.new("/example")|
+at (subscriber.onMessage?(var m))
+  echo(m["data"]);
+subscriber.subscribe;
+// Let the "is now listening" message arrive.
+sleep(200ms);
+[00026580] *** /urbi is now listening on /example
+
+syncline << "doc/specs/ros.tex:390";
+[01234567:#] "doc/specs/ros.tex:390"
+//#line 390 "doc/specs/ros.tex"
+assert {
+subscriber.structure == publisher.structure;
+};
+
+syncline << "doc/specs/ros.tex:398";
+[01234567:#] "doc/specs/ros.tex:398"
+//#line 398 "doc/specs/ros.tex"
+var message = publisher.structure.new;
+[00098963] ["data" => ""]
+message["data"] = "Hello world!"|;
+
+// publish the message.
+publisher << message;
+// Leave some time to asynchronous communications before shutting down.
+sleep(200ms);
+[00098964] *** Hello world!
+
+subscriber.unsubscribe;
+// Let the "is no longer" message arrive.
+sleep(200ms);
+[00252566] *** /urbi is no longer listening on /example
+
+syncline << "doc/specs/ros.tex:446";
+[01234567:#] "doc/specs/ros.tex:446"
+//#line 446 "doc/specs/ros.tex"
+var logService = Ros.Service.new("/rosout/get_loggers", false)|;
+waituntil(logService.initialized);
+
+syncline << "doc/specs/ros.tex:454";
+[01234567:#] "doc/specs/ros.tex:454"
+//#line 454 "doc/specs/ros.tex"
+logService.name;
+[00036689] "/rosout/get_loggers"
+
+syncline << "doc/specs/ros.tex:464";
+[01234567:#] "doc/specs/ros.tex:464"
+//#line 464 "doc/specs/ros.tex"
+logService.reqStruct;
+[00029399] [ => ]
+
+syncline << "doc/specs/ros.tex:475";
+[01234567:#] "doc/specs/ros.tex:475"
+//#line 475 "doc/specs/ros.tex"
+for (var item in logService.request([=>])["loggers"])
+  echo(item);
+[00034567] *** ["level" => "INFO", "name" => "ros"]
+[00034571] *** ["level" => "INFO", "name" => "ros.roscpp"]
+[00034575] *** ["level" => "INFO", "name" => "ros.roscpp.roscpp_internal"]
+[00034586] *** ["level" => "WARN", "name" => "ros.roscpp.superdebug"]
+
+syncline << "doc/specs/ros.tex:489";
+[01234567:#] "doc/specs/ros.tex:489"
+//#line 489 "doc/specs/ros.tex"
+logService.resStruct;
+[00029399] ["loggers" => []]

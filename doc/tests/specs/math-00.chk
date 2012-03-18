@@ -1,0 +1,115 @@
+syncline << "doc/specs/math.tex:33";
+[01234567:#] "doc/specs/math.tex:33"
+//#line 33 "doc/specs/math.tex"
+assert {
+Math.abs(1) == 1;
+Math.abs(-1) == 1;
+Math.abs(0) == 0;
+Math.abs(3.5) == 3.5;
+};
+
+syncline << "doc/specs/math.tex:47";
+[01234567:#] "doc/specs/math.tex:47"
+//#line 47 "doc/specs/math.tex"
+assert {
+Math.atan(1) ~= pi/4;
+};
+
+syncline << "doc/specs/math.tex:53";
+[01234567:#] "doc/specs/math.tex:53"
+//#line 53 "doc/specs/math.tex"
+assert {
+Math.atan2(2, 2) ~= pi/4;
+Math.atan2(-2, 2) ~= -pi/4;
+};
+
+syncline << "doc/specs/math.tex:60";
+[01234567:#] "doc/specs/math.tex:60"
+//#line 60 "doc/specs/math.tex"
+assert {
+Math.cos(0) == 1;
+Math.cos(pi) ~= -1;
+};
+
+syncline << "doc/specs/math.tex:73";
+[01234567:#] "doc/specs/math.tex:73"
+//#line 73 "doc/specs/math.tex"
+assert {
+Math.log(1) == 0;
+};
+
+syncline << "doc/specs/math.tex:79";
+[01234567:#] "doc/specs/math.tex:79"
+//#line 79 "doc/specs/math.tex"
+assert {
+max( 100,   20,   3 ) == 100;
+max("100", "20", "3") == "3";
+};
+
+syncline << "doc/specs/math.tex:86";
+[01234567:#] "doc/specs/math.tex:86"
+//#line 86 "doc/specs/math.tex"
+assert {
+min( 100,   20,   3 ) ==     3;
+min("100", "20", "3") == "100";
+};
+
+syncline << "doc/specs/math.tex:102";
+[01234567:#] "doc/specs/math.tex:102"
+//#line 102 "doc/specs/math.tex"
+assert {
+Math.round(1) == 1;
+Math.round(1.1) == 1;
+Math.round(1.49) == 1;
+Math.round(1.5) == 2;
+Math.round(1.51) == 2;
+};
+
+syncline << "doc/specs/math.tex:112";
+[01234567:#] "doc/specs/math.tex:112"
+//#line 112 "doc/specs/math.tex"
+assert {
+Math.sign(2)  == 1;
+Math.sign(-2) == -1;
+Math.sign(0)  == 0;
+};
+
+syncline << "doc/specs/math.tex:120";
+[01234567:#] "doc/specs/math.tex:120"
+//#line 120 "doc/specs/math.tex"
+assert {
+Math.sin(0) == 0;
+Math.sin(pi) ~= 0;
+};
+
+syncline << "doc/specs/math.tex:127";
+[01234567:#] "doc/specs/math.tex:127"
+//#line 127 "doc/specs/math.tex"
+assert {
+Math.sqr(2.2) ~= 4.84;
+};
+
+syncline << "doc/specs/math.tex:133";
+[01234567:#] "doc/specs/math.tex:133"
+//#line 133 "doc/specs/math.tex"
+assert {
+Math.sqrt(4) == 2;
+};
+
+syncline << "doc/specs/math.tex:142";
+[01234567:#] "doc/specs/math.tex:142"
+//#line 142 "doc/specs/math.tex"
+assert {
+Math.tan(pi/4) ~= 1;
+};
+
+syncline << "doc/specs/math.tex:148";
+[01234567:#] "doc/specs/math.tex:148"
+//#line 148 "doc/specs/math.tex"
+assert {
+Math.trunc(1) == 1;
+Math.trunc(1.1) == 1;
+Math.trunc(1.49) == 1;
+Math.trunc(1.5) == 1;
+Math.trunc(1.51) == 1;
+};

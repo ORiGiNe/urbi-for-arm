@@ -1,0 +1,14 @@
+syncline << "doc/specs/nil.tex:26";
+[01234567:#] "doc/specs/nil.tex:26"
+//#line 26 "doc/specs/nil.tex"
+assert {
+nil == nil;
+};
+
+syncline << "doc/specs/nil.tex:36";
+[01234567:#] "doc/specs/nil.tex:36"
+//#line 36 "doc/specs/nil.tex"
+assert {
+nil.isNil;
+!Object.isNil;
+};

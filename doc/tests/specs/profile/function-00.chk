@@ -1,0 +1,66 @@
+syncline << "doc/specs/profile/function.tex:26";
+[01234567:#] "doc/specs/profile/function.tex:26"
+//#line 26 "doc/specs/profile/function.tex"
+function Float.fact()
+{
+  if (this <= 1)
+    this
+  else
+    this * (this - 1).fact;
+}|;
+var profile = System.profile(function() { 20.fact });
+[00009050] Profile(
+[:]  Yields:                    0
+[:]  Total time (us):         171
+[:]  Wall-clock time (us):    171
+[:]  Function calls:           79
+[:]  Max depth:                22
+[:]
+[:]  .-------------------------------------------------------------------.
+[:]  |   function   |   %    | cumulative |  self  |  calls  |   self    |
+[:]  |              |        |    (us)    |  (us)  |         | (us/call) |
+[:]  |--------------+--------+------------+--------+---------+-----------|
+[:]  |         fact |  70.18 |        120 |    120 |      20 |         6 |
+[:]  |            - |  10.53 |        138 |     18 |      19 |     0.947 |
+[:]  |           <= |   8.77 |        153 |     15 |      20 |     0.750 |
+[:]  |            * |   8.19 |        167 |     14 |      19 |     0.737 |
+[:]  |   <profiled> |   2.34 |        171 |      4 |       1 |         4 |
+[:]  '--------------'--------'------------'--------'---------'-----------'
+[:])
+profile.calls[0];
+[00123833] Function('fact', 20, 0.000120, 0.000006)
+
+syncline << "doc/specs/profile/function.tex:62";
+[01234567:#] "doc/specs/profile/function.tex:62"
+//#line 62 "doc/specs/profile/function.tex"
+assert {
+// Example continued from Construction section.
+profile.calls[0].calls == 20;
+};
+
+syncline << "doc/specs/profile/function.tex:69";
+[01234567:#] "doc/specs/profile/function.tex:69"
+//#line 69 "doc/specs/profile/function.tex"
+assert {
+// Example continued from Construction section.
+profile.calls[0].name == "fact";
+};
+
+syncline << "doc/specs/profile/function.tex:77";
+[01234567:#] "doc/specs/profile/function.tex:77"
+//#line 77 "doc/specs/profile/function.tex"
+assert {
+// Example continued from Construction section.
+do (profile.calls[0])
+{
+  selfTimePer == selfTime / calls;
+}
+};
+
+syncline << "doc/specs/profile/function.tex:87";
+[01234567:#] "doc/specs/profile/function.tex:87"
+//#line 87 "doc/specs/profile/function.tex"
+assert {
+// Example continued from Construction section.
+profile.calls[0].selfTime.isA(Float);
+};

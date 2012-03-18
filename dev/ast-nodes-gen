@@ -1,0 +1,510 @@
+#! /usr/bin/env python
+
+import re, string
+import sys, os.path
+import ast, tools
+
+if len(sys.argv) != 2:
+  tools.error("Usage: .. SRCDIR")
+srcdir = sys.argv[1]
+
+## Globals --------------------------------------------------------------------
+
+re_access_r = re.compile (".*r.*"); re_access_R = re.compile (".*R.*")
+re_access_w = re.compile (".*w.*"); re_access_W = re.compile (".*W.*")
+
+## Abstract syntax tree C++ classes generator ---------------------------------
+
+def print_inline_code (node, file, where):
+  if node.inline.has_key(file + ' ' + where):
+    str = node.inline[file + ' ' + where]
+    print str
+
+def print_banner(file, name, doc):
+  print >>file, tools.banner(ast_params,
+                             "ast/" + name,  doc)
+
+def print_guard_close (file, node, ext):
+  print >>file, "#endif // !" + node.guard(ext)
+
+def print_guards_close (node, header, inline, impl):
+  sys.stdout = header
+  # Shortands.
+  print_inline_code (node, "header", "epilogue")
+
+  # Close protection
+  print >>header, """
+#if ENABLE_SERIALIZATION
+# include <serialize/serialize.hh>
+#endif"""
+  print >>header, "# include <ast/" + node.hxx () + ">"
+  print >>header, ""
+  print_guard_close (header, node, "hh")
+  print_guard_close (inline, node, "hxx")
+
+  sys.stdout = impl
+  print_inline_code (node, "impl", "epilogue")
+
+def print_includes (node, header, inline, impl):
+  """Generate the required header inclusions."""
+
+  includes = {}
+
+  if node.super:
+    for sup in node.super:
+      includes["<ast/" + sup.hh () + ">"] = True
+
+  for inc in node.includes:
+    includes[inc] = True
+
+  need_misc_algorithm = False
+  for attribute in node.attributes:
+    need_misc_algorithm |= attribute.deep_clear_p ()
+    type = attribute.root_type ()
+    if type in ast_params['includes_map']:
+      includes[ast_params['includes_map'][type]] = True
+    elif not type == node.name and \
+	 not type in ast_params['atomic_types'] and \
+	 not ('compound_types' in ast_params and \
+		type in ast_params['compound_types']):
+      # Don't include ourselves.
+      # Don't include headers for atomic types.
+      # Don't include headers for types defined elsewhere.
+      includes["<ast/" + tools.file_id (type) + ".hh>"] = True
+
+  # *.hh
+  sys.stdout = header
+  for i in includes:
+    print >>header, "# include " + i
+  print_inline_code (node, "header", "prologue")
+  print >>header, "# include <urbi/object/fwd.hh>"
+  print >>header, "# include <kernel/config.h>"
+  print >>header, """
+#if ENABLE_SERIALIZATION
+# include <serialize/serialize.hh>
+#endif"""
+
+  # *.hxx
+  sys.stdout = inline
+  print >>inline, "# include <ast/" + node.hh () + ">"
+  print_inline_code (node, "inline", "prologue")
+
+  # *.cc
+  sys.stdout = impl
+  if need_misc_algorithm:
+    print >>impl, "#include <libport/containers.hh>"
+  print >>impl, """#include <ast/visitor.hh>
+#include <ast/%s>
+#include <runner/interpreter.hh>
+#include <libport/compilation.hh>
+
+// If in speed mode, inline Interpreters visit methods.
+#ifdef LIBPORT_COMPILATION_MODE_SPEED
+# include <runner/interpreter-visit.hxx>
+#endif""" % node.hh()
+  print_inline_code (node, "impl", "prologue")
+
+
+## ----------- ##
+## Namespace.  ##
+## ----------- ##
+
+def print_namespace_open (node, header, inline, impl):
+  """Open the AST namespace."""
+  # Open namespace
+  for f in [header, inline, impl]:
+    print >>f, """
+namespace ast
+{
+"""
+
+def print_namespace_close (node, header, inline, impl):
+  """Close the AST namespace."""
+  for f in [header, inline, impl]:
+    print >>f, """
+} // namespace ast
+"""
+
+
+## -------------- ##
+## Hiding marks.  ##
+## -------------- ##
+
+def print_hiding_marks (node, mark, header, inline, impl):
+  """Print the hiding marks for node.  Used to open and close:
+  mark should be "<<" or ">>", etc."""
+  if node.hide:
+    for f in [header, inline, impl]:
+      if not (f == inline and len(node.attributes) == 0):
+	print >>f, "//" + mark
+
+## ------- ##
+## Class.  ##
+## ------- ##
+
+def print_class_open (node, header, inline, impl):
+  """Open the class header."""
+  print_hiding_marks (node, "<<", header, inline, impl)
+
+  # Declare class
+  sys.stdout = header
+  decl = "class "
+  if node.declAttribute:
+    decl += node.declAttribute + " "
+  decl += node.name
+
+  # Declare parents.
+  sups = [sup.name for sup in node.super]
+  parents = ", ".join(["public " + super
+		       for super in sups + node.super_non_nodes])
+  if parents:
+    decl += " : " + parents
+
+  print node.description()
+  print "  " + decl
+  print "  {"
+
+def print_class_close (node, header, inline, impl):
+  sys.stdout = header
+  print "  };"
+
+  print_hiding_marks (node, ">>", header, inline, impl)
+
+def print_ctor_dtor (node, header, inline, impl):
+  """Issue the constructors and destructor."""
+  args = node.ctor_args (False)
+  init = node.ctor_init (False)
+  hide = node.need_duplicate ()
+  if hide:
+    args_h = node.ctor_args (True)
+    init_h = node.ctor_init (True)
+
+  sys.stdout = header
+  print """    /** \\name Ctor & dtor.
+     ** \\{ */
+  public:"""
+  if hide:
+    print "    //<<-"
+  print "    /// Construct " + tools.indef_article (node.name) + " " + \
+	node.name + " node."
+  print tools.wrap_proto ("    " + node.name + " (" + args + ");", 75)
+  if hide:
+    print "    //->>"
+    print "    /// Construct " + tools.indef_article (node.name) + " " + \
+	  node.name + " node."
+    print tools.wrap_proto ("    " + node.name + " (" + args_h + ");", 75)
+  print "    /// Destroy " + tools.indef_article (node.name) + " " + \
+	node.name + " node."
+  print "    virtual ~" + node.name + " ();"
+  print "    /** \\} */"
+  sys.stdout = impl
+  if hide:
+    print "  //<<-"
+  if init == "":
+    print tools.wrap_proto ("  " + node.name + "::" + node.name + " ()", 75)
+  else:
+    print tools.wrap_proto ("  " + node.name + "::" + node.name + " (" + \
+	  re.sub(" =.*(, )?", "", args) + ")", 75)
+    print init
+  print "  {}"
+  if hide:
+    print "  //->>"
+    print ""
+    print tools.wrap_proto ("  " + node.name + "::" + node.name + " (" + \
+	  re.sub(" =.*(, )?", "", args_h) + ")", 75)
+    print init_h
+    print "  {}"
+  print ""
+  print "  " + node.name + "::~" + node.name + " ()"
+  print "  {"
+  for a in node.attributes:
+    if a.delete ():
+      print a.delete (),
+  print "  }"
+  print ""
+
+def print_attribute_get (attr, const, header, inline, impl):
+  """Print the declaration and implementation for attribute attr.
+  Depending whether const, issue a read or read-write accessor."""
+  if const and re_access_r.match (attr.access) \
+	or not const and re_access_w.match (attr.access):
+
+    get_deref = ""
+    if attr.pointer_p () and attr.mandatory:
+      get_deref = "*"
+
+    sys.stdout = header
+    print "    " + attr.accessor_comment ("Return");
+    if const:
+      type = attr.r_type()
+    else:
+      type = attr.w_type()
+    if type[-1] not in "*&":
+      type += "&"
+    const_cv = ""
+    if const:
+      const_cv = " const"
+    print "    " + ast.decl (type, attr.name) + "_get ()" + const_cv + ";"
+    sys.stdout = inline
+    if attr.hide:
+      print "  //<<-"
+    print "  inline " + type
+    print "  " + node.name + "::" + attr.name + "_get ()" + const_cv
+    print "  {"
+    print "    return " + get_deref + attr.name + "_;"
+    print "  }"
+    if attr.hide:
+      print "  //->>"
+
+def print_attributes (node, header, inline, impl):
+  # Declare attribute accessors
+  if len(node.attributes) > 0:
+    sys.stdout = header
+    print """
+    /** \\name Accessors.
+     ** \\{ */
+  public:"""
+
+    for a in node.attributes:
+      # Hide following code to students
+      if a.hide:
+	sys.stdout = header
+	print "    //<<-"
+
+      # Read-only accessor (const get)
+      print_attribute_get (a, True,  header, inline, impl);
+      # Read-write accessor (get)
+      print_attribute_get (a, False, header, inline, impl);
+
+      # Write accessor (set)
+      if re_access_W.match (a.access):
+	sys.stdout = header
+	print "    " + a.accessor_comment ("Set");
+	print "    void " + a.name + "_set (" + a.W_type () + ");"
+	sys.stdout = inline
+	if a.hide:
+	  print "  //<<-"
+	print "  inline void"
+	print "  " + node.name + "::" + a.name + "_set (" + \
+	      ast.decl (a.W_type (), a.name) + ")"
+	print "  {"
+	if a.pointer_p():
+	  print "    delete %s;" % a.name_()
+	print "    %s = %s;" % (a.name_(), a.name)
+	print "  }"
+	if a.hide:
+	  print "  //->>"
+
+      sys.stdout = inline
+      print ""
+      sys.stdout = header
+      if a.hide:
+	print "    //->>"
+    print "    /** \\} */\n"
+
+    # Declare attributes.
+    print "  protected:"
+    for a in node.attributes:
+      sys.stdout = header
+      if a.hide:
+	print "    //<<-"
+      print "    " + a.accessor_comment('')
+      print "    " + a.attr_decl () + ";"
+      if a.hide:
+	print "    //->>"
+
+
+def declare_visitor(node, header, abstract):
+  "Declare the (possible abstract) `accept' methods for node."
+
+  sys.stdout = header
+  impl = ""
+  if abstract:
+    impl = " = 0"
+  print """
+    /// \\name Visitors entry point.
+    /// \\{ */
+  public:
+    /// Accept a const visitor \\a v.
+    virtual void accept (ConstVisitor& v) const%(impl)s;
+    /// Accept a non-const visitor \\a v.
+    virtual void accept (Visitor& v)%(impl)s;
+    /// Evaluate the node in interpreter \\a r
+    virtual urbi::object::rObject eval(runner::Interpreter& r) const %(impl)s;
+    /// Return the node type
+    virtual std::string node_type() const%(impl)s;
+    /// \\}""" % {'impl': impl}
+
+
+def print_visitor(node, header, inline, impl):
+  """Output the Visitor support routine declaration, and implementation
+  if the class is concrete."""
+
+  if node.concrete:
+    declare_visitor (node, header, False)
+    sys.stdout = inline
+    print ""
+    sys.stdout = impl
+    print """  void
+  %(name)s::accept (ConstVisitor& v) const
+  {
+    v.visit(this);
+  }
+
+  urbi::object::rObject %(name)s::eval(runner::Interpreter& r) const
+  {
+    urbi::object::rObject res = r.visit(this);
+    return assert_exp(res);
+  }
+
+  std::string %(name)s::node_type() const
+  {
+    return "%(name)s";
+  }
+
+  void
+  %(name)s::accept (Visitor& v)
+  {
+    v.visit(this);
+  }""" % { 'name' : node.name }
+  # In our design, the class is concrete iff it has a single parent.
+  # This excludes roots, and "joins".
+  elif len (node.super) != 1:
+    declare_visitor (node, header, True)
+
+
+def declare_serialization(node, header):
+  "Declare the serialization methods for node."
+
+  sys.stdout = header
+  print """
+#if defined ENABLE_SERIALIZATION
+    /// \\name Serialization.
+    /// \\{ */
+  public:
+    template <typename T>
+    %(name)s(libport::serialize::ISerializer<T>& ser);
+    template <typename T>
+    void
+    serialize(libport::serialize::OSerializer<T>& ser) const;
+    /// \\}
+#endif
+""" % {'name': node.name}
+
+
+def print_serialization(node, header, inline, impl):
+  """Output the serialization routines."""
+
+  declare_serialization(node, header)
+
+  sys.stdout = inline
+
+  super = ''
+  for n in node.super:
+    super += '    %s::serialize(ser);\n' % n.name
+
+  ser = ''
+  for a in node.attributes:
+    if not a.serialize:
+      continue
+    ser += '    ser.template serialize< %(type)s >("%(name)s", %(name)s_);\n' \
+        % { 'name': a.name, 'type': a.type }
+
+  print """#if defined ENABLE_SERIALIZATION
+ template <typename T>
+  void
+  %(name)s::serialize(libport::serialize::OSerializer<T>& ser) const
+  {
+    LIBPORT_USE(ser);
+%(super)s%(ser)s  }
+""" % { 'name': node.name, 'super': super, 'ser': ser }
+
+  super = []
+  for n in node.super:
+    super.append('%s(ser)' % n.name)
+  super = ', '.join(super)
+  if len(super) > 0:
+    super = ': %s' % super
+
+  ser = ''
+  for a in node.attributes:
+    if not a.serialize:
+      continue
+    ser += '    %(name)s_ = ser.template unserialize< %(type)s >("%(name)s");\n' \
+        % { 'name': a.name, 'type': a.type }
+
+  print """  template <typename T>
+  %(name)s::%(name)s(libport::serialize::ISerializer<T>& ser)
+    %(super)s
+  {
+    LIBPORT_USE(ser);
+%(ser)s  }
+#endif
+""" % { 'name': node.name, 'super': super, 'ser': ser }
+
+
+
+
+## Generate the class corresponding to node
+def class_generate(node):
+  # Open destination header, inline and implementation files
+  header = file(node.hh()  + ".tmp", "w")
+  inline = file(node.hxx() + ".tmp", "w")
+  impl   = file(node.cc()  + ".tmp", "w")
+
+  # A flag for developpers.
+  # Document the file
+  print_banner (header, node.hh (),
+		"Declaration of ast::" + node.name + ".")
+  print_banner (inline, node.hxx (),
+		"Inline methods of ast::" + node.name + ".")
+  print_banner (impl, node.cc (),
+		"Implementation of ast::" + node.name + ".")
+
+  print_includes (node, header, inline, impl)
+
+  print_namespace_open(node, header, inline, impl)
+  print_class_open(node, header, inline, impl)
+
+  # Print inside hand written code.
+  for f in [(header, "header"),
+	    (inline, "inline"),
+	    (impl,   "impl")]:
+    sys.stdout = f[0]
+    print_inline_code (node, f[1], "inside")
+
+  # Constructor(s) and destructor.
+  print_ctor_dtor (node, header, inline, impl)
+
+  # Visitor entry point.
+  print_visitor (node, header, inline, impl)
+
+  # Serialization.
+  print_serialization (node, header, inline, impl)
+
+  # Attributes and accessors.
+  print_attributes (node, header, inline, impl)
+
+  # End of declaration.
+  print_class_close (node, header, inline, impl)
+  print_namespace_close (node, header, inline, impl)
+
+  # Print epilogue.
+  print_guards_close (node, header, inline, impl)
+
+  # Restore stdout.
+  sys.stdout = sys.__stdout__
+
+  # Check differences between old and new files.
+  for f in [(header, node.hh()),
+	    (inline, node.hxx()),
+	    (impl,   node.cc())]:
+    f[0].close ()
+    tools.lazy_install (srcdir, f[1])
+
+## Main -----------------------------------------------------------------------
+loader = ast.Loader ()
+nodes, ast_params = loader.load (sys.stdin)
+
+for node in nodes.values ():
+  class_generate (node)

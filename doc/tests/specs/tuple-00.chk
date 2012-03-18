@@ -1,0 +1,104 @@
+syncline << "doc/specs/tuple.tex:26";
+[01234567:#] "doc/specs/tuple.tex:26"
+//#line 26 "doc/specs/tuple.tex"
+var t = Tuple.new([1, 2, 3]);
+[00000000] (1, 2, 3)
+
+syncline << "doc/specs/tuple.tex:38";
+[01234567:#] "doc/specs/tuple.tex:38"
+//#line 38 "doc/specs/tuple.tex"
+// not a Tuple
+(1);
+[00000000] 1
+
+// Tuples
+();
+[00000000] ()
+(1,);
+[00000000] (1,)
+(1, 2);
+[00000000] (1, 2)
+(1, 2, 3, 4,);
+[00000000] (1, 2, 3, 4)
+
+syncline << "doc/specs/tuple.tex:61";
+[01234567:#] "doc/specs/tuple.tex:61"
+//#line 61 "doc/specs/tuple.tex"
+assert {
+           ().asString == "()";
+         (1,).asString == "(1,)";
+       (1, 2).asString == "(1, 2)";
+(1, 2, 3, 4,).asString == "(1, 2, 3, 4)";
+};
+
+syncline << "doc/specs/tuple.tex:71";
+[01234567:#] "doc/specs/tuple.tex:71"
+//#line 71 "doc/specs/tuple.tex"
+{
+  // Match a tuple.
+  (var first, var second) = (1, 2);
+  assert { first == 1; second == 2 };
+};
+
+syncline << "doc/specs/tuple.tex:80";
+[01234567:#] "doc/specs/tuple.tex:80"
+//#line 80 "doc/specs/tuple.tex"
+assert {
+           ().size == 0;
+         (1,).size == 1;
+ (1, 2, 3, 4).size == 4;
+(1, 2, 3, 4,).size == 4;
+};
+
+syncline << "doc/specs/tuple.tex:89";
+[01234567:#] "doc/specs/tuple.tex:89"
+//#line 89 "doc/specs/tuple.tex"
+assert {
+(1, 2, 3)[0] == 1;
+(1, 2, 3)[1] == 2;
+};
+
+syncline << "doc/specs/tuple.tex:97";
+[01234567:#] "doc/specs/tuple.tex:97"
+//#line 97 "doc/specs/tuple.tex"
+{
+  var t = (1, 2, 3);
+  assert
+  {
+    (t[0] = 2) == 2;
+    t == (2, 2, 3);
+  };
+};
+
+syncline << "doc/specs/tuple.tex:110";
+[01234567:#] "doc/specs/tuple.tex:110"
+//#line 110 "doc/specs/tuple.tex"
+assert {
+(0, 0) < (0, 1);
+(0, 0) < (1, 0);
+(0, 1) < (1, 0);
+};
+
+syncline << "doc/specs/tuple.tex:119";
+[01234567:#] "doc/specs/tuple.tex:119"
+//#line 119 "doc/specs/tuple.tex"
+assert {
+  (1, 2) == (1, 2);
+!((1, 1) == (2, 2));
+};
+
+syncline << "doc/specs/tuple.tex:128";
+[01234567:#] "doc/specs/tuple.tex:128"
+//#line 128 "doc/specs/tuple.tex"
+assert {
+(0, 1, 2, 3) * 3 == (0, 3, 6, 9);
+(1, "foo") * 2 == (2, "foofoo");
+};
+
+syncline << "doc/specs/tuple.tex:137";
+[01234567:#] "doc/specs/tuple.tex:137"
+//#line 137 "doc/specs/tuple.tex"
+assert {
+(0, 1) + (2, 3) == (2, 4);
+(1, "foo") + (2, "bar") == (3, "foobar");
+};

@@ -1,0 +1,31 @@
+syncline << "doc/specs/event.tex:35";
+[01234567:#] "doc/specs/event.tex:35"
+//#line 35 "doc/specs/event.tex"
+var e = Event.new;
+[00000001] Event_0x9ad8118
+
+syncline << "doc/specs/event.tex:84";
+[01234567:#] "doc/specs/event.tex:84"
+//#line 84 "doc/specs/event.tex"
+var e1 = Event.new|;
+var e2 = Event.new|;
+var either = e1.'||'(e2)|;
+at (either?)
+  echo("!");
+e1!;
+[00000004] *** !
+e2!;
+[00000005] *** !
+
+syncline << "doc/specs/event.tex:101";
+[01234567:#] "doc/specs/event.tex:101"
+//#line 101 "doc/specs/event.tex"
+var e3 = Event.new|;
+var e4 = Event.new|;
+var e_watch = Event.new << e3 << e4 |;
+at (e_watch?)
+  echo("!");
+e3!;
+[00000006] *** !
+e4!;
+[00000007] *** !

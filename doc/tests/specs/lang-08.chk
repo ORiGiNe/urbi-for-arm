@@ -1,0 +1,111 @@
+syncline << "doc/specs/lang.tex:3533";
+[01234567:#] "doc/specs/lang.tex:3533"
+//#line 3533 "doc/specs/lang.tex"
+var x = 0 |
+var x_is_two = false |;
+
+{
+  Tag.scope:
+    at (x == 2)
+      x_is_two = true
+    onleave
+      x_is_two = false;
+  sleep(2s);
+},
+x = 2 |; assert(x_is_two);
+x = 1 |; assert(!x_is_two);
+sleep(3s);
+x = 2 | assert(!x_is_two);
+
+syncline << "doc/specs/lang.tex:3556";
+[01234567:#] "doc/specs/lang.tex:3556"
+//#line 3556 "doc/specs/lang.tex"
+// Print out a message every second.
+timeout (2.1s)
+  every (1s)
+    echo("Are you still there?");
+[00000000] *** Are you still there?
+[00001000] *** Are you still there?
+[00002000] *** Are you still there?
+
+syncline << "doc/specs/lang.tex:3578";
+[01234567:#] "doc/specs/lang.tex:3578"
+//#line 3578 "doc/specs/lang.tex"
+{
+  var count = 4;
+  var start = time;
+  echo("before");
+  every| (1s)
+  {
+    count -= 1;
+    echo("begin: %s @ %1.0fs" % [count, time - start]);
+    if (count == 2)
+      continue;
+    if (count == 0)
+      break;
+    echo("end:   " + count);
+  };
+  echo("after");
+};
+[00000597] *** before
+[00000598] *** begin: 3 @ 0s
+[00000599] *** end:   3
+[00000698] *** begin: 2 @ 1s
+[00000798] *** begin: 1 @ 2s
+[00000799] *** end:   1
+[00000898] *** begin: 0 @ 3s
+[00000899] *** after
+
+syncline << "doc/specs/lang.tex:3610";
+[01234567:#] "doc/specs/lang.tex:3610"
+//#line 3610 "doc/specs/lang.tex"
+{
+  var too_long = true|;
+
+  var count = 5;
+  // Every other iteration exceeds the period, and will delay the
+  // following one.
+  every| (1s)
+  {
+    if (! count -=1)
+      break;
+
+    if (too_long)
+    {
+      too_long = false;
+      echo("Long in");
+      sleep(1.5s);
+      echo("Long out");
+    }
+    else
+    {
+      too_long = true;
+      echo("Short");
+    };
+  };
+};
+[00000000] *** Long in
+[00001500] *** Long out
+[00001500] *** Short
+[00002500] *** Long in
+[00004000] *** Long out
+[00004000] *** Short
+
+syncline << "doc/specs/lang.tex:3647";
+[01234567:#] "doc/specs/lang.tex:3647"
+//#line 3647 "doc/specs/lang.tex"
+{
+  var count = 0;
+  every| (250ms)
+  {
+    count += 1;
+    if (count == 2)
+      continue;
+    if (count == 4)
+      break;
+    echo(count);
+  }
+};
+/*(*/sleep(2s);/*)*/
+[00000000] *** 1
+[00001500] *** 3

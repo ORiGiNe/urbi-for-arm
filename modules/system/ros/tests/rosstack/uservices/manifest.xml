@@ -1,0 +1,15 @@
+<package>
+  <description brief="uservices">
+
+     Service package.
+
+  </description>
+  <author>Romain BEZUT</author>
+  <license>see LICENSE</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://www.gostai.com</url>
+  <depend package="roscpp"/>
+
+</package>
+
+

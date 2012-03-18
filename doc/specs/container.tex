@@ -1,0 +1,72 @@
+%% Copyright (C) 2009-2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Container}
+
+This object is meant to be used as a prototype for objects that support
+\refSlot{has} and \refSlot{hasNot} methods.  Any class using this prototype
+must redefine either \refSlot{has}, \refSlot{hasNot} or both.
+
+\subsection{Prototypes}
+
+\begin{itemize}
+\item \refObject{Object}
+\end{itemize}
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+\item[has](<e>)%
+  \lstinline|!hasNot(\var{e})|.  The indented semantics is
+  ``\lstinline|true| when the container has a key (or item) matching
+  \var{e}''.  This is what \lstinline|\var{e} in \var{c}| is mapped onto.
+
+\begin{urbiscript}
+class NotCell : Container
+{
+  var val;
+  function init(var v)   { val = v };
+  function hasNot(var v) { val != v };
+}|;
+var c = NotCell.new(23)|;
+assert
+{
+  c.has(23);     23 in c;
+  c.hasNot(3);    3 not in c;
+};
+\end{urbiscript}
+
+
+\item[hasNot](<e>)%
+  \lstinline|!has(\var{e})|.  The indented semantics is ``\lstinline|true|
+  when the container does not have a key (or item) matching \var{e}''.
+
+\begin{urbiscript}
+class Cell : Container
+{
+  var val;
+  function init(var v) { val = v };
+  function has(var v)  { val == v };
+}|;
+var d = Cell.new(23)|;
+assert
+{
+  d.has(23);     23 in d;
+  d.hasNot(3);    3 not in d;
+};
+\end{urbiscript}
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

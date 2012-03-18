@@ -1,0 +1,6 @@
+var e = Event.new;
+[00000001] Event_0xADDR
+
+at (e) echo("w00t");
+[00000002:warning] !!! at (<event>) without a '?', this is probably not what you meant.
+[00000003] *** w00t

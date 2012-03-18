@@ -1,0 +1,22 @@
+syncline << "doc/tutorial/concurrent.tex:290";
+[01234567:#] "doc/tutorial/concurrent.tex:290"
+//#line 290 "doc/tutorial/concurrent.tex"
+// timeout (Code, Duration).
+function timeOut
+{
+  // In background, launch a timeout job that waits
+  // for the given duration before aborting the function.
+  // call.evalArgAt(1) is the second argument, the duration.
+  {
+    sleep(call.evalArgAt(1));
+    echo("Timeout!");
+    return;
+  },
+  // Run the Code and return its value.
+  return call.evalArgAt(0);
+} |;
+timeOut({sleep(1s); echo("On time"); 42}, 2s);
+[00000000] *** On time
+[00000000] 42
+timeOut({sleep(2s); echo("On time"); 42}, 1s);
+[00000000] *** Timeout!

@@ -1,0 +1,229 @@
+#! /usr/bin/env python
+
+import sys
+import ast, tools
+
+if len(sys.argv) != 2:
+  tools.error("Usage: .. SRCDIR")
+srcdir = sys.argv[1]
+
+namespace = 'ast'
+
+loader = ast.Loader ()
+nodes, ast_params = loader.load (sys.stdin)
+# Concrete classes.
+concrete = ast.concrete(nodes)
+
+dot_printer_hh = file("dot-printer.hh.tmp", "w")
+
+print >> dot_printer_hh, """\
+%(banner)s
+
+# include <list>
+# include <sstream>
+
+# include <libport/foreach.hh>
+
+# include <ast/ast.hh>
+# include <ast/visitor.hh>
+# include <ast/symbols-type.hh>
+
+namespace %(ns)s
+{
+  /// Print an ast in Dot format
+  class DotPrinter: public %(super)s
+  {
+  public:
+    typedef %(super)s super_type;
+
+    DotPrinter(std::ostream& output, const std::string& title = "");
+    virtual ~DotPrinter();
+    virtual void operator()(const ast::Ast* n);
+
+  private:
+    // Import overloaded virtual functions.
+    using super_type::visit;
+    %(visit)s
+    std::ostream& output_;
+    unsigned id_;
+    std::list<std::pair<unsigned, std::string> > ids_;
+    bool root_;
+    /// The name of the graph.
+    std::string title_;
+
+    template<typename T>
+    void recurse(const T& c);
+
+    template<typename T>
+    void recurse(const T* c);
+  };
+}
+
+#endif
+""" % {
+  'banner' : tools.banner(ast_params,
+                          "ast/dot-generator.hh",
+                          "Declaration of %s::Cloner." % namespace),
+  'ns'     : namespace,
+  'super'  : 'ast::ConstVisitor',
+  'visit'  : tools.indent(4, ast.visit(concrete, True))
+  },
+
+dot_printer_hh.close()
+tools.lazy_install(srcdir, "dot-printer.hh");
+
+dot_printer_cc = file("dot-printer.cc.tmp", "w")
+
+visit = ''
+
+
+def dot_attrs(node):
+  recurse = ''
+  label = ''
+  for attr in node.all_attributes():
+    if attr.name in ['location', 'original']:
+      continue
+    if attr.name == 'lazy' and node.name == 'Lazy':
+      continue
+    if attr.name == 'declaration' and node.name in ['LocalAssignment', 'Local']:
+      continue
+    pointer = ''
+    if attr.visitable_p():
+      recurse += """\
+    ids_.back().second = "%(name)s";
+    operator() (n->%(name)s_get().get());
+""" % {'name': attr.name};
+    elif attr.root_type() in ast_params['collections']:
+      recurse += """\
+    ids_.back().second = "%(name)s";
+    recurse(n->%(name)s_get());
+""" % {'name': attr.name}
+    else:
+      if label != '':
+        label += '|'
+      label += '%(name)s: " << ast::escape(n->%(name)s_get()) << "' % {'name' : attr.name}
+  if label != '':
+    label = '|{%s}' % label
+  label = '|{" << ast::escape(n->location_get()) << " }' + label
+  return recurse, label
+
+
+for node in concrete:
+
+  recurse, label = dot_attrs(node)
+
+  visit += """\
+  void
+  DotPrinter::visit(const %(type)s* n)
+  {
+    LIBPORT_USE(n);
+
+    ++id_;
+    if (!ids_.empty())
+      output_ << "  node_" << ids_.back().first << " -> node_" << id_
+              << " [label=\\"" << ids_.back().second << "\\"];" << std::endl;
+    ids_.push_back(std::make_pair(id_, ""));
+    output_ << "  node_" << id_ << " [label=\\"{%(type)s%(label)s}\\"];" << std::endl;
+%(attrs)s
+    ids_.pop_back();
+  }
+
+""" % {
+    'attrs' : recurse,
+    'label' : label,
+    'type'  : node.name,
+    }
+
+print >> dot_printer_cc, """\
+%(banner)s
+
+#include <libport/lexical-cast.hh>
+#include <ast/dot-printer.hh>
+#include <ast/all.hh>
+
+namespace %(ns)s
+{
+  DotPrinter::DotPrinter(std::ostream& output, const std::string& title)
+    : output_(output)
+    , id_(0)
+    , ids_()
+    , root_(true)
+    , title_(title)
+  {}
+
+  DotPrinter::~DotPrinter()
+  {}
+
+  template <typename T>
+  std::string
+  escape(const T& e)
+  {
+    std::string res = string_cast(e);
+    for (std::string::size_type i = res.find_first_of("<>");
+         i != std::string::npos;
+	 i = res.find_first_of("<>", i+4))
+      res.replace(i, 1, res[i] == '<' ? "&lt;" : "&gt;");
+    return res;
+  }
+
+  void DotPrinter::operator()(const ast::Ast* n)
+  {
+    if (!n)
+      return;
+    if (root_)
+    {
+      root_ = false;
+      output_ << "digraph \\"" << ast::escape(title_) << '"' << std::endl
+              << "{" << std::endl
+              << "  node [shape=\\"record\\"];" << std::endl;
+      super_type::operator()(n);
+      output_ << "}" << std::endl;
+    }
+    else
+      super_type::operator()(n);
+  }
+
+  template<typename T>
+  void
+  DotPrinter::recurse(const T& c)
+  {
+    foreach (const typename T::value_type& elt, c)
+      if (elt.get())
+        operator()(elt.get());
+  }
+
+  template<>
+  void
+  DotPrinter::recurse<symbols_type>(const symbols_type&)
+  {}
+
+  template<>
+  void
+  DotPrinter::recurse<ast::modifiers_type>(const ast::modifiers_type&)
+  {}
+
+  template<>
+  void
+  DotPrinter::recurse<ast::dictionary_elts_type>(const ast::dictionary_elts_type&)
+  {}
+
+  template<typename T>
+  void
+  DotPrinter::recurse(const T* c)
+  {
+    if (c)
+      recurse(*c);
+  }
+
+  %(visit)s
+}
+""" % {
+  'banner': tools.banner(ast_params,
+                         "ast/dot-generator.cc",
+			 "Implementation of %s::Cloner." % namespace),
+  'ns': namespace,
+  'visit': visit
+  }
+
+dot_printer_cc.close()
+tools.lazy_install(srcdir, "dot-printer.cc");

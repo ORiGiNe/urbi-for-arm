@@ -1,0 +1,229 @@
+syncline << "doc/specs/lobby.tex:26";
+[01234567:#] "doc/specs/lobby.tex:26"
+//#line 26 "doc/specs/lobby.tex"
+this.protos;
+[00000001] [Lobby]
+this.protos[0].protos;
+[00000003] [Channel_0xADDR]
+
+syncline << "doc/specs/lobby.tex:35";
+[01234567:#] "doc/specs/lobby.tex:35"
+//#line 35 "doc/specs/lobby.tex"
+Lobby.new;
+[00000177:error] !!! new: `Lobby' objects cannot be cloned
+Lobby.create;
+[00000174] Lobby_0x126450
+
+syncline << "doc/specs/lobby.tex:48";
+[01234567:#] "doc/specs/lobby.tex:48"
+//#line 48 "doc/specs/lobby.tex"
+lobby << 123;
+[00478679] 123
+lobby << "foo";
+[00478679] "foo"
+
+syncline << "doc/specs/lobby.tex:59";
+[01234567:#] "doc/specs/lobby.tex:59"
+//#line 59 "doc/specs/lobby.tex"
+lobby.authors;
+[00478679] *** Authors of Urbi:
+[00478679] ***  - Jean-Christophe Baillie (original designer)
+[00478679] ***
+[00478679] *** Urbi 2 and subsequent versions:
+[00478679] ***  - Akim Demaille
+[00478679] ***  - Matthieu Nottale
+[00478679] ***  - Quentin Hocquet
+[00478679] ***
+[00478679] *** See also `thanks;'.
+
+syncline << "doc/specs/lobby.tex:73";
+[01234567:#] "doc/specs/lobby.tex:73"
+//#line 73 "doc/specs/lobby.tex"
+lobby.banner;
+[00006124] *** ********************************************************
+[00006124] *** Urbi version 2.7.4 rev. 268868e
+[00006124] *** Copyright (C) 2004-2012 Gostai S.A.S.
+[00006124] ***
+[00006124] *** This program comes with ABSOLUTELY NO WARRANTY.  It can
+[00006124] *** be used under certain conditions.  Type `license;',
+[00006124] *** `authors;', or `copyright;' for more information.
+[00006124] ***
+[00006124] *** Check our community site: http://www.urbiforge.org.
+[00006124] *** ********************************************************
+
+syncline << "doc/specs/lobby.tex:89";
+[01234567:#] "doc/specs/lobby.tex:89"
+//#line 89 "doc/specs/lobby.tex"
+var l = Lobby.create|;
+assert (l.bytesReceived == 0);
+
+l.receive("123456789;");
+[00000022] 123456789
+assert (l.bytesReceived == 10);
+
+l.receive("1234;");
+[00000023] 1234
+assert (l.bytesReceived == 15);
+
+syncline << "doc/specs/lobby.tex:101";
+[01234567:#] "doc/specs/lobby.tex:101"
+//#line 101 "doc/specs/lobby.tex"
+removeSlot("l")|;
+
+syncline << "doc/specs/lobby.tex:107";
+[01234567:#] "doc/specs/lobby.tex:107"
+//#line 107 "doc/specs/lobby.tex"
+// We have a non deterministic bug that happens from time to time in here.
+// Nobody could find it for years.  Let's work around it, it does not seem
+// to exist with Urbi 3.
+sleep(1s);
+
+syncline << "doc/specs/lobby.tex:113";
+[01234567:#] "doc/specs/lobby.tex:113"
+//#line 113 "doc/specs/lobby.tex"
+var l = Lobby.create|;
+assert (l.bytesSent == 0);
+
+l.send("0123456789");
+[00011988] 0123456789
+// 22 = "[00011988] 0123456789\n".size.
+assert (l.bytesSent == 22);
+
+l.send("xx", "label");
+[00061783:label] xx
+// 20 = "[00061783:label] xx\n".size.
+assert (l.bytesSent == 42);
+
+l.write("[01234567]\n");
+[01234567]
+assert (l.bytesSent == 53);
+
+syncline << "doc/specs/lobby.tex:131";
+[01234567:#] "doc/specs/lobby.tex:131"
+//#line 131 "doc/specs/lobby.tex"
+removeSlot("l")|;
+
+syncline << "doc/specs/lobby.tex:137";
+[01234567:#] "doc/specs/lobby.tex:137"
+//#line 137 "doc/specs/lobby.tex"
+assert {
+connected;
+};
+
+syncline << "doc/specs/lobby.tex:146";
+[01234567:#] "doc/specs/lobby.tex:146"
+//#line 146 "doc/specs/lobby.tex"
+every (1s) echo(1), sleep(0.5s); every (1s) echo(2),
+sleep(1.2s);
+connectionTag.stop;
+[00000507] *** 1
+[00001008] *** 2
+[00001507] *** 1
+[00002008] *** 2
+
+"We are alive!";
+[00002008] "We are alive!"
+
+every (1s) echo(3), sleep(0.5s); every (1s) echo(4),
+sleep(1.2s);
+connectionTag.stop;
+[00003208] *** 3
+[00003710] *** 4
+[00004208] *** 3
+[00004710] *** 4
+
+"and kicking!";
+[00002008] "and kicking!"
+
+syncline << "doc/specs/lobby.tex:171";
+[01234567:#] "doc/specs/lobby.tex:171"
+//#line 171 "doc/specs/lobby.tex"
+{ sleep(1.2s); connectionTag.stop; },
+// Note the `;', this is a foreground statement.
+every (1s) echo(5);
+[00005008] *** 5
+[00005508] *** 5
+
+"bye!";
+[00006008] "bye!"
+
+syncline << "doc/specs/lobby.tex:185";
+[01234567:#] "doc/specs/lobby.tex:185"
+//#line 185 "doc/specs/lobby.tex"
+lobby.copyright(false);
+[00028588] *** Urbi version 2.7.4 rev. 268868e
+[00028588] *** Copyright (C) 2004-2012 Gostai S.A.S.
+
+lobby.copyright;
+[00041874] *** Urbi version 2.7.4 rev. 268868e
+[00041874] *** Copyright (C) 2004-2012 Gostai S.A.S.
+[00041874] ***
+[00041874] *** Libport version 2.7.4 rev. 268868e
+[00041874] *** Copyright (C) 2004-2012 Gostai S.A.S.
+
+syncline << "doc/specs/lobby.tex:200";
+[01234567:#] "doc/specs/lobby.tex:200"
+//#line 200 "doc/specs/lobby.tex"
+assert {
+Lobby.create.isA(Lobby);
+};
+
+syncline << "doc/specs/lobby.tex:209";
+[01234567:#] "doc/specs/lobby.tex:209"
+//#line 209 "doc/specs/lobby.tex"
+lobby.echo("111", "foo");
+[00015895:foo] *** 111
+lobby.echo(222, "");
+[00051909] *** 222
+lobby.echo(333);
+[00055205] *** 333
+
+syncline << "doc/specs/lobby.tex:221";
+[01234567:#] "doc/specs/lobby.tex:221"
+//#line 221 "doc/specs/lobby.tex"
+lobby.echo([1, "2"], "foo");
+[00015895:foo] *** [1, "2"]
+
+lobby.echoEach([1, "2"], "foo");
+[00015895:foo] *** 1
+[00015895:foo] *** 2
+
+lobby.echoEach([], "foo");
+
+syncline << "doc/specs/lobby.tex:238";
+[01234567:#] "doc/specs/lobby.tex:238"
+//#line 238 "doc/specs/lobby.tex"
+assert {
+lobby in Lobby.instances;
+Lobby in Lobby.instances;
+};
+
+syncline << "doc/specs/lobby.tex:261";
+[01234567:#] "doc/specs/lobby.tex:261"
+//#line 261 "doc/specs/lobby.tex"
+assert {
+Lobby.lobby === this;
+};
+
+syncline << "doc/specs/lobby.tex:268";
+[01234567:#] "doc/specs/lobby.tex:268"
+//#line 268 "doc/specs/lobby.tex"
+Lobby.create| Lobby.create|;
+for (var l : lobbies)
+  assert (l.lobby == Lobby.lobby);
+
+syncline << "doc/specs/lobby.tex:290";
+[01234567:#] "doc/specs/lobby.tex:290"
+//#line 290 "doc/specs/lobby.tex"
+Lobby.create.receive("12;");
+[00478679] 12
+
+syncline << "doc/specs/lobby.tex:302";
+[01234567:#] "doc/specs/lobby.tex:302"
+//#line 302 "doc/specs/lobby.tex"
+lobby.send("111", "foo");
+[00015895:foo] 111
+lobby.send("222", "");
+[00051909] 222
+lobby.send("333");
+[00055205] 333

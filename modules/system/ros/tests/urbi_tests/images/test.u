@@ -1,0 +1,30 @@
+/*
+ * Copyright (C) 2011, Gostai S.A.S.
+ *
+ * This software is provided "as is" without warranty of any kind,
+ * either expressed or implied, including but not limited to the
+ * implied warranties of fitness for a particular purpose.
+ *
+ * See the LICENSE file for more information.
+ */
+
+// Urbi 2.7 does not have InputStream.content.
+if (!InputStream.hasLocalSlot("content"))
+  function InputStream.content
+  {
+    var res = ""|
+    for| (var c = getChar.acceptVoid; !c.isVoid; c = getChar.acceptVoid)
+      res += c|
+    Binary.new("", res);
+  }|;
+
+// Directory of jpeg images.
+var jpgPath = System.urbiShareDir / "images" / "gostai-logo" / "jpeg"|;
+
+// The first one.
+var jpg00Path = jpgPath / "00.jpg"|;
+
+// This image as a proper UBinary.
+var img00 = File.new(jpg00Path).content|;
+// FIXME: remove when UBinary does it.
+img00.keywords = "jpeg" |;

@@ -1,0 +1,165 @@
+syncline << "doc/specs/process.tex:30";
+[01234567:#] "doc/specs/process.tex:30"
+//#line 30 "doc/specs/process.tex"
+var p = Process.new("cat", []);
+[00000004] Process cat
+
+syncline << "doc/specs/process.tex:39";
+[01234567:#] "doc/specs/process.tex:39"
+//#line 39 "doc/specs/process.tex"
+p.status;
+[00000005] not started
+
+p.run;
+p.status;
+[00000006] running
+
+syncline << "doc/specs/process.tex:52";
+[01234567:#] "doc/specs/process.tex:52"
+//#line 52 "doc/specs/process.tex"
+p.stdin << "1\n" |
+p.stdin << "2\n" |
+p.stdin << "3\n" |;
+
+p.status;
+[00000007] running
+
+p.stdin.close;
+
+syncline << "doc/specs/process.tex:70";
+[01234567:#] "doc/specs/process.tex:70"
+//#line 70 "doc/specs/process.tex"
+p.join;
+
+p.status;
+[00000008] exited with status 0
+
+syncline << "doc/specs/process.tex:80";
+[01234567:#] "doc/specs/process.tex:80"
+//#line 80 "doc/specs/process.tex"
+p.stdout.asList;
+[00000009] ["1", "2", "3"]
+
+syncline << "doc/specs/process.tex:91";
+[01234567:#] "doc/specs/process.tex:91"
+//#line 91 "doc/specs/process.tex"
+Process.new("cat", []);
+[00000004] Process cat
+
+Process.new("cat", ["--version"]);
+[00000004] Process cat
+
+syncline << "doc/specs/process.tex:103";
+[01234567:#] "doc/specs/process.tex:103"
+//#line 103 "doc/specs/process.tex"
+do (Process.new("cat", []))
+{
+  assert (asProcess === this);
+}|;
+
+syncline << "doc/specs/process.tex:111";
+[01234567:#] "doc/specs/process.tex:111"
+//#line 111 "doc/specs/process.tex"
+assert {
+Process.new("cat", ["--version"]).asString
+  == "Process cat";
+};
+
+syncline << "doc/specs/process.tex:117";
+[01234567:#] "doc/specs/process.tex:117"
+//#line 117 "doc/specs/process.tex"
+do (Process.new("sleep", ["1"]))
+{
+  assert (!done);
+  run;
+  assert (!done);
+  join;
+  assert (done);
+}|;
+
+syncline << "doc/specs/process.tex:130";
+[01234567:#] "doc/specs/process.tex:130"
+//#line 130 "doc/specs/process.tex"
+do (Process.new("sleep", ["2"]))
+{
+  var t0 = System.time;
+  assert (status.asString == "not started");
+  run;
+  assert (status.asString == "running");
+  join;
+  assert (t0 + 2s <= System.time);
+  assert (status.asString == "exited with status 0");
+}|;
+
+syncline << "doc/specs/process.tex:146";
+[01234567:#] "doc/specs/process.tex:146"
+//#line 146 "doc/specs/process.tex"
+do (Process.new("sleep", ["1"]))
+{
+  run;
+  kill;
+  join;
+  assert (done);
+  assert (status.asString == "killed by signal 9");
+}|;
+
+syncline << "doc/specs/process.tex:159";
+[01234567:#] "doc/specs/process.tex:159"
+//#line 159 "doc/specs/process.tex"
+assert {
+Process.new("cat", ["--version"]).name == "cat";
+};
+
+syncline << "doc/specs/process.tex:165";
+[01234567:#] "doc/specs/process.tex:165"
+//#line 165 "doc/specs/process.tex"
+do (Process.new("sleep", ["1"]))
+{
+  assert (status.asString == "not started");
+  run;
+  assert (status.asString == "running");
+  join;
+  assert (status.asString == "exited with status 0");
+  run;
+}|;
+[00021972:error] !!! run: Process was already run
+
+syncline << "doc/specs/process.tex:185";
+[01234567:#] "doc/specs/process.tex:185"
+//#line 185 "doc/specs/process.tex"
+do (Process.new("urbi-send", ["--no-such-option"]))
+{
+  run;
+  join;
+  assert
+  {
+    stderr.asList ==
+    ["urbi-send: invalid option: --no-such-option",
+     "Try `urbi-send --help' for more information."];
+  };
+}|;
+
+syncline << "doc/specs/process.tex:201";
+[01234567:#] "doc/specs/process.tex:201"
+//#line 201 "doc/specs/process.tex"
+do (Process.new(System.programName, ["--version"]))
+{
+  run;
+  join;
+  assert
+  {
+    stdout.asList[1] == "Copyright (C) 2004-2012 Gostai S.A.S..";
+  };
+}|;
+
+syncline << "doc/specs/process.tex:215";
+[01234567:#] "doc/specs/process.tex:215"
+//#line 215 "doc/specs/process.tex"
+do (Process.new("cat", []))
+{
+  run;
+  stdin << "Hello, World!\n";
+  stdin.close;
+  join;
+  assert (stdout.asList == ["Hello, World!"]);
+}|;

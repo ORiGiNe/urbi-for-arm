@@ -1,0 +1,23 @@
+//#uobject test/all
+sleep(384ms);
+var remall.v = 1 | {};
+remall.typeOf("remall.v");
+[00000001] "double"
+
+remall.v = "foo" | {};
+remall.typeOf("remall.v");
+[00000002] "string"
+
+remall.v = BIN 0;
+[00000003] BIN 0
+[:]
+remall.typeOf("remall.v");
+[00000004] "binary"
+
+remall.v = [1,2] | {};
+remall.typeOf("remall.v");
+[00000005] "list"
+
+remall.v = ["foo" => 4] | {};
+remall.typeOf("remall.v");
+[00000006] "dictionary"

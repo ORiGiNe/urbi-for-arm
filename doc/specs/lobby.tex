@@ -1,0 +1,356 @@
+%% Copyright (C) 2009-2012, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Lobby}
+
+A \dfn{lobby} is the local environment for each (remote or local)
+connection to an \urbi server.
+
+\subsection{Prototypes}
+\begin{itemize}
+\item \refSlot[Channel]{topLevel}, an instance of \refObject{Channel}
+  with an empty Channel name.
+\end{itemize}
+
+\subsection{Construction}
+
+A lobby is implicitly created at each connection. At the top level,
+\this is a \dfn{Lobby}.
+
+\begin{urbiscript}
+this.protos;
+[00000001] [Lobby]
+this.protos[0].protos;
+[00000003] [Channel_0xADDR]
+\end{urbiscript}
+
+Lobbies cannot be cloned, they must be created using \refSlot{create}.
+
+\begin{urbiscript}
+Lobby.new;
+[00000177:error] !!! new: `Lobby' objects cannot be cloned
+Lobby.create;
+[00000174] Lobby_0x126450
+\end{urbiscript}
+
+
+\subsection{Examples}
+
+Since every lobby is-a \refObject{Channel}, one can use the methods of
+Channel.
+
+\begin{urbiscript}
+lobby << 123;
+[00478679] 123
+lobby << "foo";
+[00478679] "foo"
+\end{urbiscript}
+
+\subsection{Slots}
+\begin{urbiscriptapi}
+\item[authors] Credit the authors of \usdk.  See also \refSlot{thanks} and
+  \autoref{sec:genesis}.
+\begin{urbiscript}
+lobby.authors;
+[00478679] *** Authors of Urbi:
+[00478679] ***  - Jean-Christophe Baillie (original designer)
+[00478679] ***
+[00478679] *** Urbi 2 and subsequent versions:
+[00478679] ***  - Akim Demaille
+[00478679] ***  - Matthieu Nottale
+[00478679] ***  - Quentin Hocquet
+[00478679] ***
+[00478679] *** See also `thanks;'.
+\end{urbiscript}
+
+\item[banner] Internal.  Display \usdk banner.
+\begin{urbiscript}
+lobby.banner;
+[00006124] *** ********************************************************
+[00006124] *** Urbi version 2.7.4 rev. 268868e
+[00006124] *** Copyright (C) 2004-2012 Gostai S.A.S.
+[00006124] ***
+[00006124] *** This program comes with ABSOLUTELY NO WARRANTY.  It can
+[00006124] *** be used under certain conditions.  Type `license;',
+[00006124] *** `authors;', or `copyright;' for more information.
+[00006124] ***
+[00006124] *** Check our community site: http://www.urbiforge.org.
+[00006124] *** ********************************************************
+\end{urbiscript}
+
+\item[bytesReceived] The number of bytes that were ``input'' to \this.  See
+  also \refSlot{receive}.
+\begin{urbiscript}
+var l = Lobby.create|;
+assert (l.bytesReceived == 0);
+
+l.receive("123456789;");
+[00000022] 123456789
+assert (l.bytesReceived == 10);
+
+l.receive("1234;");
+[00000023] 1234
+assert (l.bytesReceived == 15);
+\end{urbiscript}
+\begin{urbicomment}
+removeSlot("l")|;
+\end{urbicomment}
+
+\item[bytesSent] The number of bytes that were ``output'' by \this.  See
+  also \refSlot{send} and \refSlot{write}.
+\begin{urbicomment}
+// We have a non deterministic bug that happens from time to time in here.
+// Nobody could find it for years.  Let's work around it, it does not seem
+// to exist with Urbi 3.
+sleep(1s);
+\end{urbicomment}
+\begin{urbiscript}
+var l = Lobby.create|;
+assert (l.bytesSent == 0);
+
+l.send("0123456789");
+[00011988] 0123456789
+// 22 = "[00011988] 0123456789\n".size.
+assert (l.bytesSent == 22);
+
+l.send("xx", "label");
+[00061783:label] xx
+// 20 = "[00061783:label] xx\n".size.
+assert (l.bytesSent == 42);
+
+l.write("[01234567]\n");
+[01234567]
+assert (l.bytesSent == 53);
+\end{urbiscript}
+\begin{urbicomment}
+removeSlot("l")|;
+\end{urbicomment}
+
+\item[connected]
+  Whether \this is connected.
+\begin{urbiassert}
+connected;
+\end{urbiassert}
+
+\item[connectionTag] The tag of all code executed in the context of \this.
+  This tag applies to \this, but the top-level loop is immune to
+  \refSlot[Tag]{stop}, therefore \lstinline|connectionTag| controls every
+  thing that was launched from this lobby, yet the lobby itself is still
+  usable.
+\begin{urbiscript}
+every (1s) echo(1), sleep(0.5s); every (1s) echo(2),
+sleep(1.2s);
+connectionTag.stop;
+[00000507] *** 1
+[00001008] *** 2
+[00001507] *** 1
+[00002008] *** 2
+
+"We are alive!";
+[00002008] "We are alive!"
+
+every (1s) echo(3), sleep(0.5s); every (1s) echo(4),
+sleep(1.2s);
+connectionTag.stop;
+[00003208] *** 3
+[00003710] *** 4
+[00004208] *** 3
+[00004710] *** 4
+
+"and kicking!";
+[00002008] "and kicking!"
+\end{urbiscript}
+
+  Of course, a background job may stop a foreground one.
+\begin{urbiscript}
+{ sleep(1.2s); connectionTag.stop; },
+// Note the `;', this is a foreground statement.
+every (1s) echo(5);
+[00005008] *** 5
+[00005508] *** 5
+
+"bye!";
+[00006008] "bye!"
+\end{urbiscript}
+
+\item[copyright](<deep> = true)%~\\
+  Display the copyright of \usdk.  Include copyright information
+  about sub-components if \var{deep}.
+\begin{urbiscript}
+lobby.copyright(false);
+[00028588] *** Urbi version 2.7.4 rev. 268868e
+[00028588] *** Copyright (C) 2004-2012 Gostai S.A.S.
+
+lobby.copyright;
+[00041874] *** Urbi version 2.7.4 rev. 268868e
+[00041874] *** Copyright (C) 2004-2012 Gostai S.A.S.
+[00041874] ***
+[00041874] *** Libport version 2.7.4 rev. 268868e
+[00041874] *** Copyright (C) 2004-2012 Gostai S.A.S.
+\end{urbiscript}
+
+\item[create]
+  Instantiate a new Lobby.
+\begin{urbiassert}
+Lobby.create.isA(Lobby);
+\end{urbiassert}
+
+\item[echo](<value>, <channel> = "")%
+  Send \lstinline|\var{value}.asString| to \this, prefixed
+  by the \refObject{String} \var{channel} name if specified.  This is
+  the preferred way to send informative messages (prefixed with
+  \samp{***}).
+\begin{urbiscript}
+lobby.echo("111", "foo");
+[00015895:foo] *** 111
+lobby.echo(222, "");
+[00051909] *** 222
+lobby.echo(333);
+[00055205] *** 333
+\end{urbiscript}
+
+\item[echoEach](<list>, <channel> = "")%
+  Apply \lstinline|echo(\var{m}, \var{channel})| for each member \var{m} of
+  \var{list}.
+\begin{urbiscript}
+lobby.echo([1, "2"], "foo");
+[00015895:foo] *** [1, "2"]
+
+lobby.echoEach([1, "2"], "foo");
+[00015895:foo] *** 1
+[00015895:foo] *** 2
+
+lobby.echoEach([], "foo");
+\end{urbiscript}
+
+%\item \lstinline|help|\experimental\\
+%  Launch the tutorial.
+
+\item[instances]
+  A list of the currently alive lobbies.  It contains at least the Lobby
+  object itself, and the current \refSlot{lobby}.
+\begin{urbiassert}
+lobby in Lobby.instances;
+Lobby in Lobby.instances;
+\end{urbiassert}
+
+\item[license]
+  Display the end user license agreement of the \usdk.
+\begin{urbiunchecked}
+lobby.license;
+[00000000] ***                     GNU AFFERO GENERAL PUBLIC LICENSE
+[00000000] ***                        Version 3, 19 November 2007
+[00000000] ***
+[00000000] ***  Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+[00000000] ***  Everyone is permitted to copy and distribute verbatim copies
+[00000000] ***  of this license document, but changing it is not allowed.
+[00000000] ***
+[:][...]
+[00000000] *** For more information on this, and how to apply and follow the GNU AGPL, see
+[00000000] *** <http://www.gnu.org/licenses/>.
+\end{urbiunchecked}
+
+\item[lobby]
+  The lobby of the current connection.  This is typically \this.
+\begin{urbiassert}
+Lobby.lobby === this;
+\end{urbiassert}
+
+  But when several connections are active (e.g., when there are remote
+  connections), it can be different from the target of the call.
+
+\begin{urbiscript}
+Lobby.create| Lobby.create|;
+for (var l : lobbies)
+  assert (l.lobby == Lobby.lobby);
+\end{urbiscript}
+
+\item[onDisconnect](<lobby>)%
+  Event launched when \this is disconnected.  There is a single event
+  instance for all the lobby, \refSlot[Lobby]{onDisconnect}, the
+  disconnected lobby being passed as argument.
+
+\item[quit] Shut this lobby down, i.e., close the connection.  The
+  server is still running, see \refSlot[System]{shutdown} to quit the
+  server.
+
+\item[receive](<value>)%
+  This is low-level routine.  Pretend the \refObject{String}
+  \var{value} was received from the connection.  There is no guarantee
+  that \var{value} will be the next program block that will be
+  processed: for instance, if you load a file which, in its middle,
+  uses \lstinline|lobby.receive("foo")|, then \lstinline|"foo"| will
+  be appended after the end of the file.
+\begin{urbiscript}
+Lobby.create.receive("12;");
+[00478679] 12
+\end{urbiscript}
+
+\item[remoteIP]
+  When \this is connected to a remote server, it's Internet address.
+
+\item[send](<value>, <channel> = "")%
+  This is low-level routine.  Send the \refObject{String} \var{value}
+  to \this, prefixed by the \refObject{String}
+  \var{channel} name if specified.
+\begin{urbiscript}
+lobby.send("111", "foo");
+[00015895:foo] 111
+lobby.send("222", "");
+[00051909] 222
+lobby.send("333");
+[00055205] 333
+\end{urbiscript}
+
+
+\item[thanks] Credit the contributors of \usdk.  See also \refSlot{authors}
+  and \autoref{sec:genesis}.
+%% FIXME: Can't credit everyone because listings does not support UTF-8 in
+%% these environments... And Benoît Sigoure, for instance, has some.
+\begin{urbiunchecked}
+lobby.thanks;
+[00478679] *** Contributors to Urbi:
+[00478679] ***
+[00478679] ***  - Adam Oleksy <adam.oleksy@pwr.wroc.pl>
+[00478679] ***  - Alexandre Morgand
+[:][...]
+[00478679] ***
+[00478679] *** See also `authors;'.
+\end{urbiunchecked}
+
+
+\item[wall](<value>, <channel> = "")%
+  Perform \lstinline|echo(\var{value}, \var{channel})| on all the
+  existing lobbies (except Lobby itself).
+\begin{urbiscript}[firstnumber=1]
+Lobby.wall("111", "foo");
+[00015895:foo] *** 111
+\end{urbiscript}
+
+\item[write](<value>)%
+  This is low-level routine.  Send the \refObject{String} \var{value}
+  to the connection.  Note that because of buffering, the output might
+  not be visible before an end-of-line character is output.
+\begin{urbiscript}
+lobby.write("[");
+lobby.write("999999999:");
+lobby.write("myTag] ");
+lobby.write("Hello, World!");
+lobby.write("\n");
+[999999999:myTag] Hello, World!
+\end{urbiscript}
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

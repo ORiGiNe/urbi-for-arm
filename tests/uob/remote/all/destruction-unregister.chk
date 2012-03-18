@@ -1,0 +1,24 @@
+//#uobject test/all
+
+var a = remall.new(0) |;
+
+assert (remall.getDestructionCount == 0);
+
+a.setNotifyChangeByName("remall.a") |
+remall.a = 1 | sleep(100ms) |
+assert (a.lastChange == "remall.a");
+
+// Make it run a lot.
+a.setNotifyChangeByName("remall.b") |
+a.setNotifyChangeByName("remall.c") |
+detach({loop {remall.a = 12 | remall.b = 12 | remall.c=12}})|;
+sleep(200ms);
+a.destroy | a = 1|;
+
+// yield a bit just in case
+sleep(100ms);
+assert (remall.getDestructionCount == 1);
+
+// This should not segfault.
+remall.a = 2;
+[00000004] 2

@@ -1,0 +1,23 @@
+"=>" % [];
+[00000001] "=>"
+
+"=> %s" % [];
+[00000002:error] !!! input.u:@.1-12: %: too few arguments for format
+
+"=> %s" % ["foo"];
+[00000003] "=> foo"
+
+"=> %s" % ["foo", "bar"];
+[00000004:error] !!! input.u:@.1-24: %: too many arguments for format
+
+"%s%" % [1];
+[00000005:error] !!! input.u:@.1-11: %: format: trailing `%'
+
+
+class C { function uid {"0xADDR"} } | {};
+
+"The uid of %s is %s" % [C, C.uid];
+[00000006] "The uid of C is 0xADDR"
+
+"%s are 100%% functional!" % ["Formats"];
+[00000007] "Formats are 100% functional!"

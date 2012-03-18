@@ -1,0 +1,297 @@
+%% Copyright (C) 2010, 2011, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\chapter{Pioneer 3-DX}
+\label{sec:p3dx}
+\setHtmlFileName{p3dx}
+
+This UObject has been created to drive the Pioneer 3-DX robot. It uses the
+Aria/Arnl manufacturer library.
+
+\section{Getting started}
+
+\subsection{Prerequisites}
+\begin{itemize}
+\item Have a Pioneer P3-DX robot with linux or any linux distribution with
+  MobileSim installed (\url{http://robots.mobilerobots.com/wiki/MobileSim}).
+
+\item Have Urbi Sdk and ARNL libraries installed
+  (\url{http://robots.mobilerobots.com/wiki/ARNL,_SONARNL_and_MOGS}).
+\end{itemize}
+
+\subsection{Installation}
+\begin{itemize}
+\item Untar you archive file
+\item Move in your archive and create a config.mk file where variables
+  \env{UPATH} and \env{ARNLPATH} are defined. For example
+\begin{shell}
+UPATH=/usr/local/gostai	 # path for your urbi-sdk directory
+ARNLPATH=/usr/local/Arnl # path for your arnl directory
+\end{shell}
+\item Run \command{make} to compile
+\end{itemize}
+
+\subsection{Running}
+\begin{itemize}
+\item If you are working with the simulator MobileSim, make sure it is
+  running.
+\item Run \samp{make run}.
+\item Connect to the Urbi server, for instance with \samp{telnet IPYouNeed
+    54000}.
+\end{itemize}
+
+
+\section{How to use Pioneer 3-DX robot}
+
+The following objects are defined to support the Pioneer 3-DX Robot.  Please
+note that when loaded, \file{p3dx.u} also defines the \lstinline{robot}
+variable to enforce the conformance with the Gostai Standard Robotics API
+(\autoref{sec:naming}).
+
+Below, we denote read-only slots with \samp{r}, and read-write slots with
+\samp{rw}.
+
+\let\subsectionOrig\subsection
+\let\subsection\subsectionObject
+
+\subsection{P3dx}
+\begin{urbiscriptapi}
+\item[body] The \refObject{P3dx.body} class.
+
+
+\item[go](<d>) Cover \var{d} meters.
+
+
+\item[model] Model of the robot (r).
+
+
+\item[moveTo](<list>) Try to plan a path to position \var{list} == [x,y,th]
+  in absolute frame.  \code{mapFileName} must have a valid value and
+  \code{motorsLoad} must be 1.
+
+
+\item[name] Name of the robot (r).
+
+
+\item[robotType] Type of the robot (r).
+
+
+\item[serial] Serial number of the robot (r).
+
+
+\item[stop] Stop any movement.
+
+
+\item[turn](<r>) Turn \var{r} radians.
+\end{urbiscriptapi}
+
+\subsection{P3dx.body}
+
+\begin{urbiscriptapi}
+\item[load] Enable the motors (rw)
+
+
+\item[safetyDistanceMax] Speed is not restrained if all obstacles
+
+
+\item[safetyDistanceMin] Moving is not allowed if any obstacle is closer
+  (rw)
+
+
+\item[sonar] The object \refObject{P3dx.body.sonar}.
+
+
+\item|wheel[left].speed| Left wheel translation speed (r)
+
+
+\item|wheel[right].speed| Right wheel translation speed (r)
+\end{urbiscriptapi}
+
+
+\subsection{P3dx.body.odometry}
+\begin{urbiscriptapi}
+\item[coveredAngle] Total yaw angle covered (r)
+
+
+\item[coveredDistance] Total distance covered (r)
+
+
+\item[position] List for [x, y, z, yaw] in absolute frame (rw)
+
+
+\item[x] Odometric x position (r)
+
+
+\item[y] Odometric y position (r)
+
+
+\item[yaw] Odometric yaw angle (r)
+
+
+\item[z] Always 0 (r)
+\end{urbiscriptapi}
+
+
+
+\subsection{P3dx.body.sonar}
+
+%% Don't want to push all this in the index, so don't use urbiscriptapi
+%% although it's a natural choice.
+\begin{itemize}
+\item \lstinline|load|\\
+  Enable the sonars (rw).
+\item \lstinline|[front][left][left].val|\\
+  value for the front/left/left sonar (r)
+\item \lstinline|[front][left][front].val|\\
+  value for the front/left/front sonar (r)
+\item \lstinline|[front][front][left].val|\\
+  value for the front/front/left sonar (r)
+\item \lstinline|[front][front][right].val|\\
+  value for the front/front/right sonar (r)
+\item \lstinline|[front][right][front].val|\\
+  value for the front/right/front sonar (r)
+\item \lstinline|[front][right][right].val|\\
+  value for the front/right/right sonar (r)
+\item \lstinline|[right][front].val|\\
+  value for the right/front sonar (r)
+\item \lstinline|[right][back].val|\\
+  value for the right/back sonar (r)
+\item \lstinline|[back][right][right].val|\\
+  value for the back/right/right sonar (r)
+\item \lstinline|[back][right][back].val|\\
+  value for the back/right/back sonar (r)
+\item \lstinline|[back][front][right].val|\\
+  value for the back/front/right sonar (r)
+\item \lstinline|[back][front][left].val|\\
+  value for the back/front/left sonar (r)
+\item \lstinline|[back][left][back].val|\\
+  value for the back/left/back sonar (r)
+\item \lstinline|[back][left][left].val|\\
+  value for the back/left/left sonar (r)
+\item \lstinline|[left][back].val|\\
+  value for the left/back sonar (r)
+\item \lstinline|[left][front].val|\\
+  value for the right/front sonar (r)
+\end{itemize}
+
+\subsection{P3dx.body.laser}
+
+\begin{urbiscriptapi}
+\item[angleMax] Angle of the first value in the robot frame (r)
+
+
+\item[angleMin] Angle of the last value in the robot frame (r)
+
+
+\item[laserDistanceMax] Maximum distance the laser can return (r)
+
+
+\item[laserDistanceMin] Minimum distance the laser can return (r)
+
+
+\item[lastCaptureTimestamp] Last time laser read its values (r)
+
+
+\item[load] Connect to sick laser (rw)
+
+
+\item[resolution] Angle between to laser values (r)
+
+
+\item[val] 181 distances given by the laser (r)
+\end{urbiscriptapi}
+
+
+\subsection{P3dx.body.camera}
+
+\begin{urbiscriptapi}
+\item[load] Connect the camera mechanical aspect (rw)
+
+
+\item[pitch] Pitch value for camera (rw)
+
+
+\item[yaw] Yaw value for camera (rw)
+
+
+\item[zoom] Zoom value for camera (rw)
+\end{urbiscriptapi}
+
+\subsection{P3dx.body.x}
+\begin{urbiscriptapi}
+\item[speed] Translation speed (rw)
+\end{urbiscriptapi}
+
+\subsection{P3dx.body.yaw}
+\begin{urbiscriptapi}
+\item[speed] Rotation speed (rw) are further (rw)
+\end{urbiscriptapi}
+
+\subsection{P3dx.planner}
+\begin{urbiscriptapi}
+\item[locFailureEvent] Event emit-ed if localization fails. In this case
+  \code{mapFileName} is set to ``''.
+
+
+\item[mapFileName] Path to a map file. Setting a string value will also try
+  to start a localization task. \code{laserLoad} must be 1. This may fail
+  if:
+  \begin{itemize}
+  \item the file is unknown;
+  \item the robot cannot localize itself on the map (the initial position of
+    the robot SHOULD be equal to the Home position inside the map file).
+  \end{itemize}
+
+  Value ``'' deletes the previous map and stops the localization task.
+
+  At any time, it might be set to ``'' if the localization task fails.
+
+
+\item[pathPlanningEvent] Event emitted when path planning ends (r) with first
+  parameter equal to:
+  \begin{sublist}
+    \begin{description}
+    \item[0] if the path planning fails;
+    \item[1] if it succeeds;
+    \item[2] if it is canceled for any reason (new path, manual motion
+      commands, change of map).
+    \end{description}
+  \end{sublist}
+\end{urbiscriptapi}
+
+\subsection{P3dx.body.battery}
+\begin{urbiscriptapi}
+\item[voltage] Current voltage (r)
+\end{urbiscriptapi}
+
+\let\subsection\subsectionOrig
+
+
+\section{Mobility modes}
+Three modes are available in order to control the Pioneer 3-DX mobility:
+\begin{itemize}
+\item Use \code{go} and \code{turn} to choose a distance and an angle.
+\item Use \code{speedDelta} and \code{speedAlpha} to choose translation and
+  rotation speeds.
+\item Use \code{moveTo} to select a goal on a map that must be reached thank
+  to path planning. Note that \code{distMin} and \code{distMax} have no
+  impact in this mode.
+\end{itemize}
+
+\section{About units}
+Every physical quantity is in SI units (m, s, rad, ...).
+
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

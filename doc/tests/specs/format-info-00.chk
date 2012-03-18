@@ -1,0 +1,90 @@
+syncline << "doc/specs/format-info.tex:27";
+[01234567:#] "doc/specs/format-info.tex:27"
+//#line 27 "doc/specs/format-info.tex"
+var f = FormatInfo.new("%+2.3d");
+[00000001] %+2.3d
+
+syncline << "doc/specs/format-info.tex:84";
+[01234567:#] "doc/specs/format-info.tex:84"
+//#line 84 "doc/specs/format-info.tex"
+assert {
+FormatInfo.new("%s").alignment == 1;
+FormatInfo.new("%=s").alignment == 0;
+FormatInfo.new("%-s").alignment == -1;
+};
+
+syncline << "doc/specs/format-info.tex:92";
+[01234567:#] "doc/specs/format-info.tex:92"
+//#line 92 "doc/specs/format-info.tex"
+assert {
+FormatInfo.new("%s").alt == false;
+FormatInfo.new("%#s").alt == true;
+};
+
+syncline << "doc/specs/format-info.tex:100";
+[01234567:#] "doc/specs/format-info.tex:100"
+//#line 100 "doc/specs/format-info.tex"
+assert {
+FormatInfo.new("%s").group == "";
+FormatInfo.new("%'s").group == " ";
+};
+
+syncline << "doc/specs/format-info.tex:107";
+[01234567:#] "doc/specs/format-info.tex:107"
+//#line 107 "doc/specs/format-info.tex"
+assert {
+FormatInfo.new("%s").pad == " ";
+FormatInfo.new("%0s").pad == "0";
+};
+
+syncline << "doc/specs/format-info.tex:114";
+[01234567:#] "doc/specs/format-info.tex:114"
+//#line 114 "doc/specs/format-info.tex"
+assert {
+FormatInfo.new("%#'12.8s").pattern == "%#'12.8s";
+};
+
+syncline << "doc/specs/format-info.tex:125";
+[01234567:#] "doc/specs/format-info.tex:125"
+//#line 125 "doc/specs/format-info.tex"
+assert {
+FormatInfo.new("%s").precision == 6;
+FormatInfo.new("%23.3s").precision == 3;
+};
+
+syncline << "doc/specs/format-info.tex:132";
+[01234567:#] "doc/specs/format-info.tex:132"
+//#line 132 "doc/specs/format-info.tex"
+assert {
+FormatInfo.new("%s").prefix == "";
+FormatInfo.new("% s").prefix == " ";
+FormatInfo.new("%+s").prefix == "+";
+};
+
+syncline << "doc/specs/format-info.tex:141";
+[01234567:#] "doc/specs/format-info.tex:141"
+//#line 141 "doc/specs/format-info.tex"
+assert {
+FormatInfo.new("%s").spec == "s";
+FormatInfo.new("%23.3s").spec == "s";
+FormatInfo.new("%'X").spec == "x";
+};
+
+syncline << "doc/specs/format-info.tex:152";
+[01234567:#] "doc/specs/format-info.tex:152"
+//#line 152 "doc/specs/format-info.tex"
+assert {
+FormatInfo.new("%s").uppercase == 0;
+FormatInfo.new("%d").uppercase == -1;
+FormatInfo.new("%D").uppercase == 1;
+FormatInfo.new("%x").uppercase == -1;
+FormatInfo.new("%X").uppercase == 1;
+};
+
+syncline << "doc/specs/format-info.tex:162";
+[01234567:#] "doc/specs/format-info.tex:162"
+//#line 162 "doc/specs/format-info.tex"
+assert {
+FormatInfo.new("%s").width == 0;
+FormatInfo.new("%10s").width == 10;
+};

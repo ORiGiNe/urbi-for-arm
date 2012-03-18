@@ -1,0 +1,68 @@
+%% Copyright (C) 2009-2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Triplet}
+
+A \dfn{triplet} (or \dfn{triple}) is a container storing three
+objects.
+
+
+\subsection{Prototype}
+\begin{refObjects}
+\item[Tuple]
+\end{refObjects}
+
+\subsection{Construction}
+
+A \lstinline|Triplet| is constructed with three arguments.
+
+\begin{urbiscript}[firstnumber=1]
+Triplet.new(1, 2, 3);
+[00000001] (1, 2, 3)
+
+Triplet.new(1, 2);
+[00000003:error] !!! new: expected 3 arguments, given 2
+
+Triplet.new(1, 2, 3, 4);
+[00000003:error] !!! new: expected 3 arguments, given 4
+\end{urbiscript}
+
+\subsection{Slots}
+\begin{urbiscriptapi}
+\item[first]
+  Return the first member of the pair.
+\begin{urbiassert}
+Triplet.new(1, 2, 3).first == 1;
+Triplet[0] === Triplet.first;
+\end{urbiassert}
+
+\item[second]
+  Return the second member of the triplet.
+\begin{urbiassert}
+Triplet.new(1, 2, 3).second == 2;
+Triplet[1] === Triplet.second;
+\end{urbiassert}
+
+\item[third]
+  Return the third member of the triplet.
+\begin{urbiassert}
+Triplet.new(1, 2, 3).third == 3;
+Triplet[2] === Triplet.third;
+\end{urbiassert}
+\end{urbiscriptapi}
+
+
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

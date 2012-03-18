@@ -1,0 +1,13 @@
+at (true)
+  onleave { echo ("hello"); };
+[00000001:warning] !!! input.u:1.10-9: implicit empty instruction.  Use '{}' to make it explicit.
+
+if (1);
+[00000002:warning] !!! input.u:@.7-6: implicit empty instruction.  Use '{}' to make it explicit.
+
+if (1) else 2;
+[00000003:warning] !!! input.u:@.7-6: implicit empty instruction.  Use '{}' to make it explicit.
+
+whenever (true)
+  else { echo ("hello"); };
+[00000004:warning] !!! input.u:11.16-15: implicit empty instruction.  Use '{}' to make it explicit.

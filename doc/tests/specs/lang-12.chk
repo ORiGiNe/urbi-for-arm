@@ -1,0 +1,201 @@
+syncline << "doc/specs/lang.tex:3734";
+[01234567:#] "doc/specs/lang.tex:3734"
+//#line 3734 "doc/specs/lang.tex"
+// If an iteration is longer than the given period, it will overlap
+// with the next one.
+timeout (2.8s)
+  every (1s)
+  {
+    echo("In");
+    sleep(1.5s);
+    echo("Out");
+  };
+[00000000] *** In
+[00001000] *** In
+[00001500] *** Out
+[00002000] *** In
+[00002500] *** Out
+
+syncline << "doc/specs/lang.tex:3762";
+[01234567:#] "doc/specs/lang.tex:3762"
+//#line 3762 "doc/specs/lang.tex"
+for, (var i = 3; 0 < i; i -= 1)
+{
+  var j = i |
+  echo ("in: i = %s, j = %s" % [i, j]);
+  sleep(j/10);
+  echo ("out: i = %s, j = %s" % [i, j]);
+};
+echo ("done");
+[00000144] *** in: i = 3, j = 3
+[00000145] *** in: i = 2, j = 2
+[00000145] *** in: i = 1, j = 1
+[00000246] *** out: i = 0, j = 1
+[00000346] *** out: i = 0, j = 2
+[00000445] *** out: i = 0, j = 3
+[00000446] *** done
+
+syncline << "doc/specs/lang.tex:3780";
+[01234567:#] "doc/specs/lang.tex:3780"
+//#line 3780 "doc/specs/lang.tex"
+for, (var i = 9; 0 < i; i -= 1)
+{
+  var j = i;
+  if (j % 2)
+    continue
+  else if (j == 4)
+    break
+  else
+    echo("%s: done" % j)
+};
+echo("done");
+[00000146] *** 8: done
+[00000148] *** 6: done
+[00000150] *** done
+
+syncline << "doc/specs/lang.tex:3803";
+[01234567:#] "doc/specs/lang.tex:3803"
+//#line 3803 "doc/specs/lang.tex"
+for& (var i: [0, 1, 2])
+{
+  echo (i * i);
+  echo (i * i);
+};
+[00000000] *** 0
+[00000000] *** 1
+[00000000] *** 4
+[00000000] *** 0
+[00000000] *** 1
+[00000000] *** 4
+
+syncline << "doc/specs/lang.tex:3820";
+[01234567:#] "doc/specs/lang.tex:3820"
+//#line 3820 "doc/specs/lang.tex"
+for& (var i: [0, 1, 2])
+{
+  var j = i;
+  if (j == 1)
+    continue;
+  echo (j);
+};
+[00020653] *** 0
+[00021054] *** 2
+
+syncline << "doc/specs/lang.tex:3835";
+[01234567:#] "doc/specs/lang.tex:3835"
+//#line 3835 "doc/specs/lang.tex"
+for& (var i: [0, 1, 2])
+{
+  var j = i;
+  echo (j);
+  if (j == 1)
+   { echo ("break");
+    break;};
+  sleep(1s);
+  echo (j);
+};
+[00000001] *** 0
+[00000001] *** 1
+[00000001] *** 2
+[00000002] *** break
+
+syncline << "doc/specs/lang.tex:3867";
+[01234567:#] "doc/specs/lang.tex:3867"
+//#line 3867 "doc/specs/lang.tex"
+assert {
+{
+  var n = 10|;
+  var res = []|;
+  loop,
+  {
+    n-- |
+    res << n |
+    if (n == 0)
+      break
+  };
+  res.sort
+}
+==
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+};
+
+syncline << "doc/specs/lang.tex:3899";
+[01234567:#] "doc/specs/lang.tex:3899"
+//#line 3899 "doc/specs/lang.tex"
+{
+  var e = Event.new;
+  {
+    waituntil (e?);
+    echo ("caught e");
+  },
+  e!;
+[00021054] *** caught e
+  e!;
+};
+
+syncline << "doc/specs/lang.tex:3915";
+[01234567:#] "doc/specs/lang.tex:3915"
+//#line 3915 "doc/specs/lang.tex"
+{
+  var e = Event.new;
+  e.trigger;
+  {
+    waituntil (e?);
+    echo ("caught e");
+  };
+[00021054] *** caught e
+  {
+    waituntil (e?);
+    echo ("caught e");
+  };
+[00021054] *** caught e
+  {
+    waituntil (e?);
+    echo ("caught e");
+  };
+[00021054] *** caught e
+};
+
+syncline << "doc/specs/lang.tex:3940";
+[01234567:#] "doc/specs/lang.tex:3940"
+//#line 3940 "doc/specs/lang.tex"
+{
+  var e = Event.new;
+  {
+    waituntil (e?(1, var b));
+    echo ("caught e(1, %s)" % b);
+  },
+  e!;
+  e!(1);
+  e!(2, 2);
+  e!(1, 2);
+[00021054] *** caught e(1, 2)
+  e!(1, 2);
+};
+
+syncline << "doc/specs/lang.tex:3958";
+[01234567:#] "doc/specs/lang.tex:3958"
+//#line 3958 "doc/specs/lang.tex"
+{
+  var e = Event.new;
+  e!;
+  {
+    waituntil (e?);
+    echo ("caught e");
+  },
+  e!;
+[00021054] *** caught e
+};
+
+syncline << "doc/specs/lang.tex:3976";
+[01234567:#] "doc/specs/lang.tex:3976"
+//#line 3976 "doc/specs/lang.tex"
+{
+  var foo = Object.new;
+  {
+    waituntil (foo.hasLocalSlot("bar"));
+    echo(foo.getLocalSlot("bar"));
+  },
+  var foo.bar = 123|;
+};
+[00021054] *** 123

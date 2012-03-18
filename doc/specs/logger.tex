@@ -1,0 +1,195 @@
+%% Copyright (C) 2011, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Logger}
+
+\lstinline|Logger| is used to report information to the final user or to the
+developer. It allows to pretty print warnings, errors, debug messages or
+simple logs. \lstinline|Logger| can also be used as \refObject{Tag} objects
+for it to handle nested calls indentation. A log message is assigned a
+category which is shown between brackets at beginning of lines, and a level
+which defines the context in which it has to be shown (see
+\autoref{sec:tools:env}). Log level definition and categories filtering can
+be changed using environment variables defined in \autoref{sec:tools:env}.
+
+\subsection{Examples}
+
+The proper use of Loggers is to instantiate your own category, and then to
+use the operator \lstinline|<<| for log messages, possibly qualified by the
+proper level (in increase order of importance: \refSlot{dump},
+\refSlot{debug}, \refSlot{trace}, \refSlot{log}, \refSlot{warn},
+\refSlot{err}):
+
+\begin{urbiscript}
+var logger = Logger.new("Category")|;
+
+logger.dump << "Low level debug message"|;
+// Nothing displayed, unless the debug level is set to DUMP.
+
+logger.warn << "something wrong happened, proceeding"|;
+[       Category        ] something wrong happened, proceeding
+
+logger.err << "something really bad happened!"|;
+[       Category        ] something really bad happened!
+\end{urbiscript}
+
+You may also directly use the logger and passing arguments to these slots.
+
+\begin{urbiscript}
+Logger.log("message", "Category") |;
+[       Category        ] message
+
+Logger.log("message", "Category") :
+{
+  Logger.log("indented message", "SubCategory")
+}|;
+[       Category        ] message
+[      SubCategory      ]   indented message
+\end{urbiscript}
+
+\subsection{Prototypes}
+\begin{refObjects}
+\item[Tag]
+\end{refObjects}
+
+\subsection{Construction}
+
+\lstinline|Logger| can be used as is, without being cloned. It is possible
+to clone \lstinline|Logger| defining a category and/or a level of debug.
+
+\begin{urbiscript}
+Logger.log("foo");
+[        Logger         ] foo
+[00004702] Logger<Logger>
+
+Logger.log("foo", "Category") |;
+[       Category        ] foo
+
+var l = Logger.new("Category2");
+[00004703] Logger<Category2>
+
+l.log("foo")|;
+[       Category2       ] foo
+
+l.log("foo", "ForcedCategory") |;
+[    ForcedCategory     ] foo
+\end{urbiscript}
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+
+\item['<<'](<object>)%
+  Allow to use the \lstinline|Logger| object as a \refObject{Channel}. This
+  slot can only be used if both category and level have been defined when
+  cloning.
+
+\begin{urbiscript}
+l = Logger.new("Category", Logger.Levels.Log);
+[00090939] Logger<Category>
+l << "foo";
+[       Category        ] foo
+[00091939] Logger<Category>
+\end{urbiscript}
+
+\item[debug](<message> = "", <category> = category)%
+  Report a debug \var{message} of \var{category} to the user. It will be
+  shown if the debug level is \lstinline|Debug| or \lstinline|Dump|. Return
+  \this to allow chained operations.
+\begin{urbiscript}
+// None of these are displayed unless the current level is at least DEBUG.
+logger.debug << "debug 1"|;
+logger.debug("debug 2")|;
+logger.debug("debug 3", "Category2")|;
+\end{urbiscript}
+
+\item[dump](<message> = "", <category> = category)%
+  Report a debug \var{message} of \var{category} to the user. It will be
+  shown if the debug level is \lstinline|Dump|. Return \this to allow
+  chained operations.
+\begin{urbiscript}
+// None of these are displayed unless the current level is at least DEBUG.
+logger.dump << "dump 1"|;
+logger.dump("dump 2")|;
+logger.dump("dump 3", "Category2")|;
+\end{urbiscript}
+
+\item[err](<message> = "", <category> = category)%
+  Report an error \var{message} of \var{category} to the user. Return \this
+  to allow chained operations.
+
+\item[init](<category>)%
+  Define the \var{category} of the new \lstinline|Logger| object. If no
+  category is given the new \lstinline|Logger| will inherit the category of
+  its prototype.
+
+\item[Levels]%
+  An \refObject{Enumeration} of the log levels defined in
+  \autoref{sec:tools:env}.
+
+\begin{urbiscript}
+Logger.Levels.values;
+[00000001] [None, Log, Trace, Debug, Dump]
+\end{urbiscript}
+
+\item[log](<message> = "", <category> = category)%
+  Report a debug \var{message} of \var{category} to the user. It will be
+  shown if debug is not disabled. Return \this to allow chained operations.
+\begin{urbiscript}
+logger.log << "log 1"|;
+[       Category        ] log 1
+
+logger.log("log 2")|;
+[       Category        ] log 2
+
+logger.log("log 3", "Category2")|;
+[       Category2       ] log 3
+\end{urbiscript}
+
+\item[onEnter]%
+  The primitive called when \lstinline|Logger| is used as a \lstinline|Tag|
+  and is entered. This primitive only increments the indentation level.
+
+\item[onLeave]%
+  The primitive called when \lstinline|Logger| is used as a \lstinline|Tag|
+  and is left. This primitive only decrements the indentation level.
+
+\item[trace](<message> = "", <category> = category)%
+  Report a debug \var{message} of \var{category} to the user. It will be
+  shown if the debug level is \lstinline|Trace|, \lstinline|Debug| or
+  \lstinline|Dump|. Return \this to allow chained operations.
+\begin{urbiscript}
+// None of these are displayed unless the current level is at least TRACE.
+logger.trace << "trace 1"|;
+logger.trace("trace 2")|;
+logger.trace("trace 3", "Category2")|;
+\end{urbiscript}
+
+\item[warn](<message> = "", <category> = category)%
+  Report a warning \var{message} of \var{category} to the user. Return \this
+  to allow chained operations.
+\begin{urbiscript}
+logger.warn << "warn 1"|;
+[       Category        ] warn 1
+
+logger.warn("warn 2")|;
+[       Category        ] warn 2
+
+logger.warn("warn 3", "Category2")|;
+[       Category2       ] warn 3
+\end{urbiscript}
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

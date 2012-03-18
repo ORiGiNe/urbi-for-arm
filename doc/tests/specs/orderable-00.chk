@@ -1,0 +1,19 @@
+syncline << "doc/specs/orderable.tex:22";
+[01234567:#] "doc/specs/orderable.tex:22"
+//#line 22 "doc/specs/orderable.tex"
+class Foo : Orderable
+{
+  var value = 0;
+  function init (v)   { value = v; };
+  function '<' (that) { value < that.value; };
+  function asString() { "<" + value.asString + ">"; };
+}|;
+var one = Foo.new(1)|;
+var two = Foo.new(2)|;
+
+assert
+{
+   one <= one  ;   one <= two  ; !(two <= one);
+ !(one >  one) ; !(one >  two) ;   two >  one;
+  (one >= one) ; !(one >= two) ;   two >= one;
+};

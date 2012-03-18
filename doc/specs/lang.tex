@@ -1,0 +1,4299 @@
+%% Copyright (C) 2008-2012, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\chapter{\us Language Reference Manual}
+\label{sec:lang}
+
+\section{Syntax}
+
+\subsection{Characters, encoding}
+\index{encoding}
+\index{ASCII}
+\index{UTF-8}
+
+Currently \us makes no assumptions about the encoding used in the
+programs, but the streams are handled as 8-bit characters.
+
+While you are allowed to use whatever character you want in the string
+literals (especially using the binary escapes,
+\autoref{sec:us-syn-lit-string}), only plain ASCII characters are
+allowed in the program body.  Invalid characters are reported,
+possibly escaped if they are not ``printable''.  If you enter UTF-8
+characters, since they possibly span over several 8-bit characters, a
+single (UTF-8) character may be reported as several invalid (8-bit)
+characters.
+
+%% UTF-8 is not supported by lstlisting, we need to escape to TeX.
+%% TeX4ht produces ugly results when using lstnewenvironment.  Worse,
+%% here it creates a new <pre> on each side of the escape characters.
+%% So let's hope Eitan fixes this some day.
+\begin{urbiscript}[firstnumber=1,escapeinside=<>]
+#<Été>;
+[00048238:error] !!! syntax error: invalid character: `#'
+[00048239:error] !!! syntax error: invalid character: `\xc3'
+[00048239:error] !!! syntax error: invalid character: `\x89'
+[00048239:error] !!! syntax error: invalid character: `\xc3'
+[00048239:error] !!! syntax error: invalid character: `\xa9'
+\end{urbiscript}
+
+\subsection{Comments}
+
+\dfn{Comments} are used to document the code, they are ignored by the
+\us interpreter. Both \Cxx comment types are supported.
+
+\begin{itemize}
+\item A \lstinline|//| introduces a comment that lasts until the end
+  of the line.
+\item A \lstinline|/*| introduces a comment that lasts until \lstinline|*/|
+  is encountered. Comments nest, contrary to \langC/\Cxx: if two \lstinline|/*|
+  are encountered, the comment will end after two \lstinline|*/|, not one.
+\end{itemize}
+
+\begin{urbiscript}
+1; // This is a one line comment.
+[00000001] 1
+
+2; /* an inner comment */ 3;
+[00000002] 2
+[00000003] 3
+
+4; /* nested /* comments */ 5; */ 6;
+[00000004] 4
+[00000005] 6
+
+7
+  /*
+    /*
+       Multi-line.
+    */
+  */
+;
+[00000006] 7
+\end{urbiscript}
+
+\subsection{Synclines}
+\label{sec:specs:synclines}
+
+While the interaction with an \us kernel is usually performed via a
+network connection, programmers are used to work with files which have
+names, line numbers and so forth.  This is most important in error
+messages.  Since even loading a file actually means sending its
+content as if it were typed in the network session, in order to
+provide the user with meaningful locations in error messages, \us
+features \dfn[syncline]{synclines}, a means to change the ``current
+location'', similarly to \lstinline[language=C]|#line| in \langC-like
+languages.  This is achieved using special \lstinline|//#| comments.
+
+The following special comments are recognized only as a whole line.
+If some component does not match exactly the expected syntax, or if
+there are trailing items, the whole line is treated as a comment.
+\begin{itemize}
+%% I failed to use \var for line and file here.  -- AD.
+\item \lstinline|//#line line "file"|\\
+  Specify that the \emph{next} line is from the file named \var{file},
+  and which line number is \var{line}.  The current location (i.e.,
+  current file and line) is lost.
+
+\item \lstinline|//#push line "file"|\\
+  Save the current location, and then behave as if \lstinline|//#line|
+  was used.
+
+\item \lstinline|//#pop|\\
+  Restore the current location.  \lstinline|//#push| and
+  \lstinline|//#pop| must match.
+\end{itemize}
+
+
+\subsection{Identifiers}
+\label{sec:us-syn-id}
+
+\dfn{Identifiers} in \us are composed of one or more alphanumeric or
+underscore (\lstinline|_|) characters, not starting by a digit, i.e.,
+identifiers match the \lstinline|[a-zA-Z_][a-zA-Z0-9_]*| regular
+expression.  Additionally, identifiers must not match any of the \us
+reserved words\footnote{
+%%
+  The only exception to this rule is \lstinline|new|, which can be
+  used as the method identifier in a method call.
+%%
+} documented in \autoref{sec:syn-key}. Identifiers can also be written
+between simple quotes (\lstinline|'|), in which case they may contain
+any character.
+
+\begin{urbiscript}
+var x;
+var foobar51;
+var this.a_name_with_underscores;
+// Invalid.
+// var 3x;
+// obj.3x();
+
+// Invalid because "if" is a keyword.
+// var if;
+// obj.if();
+// However, keywords can be escaped with simple quotes.
+var 'if';
+var this.'else';
+
+// Identifiers can be escaped with simple quotes
+var '%x';
+var '1 2 3';
+var this.'[]';
+\end{urbiscript}
+
+\subsection{Keywords}
+\label{sec:syn-key}
+
+\dfn{Keywords} are reserved words that cannot be used as identifiers,
+for instance.  They are listed in \autoref{tab:keywords}.
+
+\renewcommand{\baselinestretch}{.85}
+\begin{table}[\floatpos]
+  \centering
+  \begin{tabular}{|c|c||c|c|}
+    \hline
+    Keyword                       & Remark                           &
+    Keyword                       & Remark                           \\
+    \hline
+    \lstinline"and"               & Synonym for \lstinline|&&|       &
+    \lstinline"long"              & Reserved                         \\
+    \lstinline"and_eq"            & Synonym for \lstinline|&=|       &
+    \lstinline"loop"              & \lstinline|loop&| and
+                                    \lstinline-loop|- flavors        \\
+    \lstinline"asm"               & Reserved                         &
+    \lstinline"loopn"             & Deprecated, use \lstinline|for|  \\
+    \lstinline"at"                &                                  &
+    \lstinline"mutable"           & Reserved                         \\
+    \lstinline"auto"              & Reserved                         &
+    \lstinline"namespace"         & Reserved                         \\
+    \lstinline"bitand"            & Synonym for \lstinline|&|        &
+    \lstinline"new"               &                                  \\
+    \lstinline"bitor"             & Synonym for \lstinline-|-        &
+    \lstinline"not"               & Synonym for \lstinline|!|        \\
+    \lstinline"bool"              & Reserved                         &
+    \lstinline"not_eq"            & Synonym for \lstinline|!=|       \\
+    \lstinline"break"             &                                  &
+                                  &                                  \\
+    \lstinline"call"              &                                  &
+    \lstinline"onleave"           &                                  \\
+    \lstinline"case"              &                                  &
+    \lstinline"or"                & Synonym for \lstinline-||-       \\
+    \lstinline"catch"             &                                  &
+    \lstinline"or_eq"             & Synonym for \lstinline-|=-       \\
+    \lstinline"char"              & Reserved                         &
+    \lstinline"private"           & Ignored                          \\
+    \lstinline"class"             &                                  &
+    \lstinline"protected"         & Ignored                          \\
+    \lstinline"closure"           &                                  &
+    \lstinline"public"            & Ignored                          \\
+    \lstinline"compl"             & Synonym for \lstinline|~|        &
+    \lstinline"register"          & Reserved                         \\
+    \lstinline"const"             &                                  &
+    \lstinline"reinterpret_cast"  & Reserved                         \\
+    \lstinline"const_cast"        & Reserved                         &
+    \lstinline"return"            &                                  \\
+    \lstinline"continue"          &                                  &
+    \lstinline"short"             & Reserved                         \\
+    \lstinline"default"           &                                  &
+    \lstinline"signed"            & Reserved                         \\
+    \lstinline"delete"            & Reserved                         &
+    \lstinline"sizeof"            & Reserved                         \\
+    \lstinline"do"                &                                  &
+    \lstinline"static"            & Deprecated                       \\
+    \lstinline"double"            & Reserved                         &
+    \lstinline"static_cast"       & Reserved                         \\
+    \lstinline"dynamic_cast"      & Reserved                         &
+    \lstinline"stopif"            &                                  \\
+    \lstinline"else"              &                                  &
+    \lstinline"struct"            & Reserved                         \\
+    \lstinline"emit"              & Deprecated                       &
+    \lstinline"switch"            &                                  \\
+    \lstinline"enum"              &                                  &
+    \lstinline"template"          & Reserved                         \\
+                                  &                                  &
+    \this                         &                                  \\
+    \lstinline"every"             &                                  &
+    \lstinline"throw"             &                                  \\
+    \lstinline"explicit"          & Reserved                         &
+    \lstinline"timeout"           &                                  \\
+    \lstinline"export"            & Reserved                         &
+    \lstinline"try"               &                                  \\
+    \lstinline"extern"            & Reserved                         &
+    \lstinline"typedef"           & Reserved                         \\
+    \lstinline"external"          &                                  &
+    \lstinline"typeid"            & Reserved                         \\
+    \lstinline"float"             & Reserved                         &
+    \lstinline"typename"          & Reserved                         \\
+    \lstinline"for"               & \lstinline|for&| and
+                                    \lstinline-for|- flavors         &
+    \lstinline"union"             & Reserved                         \\
+    \lstinline"foreach"           & Deprecated, use \lstinline|for|  &
+    \lstinline"unsigned"          & Reserved                         \\
+    \lstinline"freezeif"          &                                  &
+    \lstinline"using"             & Reserved                         \\
+    \lstinline"friend"            & Reserved                         &
+    \lstinline"var"               &                                  \\
+                                  &                                  &
+    \lstinline"virtual"           & Reserved                         \\
+    \lstinline"function"          &                                  &
+    \lstinline"volatile"          & Reserved                         \\
+    \lstinline"goto"              & Reserved                         &
+    \lstinline"waituntil"         &                                  \\
+    \lstinline"if"                &                                  &
+    \lstinline"wchar_t"           & Reserved                         \\
+    \lstinline"in"                &                                  &
+    \lstinline"whenever"          &                                  \\
+    \lstinline"inline"            & Reserved                         &
+    \lstinline"while"             & \lstinline|while&| and
+                                    \lstinline-while|- flavors       \\
+    \lstinline"int"               & Reserved                         &
+    \lstinline"xor"               & Synonym for \lstinline|^|        \\
+    \lstinline"internal"          & Deprecated                       &
+    \lstinline"xor_eq"            & Synonym \lstinline|^=|           \\
+    \hline
+  \end{tabular}
+  \caption{Keywords}
+  \label{tab:keywords}
+\end{table}
+\renewcommand{\baselinestretch}{1}
+
+\subsection{Literals}
+
+\subsubsection{Angles}
+
+\dfn[angle]{Angles} are floats (see \autoref{sec:us-syn-lit-float})
+followed by an angle unit. They are simply equivalent to the same
+float, expressed in radians. For instance, \lstinline|180deg| (180
+degrees) is equal to \lstinline|pi|. Available units and their
+equivalent are presented in \autoref{tab:angle}.
+
+\begin{table}[\floatposh]
+  \centering
+  \begin{tabular}{|c|c|c|}
+    \hline
+    unit        & abbreviation & equivalence for $n$  \\
+    \hline
+    radian      & rad          & $n$         \\
+    degree      & deg          & $n / 180 * \pi$        \\
+    grad        & grad         & $n / 200 * \pi$        \\
+    \hline
+  \end{tabular}
+  \caption{Angle units}
+  \label{tab:angle}
+\end{table}
+
+\begin{urbiassert}
+pi == 180deg;
+pi == 200grad;
+\end{urbiassert}
+
+\subsubsection{Dictionaries}
+\label{sec:us-syn-lit-dictionary}
+
+Literal \dfn{dictionaries} are represented with a comma-separated,
+potentially empty list of arbitrary associations enclosed in square brackets
+(\lstinline|[]|), as shown in the listing below.  Empty dictionaries are
+represented with an association arrow between the brackets to avoid
+confusion with empty lists.  See \refObject{Dictionary} for more details.
+
+Each association is composed of a key, which is represented by a string, an
+arrow (\lstinline|=>|) and an expression.
+
+\begin{urbiscript}
+[ => ]; // The empty dictionary
+[00000000] [ => ]
+["a" => 1, "b" => 2, "c" => 3];
+[00000000] ["a" => 1, "b" => 2, "c" => 3]
+\end{urbiscript}
+
+\subsubsection{Durations}
+
+\dfn{Durations} are floats (see \autoref{sec:us-syn-lit-float})
+followed by a time unit. They are simply equivalent to the same float,
+expressed in seconds. For instance, \lstinline|1s 1ms|, which stands
+for ``one second and one millisecond'', is strictly equivalent to
+\lstinline|1.0001|. Available units and their equivalent are presented
+in \autoref{tab:duration}.
+
+\begin{table}
+  \centering
+  \begin{tabular}{|c|c|c|}
+    \hline
+    unit        & abbreviation & equivalence for $n$  \\
+    \hline
+    millisecond & ms           & $n / 1000$         \\
+    second      & s            & $n$                \\
+    minute      & min          & $n \times 60$           \\
+    hour        & h            & $n \times 60 \times 60$      \\
+    day         & d            & $n \times 60 \times 60 \times 24$ \\
+    \hline
+  \end{tabular}
+  \caption{Duration units}
+  \label{tab:duration}
+\end{table}
+
+\begin{urbiassert}
+1d   == 24h;
+0.5d == 12h;
+1h   == 60min;
+1min == 60s;
+1s   == 1000ms;
+
+
+1s == 1;
+1s 2s 3s == 6;
+1s 1ms == 1.001;
+1ms 1s == 1.001;
+\end{urbiassert}
+
+\subsubsection{Floats}
+\label{sec:us-syn-lit-float}
+
+\us supports the \dfn{scientific notation} for floating-point
+literals.  See \refObject{Float} for more details.  Examples include:
+
+%% FIXME: On windows, does not pass.      0.000001 == 1e-06;
+%% FIXME: On windows, does not pass.     0.0000001 == 1e-07;
+%% FIXME: On windows, does not pass. 0.00000000001 == 1e-11;
+
+\begin{urbiassert}
+            1 == 1;
+            1 == 1.0;
+          1.2 == 1.2000;
+      1.234e6 == 1234000;
+        1e+11 == 1E+11;
+         1e10 == 10000000000;
+         1e30 == 1e10 * 1e10 * 1e10;
+\end{urbiassert}
+
+Numbers are displayed rounded by the top level, but internally, as
+seen above, they keep their accurate value.
+
+%% Don't try 1E-4: it is not portably output equally.  On OS X it
+%% is output as 0.0001, but other architectures output 1e-4.  And
+%% they seem to be right according to
+%% http://www.opengroup.org/onlinepubs/007908799/xsh/fprintf.html
+%%
+%%  g, G
+%%
+%%  The double argument is converted in the style f or e (or in the style
+%%  E in the case of a G conversion character), with the precision
+%%  specifying the number of significant digits. If an explicit precision
+%%  is 0, it is taken as 1. The style used depends on the value converted;
+%%  style e (or E) will be used only if the exponent resulting from such a
+%%  conversion is less than -4 or greater than or equal to the
+%%  precision. Trailing zeros are removed from the fractional portion of
+%%  the result; a radix character appears only if it is followed by a
+%%  digit. The fprintf() family of functions may make available character
+%%  string representations for infinity and NaN.
+%%
+\begin{urbiscript}
+0.000001;
+[00000011] 1e-06
+
+0.0000001;
+[00000012] 1e-07
+
+0.00000000001;
+[00000013] 1e-11
+
+1e+3;
+[00000014] 1000
+
+1E-5;
+[00000014] 1e-05
+\end{urbiscript}
+
+In order to make numbers with units (\samp{1min}) and calling a method on a
+number (\samp{1.min}), numbers that include a period must have a fractional
+part.  In other words, \samp{1.}, if not followed by digits, is always read
+as \samp{1 .}:
+
+\begin{urbiscript}
+1.;
+[00004701:error] !!! syntax error: unexpected ;
+\end{urbiscript}
+
+Hexadecimal notation is supported for integers: \lstinline|0x|
+followed by one or more hexadecimal digits, whose case is irrelevant.
+
+\begin{urbiassert}
+      0x2a == 42;
+      0x2A == 42;
+  0xabcdef == 11259375;
+  0xABCDEF == 11259375;
+0xFFFFFFFF == 4294967295;
+\end{urbiassert}
+
+Numbers with unknown suffixes are invalid tokens:
+
+\begin{urbiscript}
+123foo;
+[00005658:error] !!! syntax error: invalid token: `123foo'
+12.3foo;
+[00018827:error] !!! syntax error: invalid token: `12.3foo'
+0xabcdef;
+[00060432] 11259375
+0xabcdefg;
+[00061848:error] !!! syntax error: invalid token: `0xabcdefg'
+\end{urbiscript}
+
+\subsubsection{Lists}
+\label{sec:us-syn-lit-list}
+
+Literal \dfn{lists} are represented with a comma-separated, potentially
+empty list of arbitrary expressions enclosed in square brackets
+(\lstinline|[]|), as shown in the listing below.  See
+\refObject{List} for more details.
+
+\begin{urbiscript}
+[]; // The empty list
+[00000000] []
+[1, 2, 3];
+[00000000] [1, 2, 3]
+\end{urbiscript}
+
+\subsubsection{Strings}
+\label{sec:us-syn-lit-string}
+
+\dfn{String} literals are enclosed in double quotes (\lstinline|"|)
+and can contain arbitrary characters, which stand for themselves, with
+the exception of the escape character, backslash (\lstinline|\|), see
+below.  The escapes sequences are defined in \autoref{tab:escapes}.
+
+\begin{table}[\floatposh]
+  \centering
+  \begin{tabular}{|c|p{.6\linewidth}|}
+    \hline
+    \lstinline|\\| & backslash             \\
+    \lstinline|\"| & double-quote          \\
+    \lstinline|\a| & bell ring             \\
+    \lstinline|\b| & backspace             \\
+    \lstinline|\f| & form feed             \\
+    \lstinline|\n| & line feed             \\
+    \lstinline|\r| & carriage return       \\
+    \lstinline|\t| & tabulation            \\
+    \lstinline|\v| & vertical tabulation   \\
+
+    \lstinline|\[0-7]{1,3}|
+    & eight-bit character corresponding to a one-, two- or three-digit
+    octal number.  For instance, \lstinline|\0|, \lstinline|\000| and
+    \lstinline|177|.  The matching is greedy: as many digits as
+    possible are taken: \lstinline|\0|, \lstinline|\000| are both
+    resolved in the null character.
+    \\
+
+    \lstinline|\x[0-9a-fA-F]{2}|
+    & eight-bit character corresponding to a two-digit hexadecimal
+    number.  For instance, \lstinline|0xfF|. \\
+
+    \lstinline|\B(\var{length})(\var{content})|
+    & binary blob.  A \var{length}-long sequence of verbatim
+    \var{content}.  \var{length} is expressed in decimal.  \var{content}
+    is not interpreted in any way.  The parentheses are part of the syntax,
+    they are mandatory.  For instance \lstinline|\B(2)(\B)|\\
+    \hline
+  \end{tabular}
+  \caption{String escapes}
+  \label{tab:escapes}
+\end{table}
+
+\begin{urbiassert}
+// Special characters.
+"\"" == "\"";
+"\\" == "\\";
+
+// ASCII characters.
+"\a" == "\007"; "\a" == "\x07";
+"\b" == "\010"; "\b" == "\x08";
+"\f" == "\014"; "\f" == "\x0c";
+"\n" == "\012"; "\n" == "\x0a";
+"\r" == "\015"; "\r" == "\x0d";
+"\t" == "\011"; "\t" == "\x09";
+"\v" == "\013"; "\v" == "\x0b";
+
+// Octal escapes.
+"\0" == "\00"; "\0" == "\000";
+"\0000" == "\0""0";
+"\062\063" == "23";
+
+// Hexadecimal escapes.
+"\x00" == "\0";
+"\x32\x33" == "23";
+
+// Binary blob escape.
+"\B(3)("\")" == "\"\\\"";
+\end{urbiassert}
+
+Consecutive string literals are glued together into a single string.
+This is useful to split large strings into chunks that fit usual
+programming widths.
+
+\begin{urbiassert}
+"foo" "bar" "baz" == "foobarbaz";
+\end{urbiassert}
+
+The interpreter prints the strings escaped; for instance, line feed
+will be printed out as \lstinline|\n| when a string result is dumped
+and so forth. An actual line feed will of course be output if a string
+content is printed with echo for instance.
+
+\begin{urbiscript}
+"";
+[00000000] ""
+"foo";
+[00000000] "foo"
+"a\nb"; // urbiscript escapes string when dumping them
+[00000000] "a\nb"
+echo("a\nb"); // We can see there is an actual line feed
+[00000000] *** a
+[:]b
+echo("a\\nb");
+[00000000] *** a\nb
+\end{urbiscript}
+
+See \refObject{String} for more details.
+
+\subsubsection{Tuples}
+\label{sec:us-syn-lit-tuples}
+
+Literal \dfn{tuples} are represented with a comma-separated, potentially
+empty list of arbitrary elements enclosed in parenthesis (\lstinline|()|),
+as shown in the listing below.  One extra comma can be added after the last
+element.  To avoid confusion between a 1 member \lstinline|Tuple| and a
+parenthesized expression, the extra comma must be added.  See
+\refObject{Tuple} for more details.
+
+\begin{urbiscript}
+();
+[00000000] ()
+(1,);
+[00000000] (1,)
+(1, 2);
+[00000000] (1, 2)
+(1, 2, 3, 4,);
+[00000000] (1, 2, 3, 4)
+\end{urbiscript}
+
+
+\subsubsection{Pseudo classes}
+\label{sec:lang:class}
+
+Objects meant to serve as prototypes are best defined using the
+\lstinline|class| construct.  See also the tutorial,
+\autoref{sec:tut:class}.
+
+\begin{bnf}
+<class-statement>
+  ::= "class" <lvalue> (: <prototypes>)? <block>
+
+<lvalue>
+  ::= (<expression> ".")* "identifier"
+
+<prototypes>>
+  ::= (<expression> ",")* expression
+
+<block>
+  ::= "{" <statement>* "}"
+\end{bnf}
+
+This results in the (constant) definition of the name \var{lvalue} in the
+current context (\lstinline|class| construct can be used inside a scope or
+in an object) with:
+\begin{itemize}
+\item a slot named \lstinline|type| which is a the trailing component of
+  \var{lvalue} as a \refObject{String};
+\item a slot named \lstinline|as\var{type}| that returns \this.
+\item the list of prototypes is equal to the list \var{prototypes} that
+  served as parent, defaulting to \refObject{Object};
+\item the \var{block} is evaluated in the context of this object, as with a
+  \lstinline|do|-block;
+\item the value of the whole statement is the newly defined object.
+\end{itemize}
+
+\begin{urbiscript}
+class Base
+{
+  var slot = 12;
+}|;
+
+assert
+{
+  hasLocalSlot("Base");
+  Base.type   == "Base";
+  Base.protos == [Object];
+  Base.slot   == 12;
+  Base.asBase === Base;
+};
+
+class Global.Derive : Base
+{
+  var slot = 34;
+}|;
+
+assert
+{
+  Global.hasLocalSlot("Derive");
+  Global.Derive.type     == "Derive";
+  Global.Derive.protos   == [Base];
+  Global.Derive.slot     == 34;
+  Global.Derive.asDerive === Global.Derive;
+  Global.Derive.asBase   === Global.Derive;
+};
+
+class Base2 {}|;
+
+class Derive2 : Base, Base2 {}|;
+
+assert
+{
+  Derive2.type      == "Derive2";
+  Derive2.protos    == [Base, Base2];
+  Derive2.slot      == 12;
+  Derive2.asDerive2 === Derive2;
+  Derive2.asBase    === Derive2;
+  Derive2.asBase2   === Derive2;
+};
+\end{urbiscript}
+
+It is guaranteed that the expressions that define the class name and its
+parents are evaluated only once.
+
+\begin{urbiscript}
+function Global.verboseId(var x)
+{
+  echo(x) | x
+}|;
+class verboseId(Global).math : verboseId(Math)
+{
+};
+[00000686] *** Global
+[00000686] *** Math
+[00000686] math
+\end{urbiscript}
+
+
+\subsection{Statement Separators}
+\label{sec:lang:separators}
+
+Sequential languages such as \Cxx support a single way to compose two
+statements: the sequential composition, ``denoted'' by \samp{;}.  To
+support concurrency and more fined tuned sequentiality, \us features
+four different statement-separators (or connectors):
+\begin{description}
+\item[\samp{;}] sequentiality
+\item[\samp{|}] tight sequentiality
+\item[\samp{,}] background concurrency
+\item[\samp{\&}] fair-start concurrency
+\end{description}
+
+\subsubsection{\samp{;}}
+
+The \samp{;}-connector waits for the first statement to finish before
+starting the second statement.  When used in the top-level interactive
+session, both results are displayed.
+
+\begin{urbiscript}
+1; 2; 3;
+[00000000] 1
+[00000000] 2
+[00000000] 3
+\end{urbiscript}
+
+\subsubsection{\samp{,}}
+\label{sec:lang:comma}
+The \samp{,}-connector sends the first statement in background for
+concurrent execution, and starts the second statement when possible.
+When used in interactive sessions, the value of back-grounded
+statements are \emph{not} printed --- the time of their arrival being
+unpredictable, such results would clutter the output randomly.  Use
+\refObject[Channel]{Channels} or \refObject[Event]{Events} to return results
+asynchronously.
+
+\begin{urbiscript}
+{
+  for (3)
+  {
+    sleep(1s);
+    echo("ping");
+  },
+  sleep(0.5s);
+  for (3)
+  {
+    sleep(1s);
+    echo("pong");
+  },
+};
+[00000316] *** ping
+[00000316] *** pong
+[00000316] *** ping
+[00000316] *** pong
+[00000316] *** ping
+[00000316] *** pong
+\end{urbiscript}
+
+Both \samp{;} and \samp{,} have equal precedence.  They are scoped
+too: the execution follow ``waits'' for the end of the jobs
+back-grounded with \samp{,} before proceeding.  Compare the two
+following executions.
+
+\begin{urbiscript}
+{
+  sleep(100ms) | echo("1"),
+  sleep(400ms) | echo("2"),
+  echo("done");
+};
+[00000316] *** done
+[00000316] *** 1
+[00000316] *** 2
+\end{urbiscript}
+
+\begin{urbiscript}
+{
+  sleep(100ms) | echo("1"),
+  sleep(400ms) | echo("2"),
+};
+echo("done");
+[00000316] *** 1
+[00000316] *** 2
+[00000316] *** done
+\end{urbiscript}
+
+
+\subsubsection{\samp{|}}
+When using the \samp{;} connector, the scheduler is allowed to run
+other commands between the first and the second statement.  The
+\samp{|} does not yield between both statements.  It is therefore more
+efficient, and, in a way, provides some atomicity for concurrent tasks.
+
+\begin{urbiscript}
+{
+  { echo("11") ; sleep(100ms) ; echo("12") },
+  { echo("21") ; sleep(400ms) ; echo("22") },
+};
+[00000316] *** 11
+[00000316] *** 21
+[00000316] *** 12
+[00000316] *** 22
+\end{urbiscript}
+
+%% Cannot use sleep here, as it yields, which makes the point moot.
+\begin{urbiscript}
+{
+  { echo("11") | echo("12") },
+  { echo("21") | echo("22") },
+};
+[00000316] *** 11
+[00000316] *** 12
+[00000316] *** 21
+[00000316] *** 22
+\end{urbiscript}
+
+In an interactive session, both statements must be ``known'' before
+launching the sequence.  The value of the composed statement is the
+value of the second statement.
+
+\subsubsection{\samp{\&}}
+
+The \samp{\&} is very similar to the \samp{,} connector, but for its
+precedence.  \urbi expects to process the whole statement before
+launching the connected statements.   This is especially handy in
+interactive sessions, as a means to fire a set of tasks concurrently.
+
+
+\subsection{Operators}
+
+\us supports many \dfn{operators}, most of which are inspired from
+\Cxx. Their syntax is presented here, and they are sorted and
+described with their original semantics --- that is, \lstinline|+| is
+an arithmetic operator that sums two numeric values. However, as in
+\Cxx, these operators might be use for any other purpose --- that is,
+\lstinline|+| can also be used as the concatenation operator on lists
+and strings. Their semantics is thus not limited to what is presented
+here.
+
+Tables in this section sort operators top-down, by precedence order.
+Group of rows (not separated by horizontal lines) describe operators
+that have the same precedence. Many operators are syntactic sugar that
+bounce on a method. In this case, the equivalent desugared expression
+is shown in the ``Equivalence'' column. This can help you determine
+what method to override to define an operator for an object (see
+\autoref{sec:tut:operators}).
+
+This section defines the syntax, precedence and associativity of the
+operators. Their semantics is described in \autoref{sec:stdlib} in the
+documentation of the classes that provide them.
+
+
+% Operator generators.
+\newcommand{\operator}[6][]{\lstinline@#2@&\lstinline@#3@&#4&#5&\lstinline@#6@#1}
+\newcommand{\boperator}[3]{\operator{#1}{a #1 b}{#2}{#3}{a.'#1'(b)}}
+\newcommand{\poperator}[3]{\operator{#1}{#1a}{#2}{#3}{a.'#1'()}}
+
+% Container operators.
+\newcommand{\operatorin}     {\operator  {in}     {a in b}       {-}     {Membership}            {b.has(a)}          }
+\newcommand{\operatornotin}  {\operator  {not in} {a not in b}   {-}     {Non-membership}        {b.hasNot(a)}      }
+\newcommand{\operatorsub}    {\operator  {[]}   {a[args]}        {-}     {Subscript}             {a.'[]'(args)}          }
+\newcommand{\operatorsubass} {\operator  {[] =} {a[args] = v}    {-}     {Subscript assignment}  {a.'[]='(args, v)}      }
+
+% Object operators.
+\newcommand{\operatorprop}   {\operator  {->}   {a->b}             {-}     {Property access}        {getProperty("a", "b")} }
+\newcommand{\operatorpropass}{\operator  {->}   {a->b = v}         {-}     {Property assignment}    {setProperty("a", "b", v)}}
+\newcommand{\operatordot}    {\operator  {.}    {a.b}              {-}     {Message sending}        {Not redefinable}       }
+\newcommand{\operatordota}   {\operator  {.}    {a.b(args)}        {-}     {Message sending}        {Not redefinable}       }
+\newcommand{\operatorcolcol} {\operator  {.\&}   {a.\&b}             {-}     {Slot access}            {a.getSlot("b")}        }
+\newcommand{\operatorass}[1][]{\operator[#1]
+                                         {=}    {a = b}            {Right} {Assignment}             {updateSlot("a", b)}    }
+
+\newcommand{\operatoriass}[1]{\operator  {#1=}  {a #1= b}          {Right} {In place assignment}    {a = a.'#1='(b)}            }
+\newcommand{\operatorsiass}  {
+  \operatoriass{+}\\
+  \operatoriass{-}\\
+  \operatoriass{*}\\
+  \operatoriass{/}\\
+  \operatoriass{\%}\\
+  \operatoriass{\^}%
+  % \operatoriass{\~}
+}
+\newcommand{\operatorinc}    {\operator  {++}   {a++}  {-}     {Incrementation} {\{var '$a' = a | a = a.'++' | '$a'\}}}
+\newcommand{\operatordec}    {\operator  {--}   {a--}  {-}     {Decrementation} {\{var '$a' = a | a = a.'--' | '$a'\}}}
+\newcommand{\operatorand}    {\operator  {\&\&} {a\&\&b}{Left} {Logical and}    {if (a) b else a}}
+\newcommand{\operatoror}     {\operator  {||}   {a||b}  {Left} {Logical or}     {if (a) a else b}}
+
+\newcommand{\operatoruplus}  {\poperator {+}    {-}    {Identity}               }
+\newcommand{\operatorumin}   {\poperator {-}    {-}    {Opposite}               }
+\newcommand{\operatorexp}    {\boperator {**}   {Right}{Exponentiation}         }
+\newcommand{\operatormult}   {\boperator {*}    {Left} {Multiplication}         }
+\newcommand{\operatordiv}    {\boperator {/}    {Left} {Division}               }
+\newcommand{\operatormod}    {\boperator {\%}   {Left} {Modulo}                 }
+\newcommand{\operatorplus}   {\boperator {+}    {Left} {Sum}                    }
+\newcommand{\operatorminus}  {\boperator {-}    {Left} {Difference}             }
+\newcommand{\operatorlshift} {\boperator {<<}   {Left} {Left bit shift}         }
+\newcommand{\operatorrshift} {\boperator {>>}   {Left} {Right bit shift}        }
+\newcommand{\operatoreq}     {\boperator {==}   {None} {Equality}               }
+\newcommand{\operatorneq}    {\boperator {!=}   {None} {Inequality}             }
+\newcommand{\operatorpeq}    {\boperator {===}  {None} {Physical equality}      }
+\newcommand{\operatorpneq}   {\boperator {!==}  {None} {Physical inequality}    }
+\newcommand{\operatoraeq}    {\boperator {\~=}  {None} {Relative approximate equality} }
+\newcommand{\operatoreqaeq}  {\boperator {=~=}  {None} {Absolute approximate equality} }
+\newcommand{\operatorinf}    {\boperator {<}    {None} {Less than}              }
+\newcommand{\operatorinfeq}  {\boperator {<=}   {None} {Less than or equal to}  }
+\newcommand{\operatorsup}    {\boperator {>}    {None} {Greater than}           }
+\newcommand{\operatorsupeq}  {\boperator {>=}   {None} {Greater than or equal to}}
+\newcommand{\operatorbxor}   {\boperator {^}    {Left} {Bitwise exclusive or}   }
+\newcommand{\operatorneg}    {\poperator {!}    {Left} {Logical negation}       }
+
+\subsubsection{Arithmetic operators}
+
+\us supports classic \dfn{arithmetic operators}, with the classic
+semantics on numeric values. See \autoref{tab:arith} and the listing
+below.
+
+% \whetherHtml{HTML OUTPUT}{NOT-HTML OUTPUT}
+% ------------------------------------------
+\newcommand{\whetherHtml}[2]{%
+  \ifx\ifHtml\undefined%
+    #2%
+  \else%
+    #1%
+  \fi%
+}
+
+%% \begin{operatorTabular}
+%%   1 & 2 & 3 & 4 & 5 \\
+%%   \hline
+%% \end{operatorTabular}
+\newenvironment{operatorTabular}
+{
+  \begin{tabular}{|*{5}{c|}}
+    \hline
+    \strong{\whetherHtml{Operator}{Oper.}}
+    & \strong{Syntax}
+    & \strong{\whetherHtml{Associativity}{Assoc.}}
+    & \strong{Semantics}
+    & \strong{Equivalence}
+    \\
+    \hline
+  }{%
+    \\
+    \hline
+  \end{tabular}
+}
+
+%% \begin{operatorTable}{tab:foo}{Foo Operators}
+%%   1 & 2 & 3 & 4 & 5 \\
+%%   \hline
+%% \end{operatorTable}
+\newenvironment{operatorTable}[2]
+{
+  \def\operatorTableLabel{#1}%
+  \def\operatorTableCaption{#2}%
+  \begin{table}[\floatposh]
+    \centering
+    \begin{operatorTabular}
+    }{%
+    \end{operatorTabular}
+    \caption{\operatorTableCaption}
+    \label{\operatorTableLabel}
+  \end{table}
+}
+
+\begin{operatorTable}{tab:arith}{Arithmetic operators}
+  \operatoruplus\\
+  \operatorumin \\
+  \hline
+  \operatorexp\\
+  \hline
+  \operatormult\\
+  \operatordiv\\
+  \operatormod\\
+  \hline
+  \operatorplus\\
+  \operatorminus
+\end{operatorTable}
+
+\begin{urbiassert}
+       1 + 1 ==    2;
+       1 - 2 ==   -1;
+       2 * 3 ==    6;
+      10 / 2 ==    5;
+     2 ** 10 == 1024;
+    -(1 + 2) ==   -3;
+   1 + 2 * 3 ==    7;
+ (1 + 2) * 3 ==    9;
+     -2 ** 2 ==   -4;
+   - - - - 1 ==    1;
+\end{urbiassert}
+
+\subsubsection{Assignment operators}
+\label{sec:lang:iass}
+\dfn{Assignment} in \us can be performed with the \lstinline|=| operator.
+Assignment operators, such as \lstinline|+=|, are supported too, see
+\autoref{tab:assignment} and the examples below.
+
+
+\begin{operatorTable}{tab:assignment}{Assignment operators}
+  \operatorass[\footnotemark]\\
+  \operatorsiass
+\end{operatorTable}
+\footnotetext{For object fields only. Assignment to local variables
+  cannot be redefined. }
+
+% FIXME: this in place modulo example was removed
+%         because %= is a lame Urbi operator.
+%  x %= 3;
+
+The following example demonstrates that \lstinline|\var{a} += \var{b}|
+behaves as \lstinline|\var{a} = \var{a} + \var{b}| for Floats.
+\begin{urbiscript}
+var y = 0;
+[00000000] 0
+y = 10;
+[00000000] 10
+y += 10;
+[00000000] 20
+y /= 5;
+[00000000] 4
+\end{urbiscript}
+
+These operators are redefinable.  Indeed, \lstinline|\var{a} += \var{b}| is
+actually processed as \lstinline|\var{a} = \var{a}.'+='(\var{b})|.  This
+definition, which is neither that of \langC
+(\lstinline|\var{a} = \var{a}.'+'(\var{b})|) nor that of \Cxx
+(\lstinline|\var{a}.'+='(\var{b})|), provides support for both
+\dfn{immutable} and \dfn{mutable} values.
+
+\paragraph{Immutable Values}
+Small objects such as Floats should typically be immutable, i.e., the value
+of a Float cannot change:
+
+\begin{urbiscript}
+var value = 0|;
+var valueAlias = value|;
+value += 10;
+[00002275] 10
+valueAlias;
+[00002301] 0
+\end{urbiscript}
+
+It would be traitorous for most users that \lstinline|valueAlias| be equal
+to 10 too.  That's why \slot[Float]{'+='} (which is actually
+\refSlot[Object]{'+='}) simply bounces to \slot[Float]{'+'}.  The ``net
+result'' of \lstinline|value += 10| is therefore
+\lstinline|value = value.'+'(10)|, i.e., a \emph{new} Float is computed from
+\lstinline|0.'+'(10)|, and \lstinline|value| is rebound to it.  The binding
+from \lstinline|valueAlias| to \lstinline|0| is left as is.
+
+\paragraph{Mutable Values}
+On the contrary, large, ``updatable'' objects should provide an
+implementation of \lstinline|'+='| that mutates them.  For instance,
+implementing \lstinline|\var{a}.'+='(\var{b})| as
+\lstinline|\var{a}.'+'(\var{b})| would be too costly for
+\refObject[List]{Lists}.  Each time \lstinline|+=| is used, we need to create a
+new List (whose content is that of \var{a}), then to append the contents of
+\var{b}, and finally throw away the former value of \var{a}.
+
+Not only is this inefficient, this is also wrong (at least from a certain
+point of view).  Indeed, since we no longer update the List pointed to by
+\var{a}, but rather store a new List, everything that was special to the
+original List (its uid or whatever special slot the user may have defined)
+is lost.  The proper implementation of \refSlot[List]{'+='} is therefore to
+\emph{modify} \this by appending the added members.
+
+\begin{urbiscript}
+var myList = []|;
+var myList.specialFeature = 42|;
+myList += [1, 2, 3];
+[00848865] [1, 2, 3]
+myList.specialFeature;
+[00848869] 42
+var myOtherList = myList + [4, 5];
+[00848873] [1, 2, 3, 4, 5]
+myOtherList.specialFeature;
+[00848926:error] !!! lookup failed: specialFeature
+\end{urbiscript}
+
+Note however that this means that because \lstinline|\var{a} += \var{b}| is
+\emph{not} processed as \lstinline|\var{a} = \var{a} + \var{b}|, aliases to
+\var{a} are possibly modified.
+
+\begin{urbiscript}
+var something = []|;
+var somethingElse = something|;
+something += [1, 2];
+[00008557] [1, 2]
+somethingElse += [3, 4];
+[00008562] [1, 2, 3, 4]
+something;
+[00008566] [1, 2, 3, 4]
+\end{urbiscript}
+
+\paragraph{Example}
+So basically, the rules to redefine these operators are:
+\begin{description}
+\item[Immutable (small) objects] \lstinline|'+='| should redirect to
+  \lstinline|'+'| (which of course should \emph{not} modify its target).
+\item[Mutable (large) objects] \lstinline|'+='| should update \this and
+  return it.
+\end{description}
+
+The following examples contrasts both approaches.
+\begin{urbiscript}
+class Counter
+{
+  var count = 0;
+  function init (n)   { var this.count = n };
+  // Display the value, and the identity.
+  function asString() { "%s @ %s" % [count, uid ] };
+  function '+'(var n) { new(count + n) };
+  function '-'(var n) { new(count - n) };
+}|;
+\end{urbiscript}
+
+\begin{multicols}{2}
+\begin{urbiscript}
+class ImmutableCounter : Counter
+{
+  function '+='(var n) { this + n };
+  function '-='(var n) { this - n };
+}|;
+
+var ic1 = ImmutableCounter.new(0);
+[00010566] 0 @ 0x100354b70
+var ic2 = ic1;
+[00010574] 0 @ 0x100354b70
+
+ic1 += 1;
+[00010588] 1 @ 0x10875bee0
+
+// ic1 points to a new object.
+ic1;
+[00010592] 1 @ 0x10875bee0
+// ic2 still points to its original value.
+ic2;
+[00010594] 0 @ 0x100354b70
+\end{urbiscript}
+\columnbreak
+\begin{urbiscript}
+class MutableCounter : Counter
+{
+  function '+='(var n) { count += n | this };
+  function '-='(var n) { count -= n | this };
+}|;
+
+var mc1 = MutableCounter.new(0);
+[00029902] 0 @ 0x100364e00
+var mc2 = mc1;
+[00029911] 0 @ 0x100364e00
+
+mc1 += 1;
+[00029925] 1 @ 0x100364e00
+
+// mc1 points to the same, updated, object.
+mc1;
+[00029930] 1 @ 0x100364e00
+// mc2 too.
+mc2;
+[00029936] 1 @ 0x100364e00
+\end{urbiscript}
+\end{multicols}
+
+\subsubsection{Postfix Operators}
+\label{sec:lang:postop}
+
+In the tradition of \langC, \us provides postfix operators (see
+\autoref{tab:postop}), e.g., \lstinline|\var{b} = \var{a}++|.  Prefix
+operators, however, are not supported.  Rather than \lstinline|++\var{a}|,
+write \lstinline|\var{a} += 1|.
+
+\begin{operatorTable}{tab:postop}{Postfix operators}
+  \operatorinc\\
+  \operatordec
+\end{operatorTable}
+
+These operators \emph{modify} the variable/slot they are applied to, and
+return the \emph{former} value of the variable/slot.
+
+\begin{urbiscript}
+{
+  var count = 0;
+  var countAlias = count;
+  assert
+  {
+    count++ == 0;
+    count   == 1;
+    countAlias == 0;
+    count++ == 1;
+    count   == 2;
+    countAlias == 0;
+    count-- == 2;
+    count   == 1;
+  };
+};
+\end{urbiscript}
+
+Similarly to assignment operators, these operators are redefinable.
+Indeed, \lstinline|\var{a}++| is actually processed like
+% beware of wrapping.
+\lstinline-{ var '$save' = \var{a} | \var{a} = \var{a}.'++' | '$save' }-.
+In other words, you are entitled to redefine the operator \lstinline|'++'|
+whose semantics is ``return the successor of \this''.
+
+Beware that the operator \lstinline|'++'| should \emph{not} modify its
+target, but rather return a fresh value.  Indeed, if it alters \this, the
+copy made in \lstinline|'$save'| will also have its value updated.  In % $ Pacify emacs
+other words, the value of \lstinline|\var{a}++| would be its new one, not
+its former one.
+
+Redefining \lstinline|'++'| is still an experimental feature which might be
+changed in future releases of \usdk, do not rely on it.
+
+\subsubsection{Bitwise operators}
+
+\us features \dfn{bitwise operators}.  They are also used for other
+purpose than bit-related operations. See \autoref{tab:bitwise} and the
+listing below.
+
+\begin{operatorTable}{tab:bitwise}{Bitwise operators}
+  \operatorlshift\\
+  \operatorrshift\\
+  \hline
+  \operatorbxor
+\end{operatorTable}
+
+\begin{urbiassert}
+4 << 2 == 16;
+4 >> 2 ==  1;
+\end{urbiassert}
+
+\subsubsection{Logical operators}
+
+\us supports the usual \dfn{Boolean operators}. See the table and the
+listing below. The operators \lstinline|&&| and \lstinline-||- are
+short-circuiting: their right-hand side is evaluated only if needed.
+
+\begin{operatorTable}{tab:Boolean}{Boolean operators}
+  \operatorneg\\
+  \hline
+  \operatorand\\
+  \hline
+  \operatoror
+\end{operatorTable}
+
+The operator \lstinline{!} returns the Boolean that is the negation of the
+value of its operand.  See \refSlot[Object]{'!'}.
+\begin{urbiassert}
+!true     === false; !false === true;
+!42       === false; !0     === true;
+!"42"     === false; !""    === true;
+![42]     === false; ![]    === true;
+!["4"=>2] === false; ![=>]  === true;
+\end{urbiassert}
+
+The operator \lstinline{&&}, the short-circuiting logical and, behaves as
+follows.  If the left-hand side operand evaluates to a ``true'' value,
+return the evaluation of the right-hand side operand; otherwise return the
+value of the left-hand side operand (not necessarily \lstinline{false}).
+\begin{urbiassert}
+true && true;
+
+(0 && "foo") == 0;
+(2 && "foo") == "foo";
+
+(""    && "foo") == "";
+("foo" && "bar") == "bar";
+\end{urbiassert}
+
+Its arguments are evaluated at most once.
+\begin{urbiscript}
+var zero = 0|;
+var one = 1|;
+var two = 2|;
+
+// First argument evaluated once, second is not needed.
+({ echo("lhs") | zero } && { echo("rhs") | one }) === zero;
+[00029936] *** lhs
+[00029936] true
+
+({ echo("lhs") | one }  && { echo("rhs") | two }) === two;
+[00029966] *** lhs
+[00029966] *** rhs
+[00029966] true
+\end{urbiscript}
+\begin{urbicomment}
+removeSlots("zero", "one", "two");
+\end{urbicomment}
+
+The operator \lstinline{||}, the short-circuiting logical or, behaves as
+follows. If the left-hand side operand evaluates to a ``false'' value,
+return the evaluation of the right-hand side operand; otherwise return the
+value of the left-hand side argument (not necessarily \lstinline{true}).
+\begin{urbiassert}
+true || false;
+
+(0 || "foo") == "foo";
+(2 ||  1/0)  == 2;
+
+(""    || "foo") == "foo";
+("foo" || 1/0)   == "foo";
+\end{urbiassert}
+Its arguments are evaluated at most once.
+\begin{urbiscript}
+var zero = 0|;
+var one = 1|;
+var two = 2|;
+
+// First argument evaluated once, second is not needed.
+({ echo("lhs") | one }  || { echo("rhs") | two }) === one;
+[00029936] *** lhs
+[00029936] true
+
+({ echo("lhs") | zero } || { echo("rhs") | one }) === one;
+[00029966] *** lhs
+[00029966] *** rhs
+[00029966] true
+\end{urbiscript}
+\begin{urbicomment}
+removeSlots("zero", "one", "two");
+\end{urbicomment}
+
+See \autoref{sec:truth} for more information about ``true'' and ``false''
+values.
+
+\subsubsection{Comparison operators}
+\label{sec:lang:operators:comparison}
+
+\us supports classical \dfn{comparison operators}. See
+\autoref{tab:comparison} and the listing below.
+
+\begin{operatorTable}{tab:comparison}{Comparison operators}
+  \operatoreq\\
+  \operatorneq\\
+  \operatorpeq\\
+  \operatorpneq\\
+  \operatoraeq\\
+  \operatoreqaeq\\
+  \operatorinf\\
+  \operatorinfeq\\
+  \operatorsup\\
+  \operatorsupeq
+\end{operatorTable}
+
+\begin{urbiscript}
+assert
+{
+ ! (0 < 0);
+    0 <= 0;
+    0 == 0;
+   0 !== 0;
+};
+var z = 0;
+[00000000] 0
+assert
+{
+     z === z;
+  ! (z !== z);
+};
+\end{urbiscript}
+
+\subsubsection{Container operators}
+\label{sec:lang:operators:containers}
+
+These operators work on containers and their members. See
+\autoref{tab:operators:containers}.
+\begin{operatorTable}{tab:operators:containers}{Container operators}
+  \operatorin\\
+  \operatornotin\\
+  \hline
+  \operatorsub\\
+  \operatorsubass
+\end{operatorTable}
+
+The \dfn{in} and \dfn{not in} operators test the membership of an element in
+a container.  They bounce to the container's \lstinline|has| and
+\lstinline|hasNot| methods (see \refObject{Container}.  They are
+non-associative.
+
+\begin{urbiassert}
+1     in [0, 1, 2];
+3 not in [0, 1, 2];
+
+"one"   in     ["zero" => 0, "one" => 1, "two" => 2];
+"three" not in ["zero" => 0, "one" => 1, "two" => 2];
+\end{urbiassert}
+
+The following operators use an index. Note that the
+\dfn[operator!subscript]{subscript} (square bracket) operator is
+\dfn{variadic}: it takes any number of arguments that will be passed
+to the \lstinline|'[]'| method of the targeted object.
+
+\begin{urbiscript}
+// On lists.
+var l = [1, 2, 3, 4, 5];
+[00000000] [1, 2, 3, 4, 5]
+assert
+{
+  l[0] == 1;
+  l[-1] == 5;
+  (l[0] = 10) == 10;
+  l == [10, 2, 3, 4, 5];
+};
+
+// On strings.
+var s = "abcdef";
+[00000005] "abcdef"
+assert
+{
+  s[0] == "a";
+  s[1,3] == "bc";
+  (s[1,3] = "foo") == "foo";
+  s == "afoodef";
+};
+\end{urbiscript}
+
+
+\subsubsection{Object operators}
+
+These core operators provide access to slots and their properties. See
+\autoref{tab:operators:object}.
+
+\begin{operatorTable}{tab:operators:object}{Object operators}
+  \operatordot\\
+  \operatordota\\
+  \hline
+  \operatorprop\\
+  \operatorpropass\\
+  \hline
+  \operatorcolcol
+\end{operatorTable}
+
+\begin{urbiscript}
+var obj = Object.new|;
+function obj.f() { 24 }|;
+
+assert
+{
+  obj.f == 24;
+  obj.&f != 24;
+  obj.&f.isA(&Code);
+  obj.&f === obj.getSlot("f");
+};
+\end{urbiscript}
+
+\subsubsection{All operators summary}
+
+\autoref{tab:operators-summary} is a summary of all operators, to
+highlight the overall precedences. Operators are sorted by decreasing
+precedence. Groups of rows represent operators with the same
+precedence.
+
+\begin{operatorTable}{tab:operators-summary}{Operators summary}
+  \operatordot\\
+  \operatordota\\
+  \hline
+  \operatorprop\\
+  \operatorpropass\\
+  \hline
+  \operatorcolcol\\
+  \hline
+  \operatorsub\\
+  \operatorsubass\\
+  \hline
+  \operatoruplus\\
+  \operatorumin\\
+  \hline
+  \operatorexp\\
+  \hline
+  \operatormult\\
+  \operatordiv\\
+  \operatormod\\
+  \hline
+  \operatorplus\\
+  \operatorminus\\
+  \hline
+  \operatorlshift\\
+  \operatorrshift\\
+  \hline
+  \operatoreq\\
+  \operatorneq\\
+  \operatorpeq\\
+  \operatorpneq\\
+  \operatoreqaeq\\
+  \operatoraeq\\
+  \operatorinf\\
+  \operatorinfeq\\
+  \operatorsup\\
+  \operatorsupeq\\
+  \hline
+  \operatorbxor\\
+  \hline
+  \operatorneg\\
+  \hline
+  \operatorin\\
+  \operatornotin\\
+  \hline
+  \operatorand\\
+  \hline
+  \operatoror\\
+  \hline
+  \operatorass\\
+  \operatorsiass\\
+  \hline
+  \operatorinc\\
+  \operatordec
+\end{operatorTable}
+
+
+\section{Scopes and local variables}
+
+\subsection{Scopes}
+
+\dfn{Scopes} are sequences of statements, enclosed in curly brackets
+(\lstinline|{}|). Statements are separated with the four statements
+separators (see \autoref{sec:lang:separators}).  A trailing \samp{;}
+or \samp{,} is ignored.  A trailing \samp{\&} or \samp{|} behaves as
+if \lstinline|& {}| or \lstinline'| {}' was used.  This particular
+case is heavily used by \us programmers to discard the value of an
+expression:
+
+\begin{urbiscript}
+// Return value is 1.  Displayed.
+1;
+[00000000] 1
+// Return value is that of {}, i.e., void.  Nothing displayed.
+1 | {};
+// Same as "1 | {}", a valueless expression.
+1|;
+\end{urbiscript}
+
+Scopes are themselves expressions, and can thus be used in composite
+expressions, nested, and so forth.
+
+\begin{urbiscript}
+// Scopes evaluate to their last expression
+{
+  1;
+  2;
+  3; // This last separator is optional.
+};
+[00000000] 3
+// Scopes can be used as expressions
+{1; 2; 3} + 1;
+[00000000] 4
+\end{urbiscript}
+
+\subsection{Local variables}
+
+\dfn{Local variables} are introduced with the \lstinline|var| keyword,
+followed by an identifier (see \autoref{sec:us-syn-id}) and an optional
+initialization value assignment. If the initial value is omitted, it
+defaults to \refObject{void}. Variable
+declarations evaluate to
+the initialization value. They can later be referred to by their
+name. Their value can be changed with the assignment operator; such an
+assignment expression returns the new value. The use of local
+variables is illustrated below.
+
+\begin{urbiscript}
+// This declare variable x with value 42, and evaluates to 42.
+var t = 42;
+[00000000] 42
+// x equals 42
+t;
+[00000000] 42
+// We can assign it a new value
+t = 51;
+[00000000] 51
+t;
+[00000000] 51
+// Initialization defaults to void
+var u;
+u.isVoid;
+[00000000] true
+\end{urbiscript}
+
+The lifespan of local variables is the same as their enclosing scope. They
+are thus only accessible from their scope and its
+sub-scopes\footnote{Local variables can actually escape their scope
+  with lexical closures, see \autoref{sec:us-fun-closures}.}. Two
+variables with the same name cannot be defined in the same scope. A
+variable with the same name can be defined in an inner scope, in which
+case references refer to the innermost variable, as shown below.
+
+\begin{urbiscript}
+{
+  var x = "x";
+  var y = "outer y";
+  {
+    var y = "inner y";
+    var z = "z";
+    // We can access variables of parent scopes.
+    echo(x);
+    // This refers to the inner y.
+    echo(y);
+    echo(z);
+  };
+  // This refers to the outer y.
+  echo(y);
+  // This would be invalid: z does not exist anymore.
+  // echo(z);
+  // This would be invalid: x is already declared in this scope.
+  // var x;
+};
+[00000000] *** x
+[00000000] *** inner y
+[00000000] *** z
+[00000000] *** outer y
+\end{urbiscript}
+
+
+\section{Functions}
+
+\subsection{Function Definition}
+
+\dfn{Functions} in \us are first class citizens: a function is a
+value, like floats and strings, and can be handled as such.  This is
+different from most \langC-like languages.  One can create a functional
+value thanks to the \lstinline|function| keyword, followed by the list
+of formal arguments and a compound statement representing the body of
+the function. Formal arguments are a possibly-empty comma-separated
+list of identifiers.  Non-empty lists of formal arguments may
+optionally end with a trailing comma. The listing below illustrates
+this.
+
+\begin{urbiscript}
+function () { echo(0) };
+[00000000] function () { echo(0) }
+
+function (arg1, arg2) { echo(0) };
+[00000000] function (var arg1, var arg2) { echo(0) }
+
+function (
+           arg1, // Ignored argument.
+           arg2, // Also ignored.
+          )
+{
+  echo(0)
+};
+[00000000] function (var arg1, var arg2) { echo(0) }
+\end{urbiscript}
+
+Usually functions are bound to an identifier to be invoked later.
+The listing below shows a short-hand to define a named
+function.
+
+\begin{urbiscript}
+// Functions are often stored in variables to call them later.
+var f1 = function () {
+  echo("hello")
+}|
+f1();
+[00000000] *** hello
+
+// This form is strictly equivalent, yet simpler.
+function f2()
+{
+  echo("hello")
+}|
+f2();
+[00000000] *** hello
+\end{urbiscript}
+
+Therefore, like regular values, functions can either be plain local
+variables or slots of objects.  In the following example, initially the
+object \lstinline{Foo} features neither a \lstinline{foo} nor a
+\lstinline{bar} slot, but its \lstinline{init} function declares a
+\emph{local} \lstinline{foo} function, and a \emph{slot} \lstinline{bar}.
+The whole difference is the initial \this in the definition of
+\lstinline{bar} which makes it a slot, not a variable.
+
+\begin{urbiscript}
+class Foo
+{
+  function init()
+  {
+    // This is a function local to init().
+    function foo()      { 42 };
+    function this.bar() { 51 };
+    foo() + bar();
+  };
+}|;
+
+Foo.foo;
+[00001720:error] !!! lookup failed: foo
+Foo.bar;
+[00001750:error] !!! lookup failed: bar
+
+[00001787] 93
+Foo.init;
+Foo.foo;
+[00001787:error] !!! lookup failed: foo
+Foo.bar;
+[00001818] 51
+\end{urbiscript}
+
+\subsection{Arguments}
+
+The list of formal arguments defines the number of argument the
+function requires. They are accessible by their name from within the
+body. If the list of formal arguments is omitted, the number of
+effective arguments is not checked, and arguments themselves are not
+evaluated. Arguments can then be manipulated with the call message,
+explained below.
+
+\begin{urbiscript}
+var f = function(a, b) {
+  echo(b + a);
+}|
+f(1, 0);
+[00000000] *** 1
+// Calling a function with the wrong number of argument is an error.
+f(0);
+[00000000:error] !!! f: expected 2 arguments, given 1
+f(0, 1, 2);
+[00000000:error] !!! f: expected 2 arguments, given 3
+\end{urbiscript}
+
+Non-empty lists of effective arguments may end with an optional comma.
+\begin{urbiscript}
+f(
+  "bar",
+  "foo",
+ );
+[00000000] *** foobar
+\end{urbiscript}
+
+
+\subsection{Return value}
+
+The \dfn[function!return value]{return value} of the function is the
+evaluation of its body --- that is, since the body is a scope, the
+last evaluated expression in the scope.  Values can be returned
+manually with the \lstinline|return| keyword followed by the value, in
+which case the evaluation of the function is stopped. If
+\lstinline|return| is used with no value, the function returns
+\lstinline|void|.
+
+\begin{urbiscript}
+function g1(a, b)
+{
+  echo(a);
+  echo(b);
+  a // Return value is a
+}|
+g1(1, 2);
+[00000000] *** 1
+[00000000] *** 2
+[00000000] 1
+
+function g2(a, b)
+{
+  echo(a);
+  return a; // Stop execution at this point and return a
+  echo(b); // This is not executed
+}|
+g2(1, 2);
+[00000000] *** 1
+[00000000] 1
+
+function g3()
+{
+  return; // Stop execution at this point and return void
+  echo(0); // This is not executed
+}|
+g3(); // Returns void, so nothing is printed.
+\end{urbiscript}
+
+\subsection{Call messages}
+\label{sec:us-fun-callmsg}
+
+Functions can access meta-information about how they were called,
+through a \lstinline|CallMessage| object. The \dfn{call message}
+associated with a function can be accessed with the \lstinline|call|
+keyword. It contains several information such as not-yet evaluated
+arguments, the name of the function, the target \ldots
+
+\subsection{Strictness}
+
+\us features two different function calls:
+\dfn[function!strict]{strict} function calls, effective arguments are
+evaluated before invoking the function, and \dfn[function!lazy]{lazy}
+function calls, arguments are passed as-is to the function.  As a
+matter of fact, the difference is rather that there are strict
+functions and lazy functions.
+
+Functions defined with a (possibly empty) list of formal arguments in
+parentheses are strict: the effective arguments are first evaluated,
+and then their value is given to the called function.
+
+\begin{urbiscript}
+function first1(a, b) {
+  echo(a); echo(b)
+}|
+first1({echo("Arg1"); 1},
+       {echo("Arg2"); 2});
+[00000000] *** Arg1
+[00000000] *** Arg2
+[00000000] *** 1
+[00000000] *** 2
+\end{urbiscript}
+
+A function declared with no formal argument list is lazy.  Use its call
+message to manipulate its arguments \emph{not} evaluated.  The listing below
+gives an example.  More information about this can be found in the
+\refObject{CallMessage} class documentation.
+
+\begin{urbiscript}
+function first2
+{
+  echo(call.evalArgAt(0));
+  echo(call.evalArgAt(1));
+}|
+first2({echo("Arg1"); 1},
+       {echo("Arg2"); 2});
+[00000000] *** Arg1
+[00000000] *** 1
+[00000000] *** Arg2
+[00000000] *** 2
+\end{urbiscript}
+
+A lazy function may implement a strict interface by evaluating its
+arguments and storing them as local variables, see below.  This is
+less efficient than defining a strict function.
+
+\begin{urbiscript}
+function first3
+{
+  var a = call.evalArgAt(0);
+  var b = call.evalArgAt(1);
+  echo(a); echo(b);
+}|
+first3({echo("Arg1"); 1},
+       {echo("Arg2"); 2});
+[00000000] *** Arg1
+[00000000] *** Arg2
+[00000000] *** 1
+[00000000] *** 2
+\end{urbiscript}
+
+\subsection{Lexical closures}
+\label{sec:us-fun-closures}
+
+\dfn{Lexical closures} are an additional scoping rule, with which a function
+can refer to a local variable located outside the function --- but still
+in the current context. \us supports read/write lexical closures,
+meaning that the variable is shared between the function and the outer
+environment, as shown below.
+
+\begin{urbiscript}
+var n = 0|
+function cl()
+{
+  // x refers to a variable outside the function
+  n++;
+  echo(n);
+}|
+cl();
+[00000000] *** 1
+n;
+[00000000] 1
+n++;
+[00000000] 1
+cl();
+[00000000] *** 3
+\end{urbiscript}
+
+The following listing illustrate that local variables can even
+escape their declaration scope by lexical closure.
+
+\begin{urbiscript}
+function wrapper()
+{
+  // Normally, x is local to 'wrapper', and is limited to this scope.
+  var x = 0;
+  at (x > 1)
+    echo("ping");
+  // Here we make it escape the scope by returning a closure on it.
+  return function() { x++ };
+} |
+
+var w = wrapper()|
+w();
+[00000000] 0
+w();
+[00000000] 1
+[00000000] *** ping
+\end{urbiscript}
+
+
+\subsection{Variadic functions}
+\label{sec:us-fun-variadic}
+
+\dfn{Variadic} functions are functions that take a variable number of
+arguments. They are created by using the \lstinline|[]| tag after a
+formal argument: the function will accept any number of arguments, and
+they will be assigned to the variadic formal argument as a list.
+
+\begin{urbiscript}
+function variadic(var args[])
+{
+  echo(args)
+} |
+
+variadic();
+[00000000] *** []
+variadic(1, 2, 3);
+[00000000] *** [1, 2, 3]
+\end{urbiscript}
+
+There can be other formal arguments, as long as the variadic argument is at
+the last position. If \var{n} is the number of non variadic arguments, the
+function will request as least \var{n} effective arguments, which will be
+assigned to the non variadic arguments in order like a classical function
+call. All remaining arguments will be passed in list as the variadic
+argument.
+
+\begin{urbicomment}
+removeSlot("variadic")|;
+\end{urbicomment}
+
+\begin{urbiscript}
+function invalid(var args[], var last)
+{} |;
+[00000000:error] !!! syntax error: argument after list-argument
+
+function variadic(var a1, var a2, var a3, var args[])
+{
+  echo(a1);
+  echo(a2);
+  echo(a3);
+  echo(args)
+} |
+
+// Not enough arguments.
+variadic();
+[00000000:error] !!! variadic: expected at least 3 arguments, given 0
+
+// No variadic arguments.
+variadic(1, 2, 3);
+[00000000] *** 1
+[00000000] *** 2
+[00000000] *** 3
+[00000000] *** []
+
+// Two variadic arguments.
+variadic(1, 2, 3, 4, 5);
+[00000000] *** 1
+[00000000] *** 2
+[00000000] *** 3
+[00000000] *** [4, 5]
+\end{urbiscript}
+
+
+
+\section{Objects}
+
+Any \us value is an object. Objects contain:
+
+\begin{itemize}
+\item A set of slots, which associate an object to a name.
+\item A list of prototypes, which are also objects.
+\end{itemize}
+
+\subsection{Slots}
+
+\dfn{Objects} can contain any number of \dfn{slots}, every slot has a name
+and a value. Slots are often called ``fields'', ``attributes'' or
+``members'' in other object-oriented languages.
+
+\subsubsection{Manipulation}
+
+The \refSlot[Object]{createSlot} function adds a slot to an object with the
+void (\autoref{sec:std-void}) value. The \refSlot[Object]{updateSlot}
+function changes the value of a slot; \refSlot[Object]{getSlot} reads
+it. The \refSlot[Object]{setSlot} method creates a slot with a given
+value. Finally, the \refSlot[Object]{localSlotNames} method returns the list
+of the object slot's name. The listing below shows how to manipulate
+slots. More documentation about these methods can be found in
+\autorefObject{Object}.
+
+\begin{urbiscript}
+var o = Object.new|
+assert (o.localSlotNames == []);
+
+o.createSlot("test");
+assert
+{
+  o.localSlotNames == ["test"];
+  o.&test.isVoid;
+};
+
+o.updateSlot("test", 42);
+[00000000] 42
+assert
+{
+  o.&test == 42;
+};
+\end{urbiscript}
+
+\subsubsection{Syntactic Sugar}
+
+There is some syntactic sugar for slot methods:
+\begin{itemize}
+\item \lstinline|var \var{o}.\var{name}| is equivalent to
+  \lstinline[style=varInString]|\var{o}.createSlot("\var{name}")|.
+\item \lstinline|var \var{o}.\var{name} = \var{value}| is equivalent to
+  \lstinline[style=varInString]|\var{o}.setSlot("\var{name}", \var{value})|.
+\item \lstinline|\var{o}.\var{name} = \var{value}| is equivalent to
+  \lstinline[style=varInString]|\var{o}.updateSlot("\var{name}", \var{value})|.
+\item \lstinline|\var{o}.&\var{name}| is equivalent to
+  \lstinline[style=varInString]|\var{o}.getSlot("\var{name}")| (\var{o} can
+  be omitted, like for regular method invocations: \lstinline|&\var{name}|
+  is equivalent to \lstinline[style=varInString]|getSlot("\var{name}")|).
+\end{itemize}
+
+
+\subsection{Properties}
+\label{sec:lang:prop}
+Slots can have properties, see \autoref{sec:tut:prop} for an introduction to
+properties.
+
+\subsubsection{Manipulation}
+
+There is a number of functions to manipulate properties:
+\begin{itemize}
+\item \refSlot[Object]{setProperty}, to define/set a property.
+\item \refSlot[Object]{getProperty}, to get a property.
+\item \refSlot[Object]{removeProperty}, to delete a property.
+\item \refSlot[Object]{hasProperty}, to test for the existence of a
+  property.
+\item \refSlot[Object]{properties}, to get all the properties of a slot.
+\end{itemize}
+
+There is also syntactic sugar for some of them:
+
+\begin{itemize}
+\item \lstinline|\var{slot}->\var{name}| is equivalent to
+  \lstinline[style=varInString]|getProperty("\var{slot}", "\var{name}")|.
+\item \lstinline|\var{slot}->\var{name} = \var{value}| is equivalent to
+  \lstinline[style=varInString]|setProperty("\var{slot}", "\var{name}", \var{value})|.
+\end{itemize}
+
+\subsubsection{Standard Properties}
+\label{sec:lang:prop:std}
+
+Some properties are handled by the system itself.
+
+
+\paragraph{\lstinline|changed|}
+
+The \lstinline|changed| property allows to monitor when a slot is bound to
+new values: each time a new value is assigned to the monitored slot, an
+event \lstinline|changed| is emitted:
+
+\begin{urbiscript}[firstnumber=1]
+var x = []|;
+
+at (x->changed?)
+  echo("x->changed");
+
+x = [1]|;
+[00092656] *** x->changed
+x = [1, 2]|;
+[00092756] *** x->changed
+\end{urbiscript}
+
+Even if the slot is assigned to the very same value, the
+\lstinline|x->changed| event is emitted.
+
+\begin{urbiscript}
+x = x|;
+[00092856] *** x->changed
+\end{urbiscript}
+
+This is different from checking updates to the value a slot is bound to:
+
+\begin{urbiscript}
+x << 3;
+[00092866] [1, 2, 3]
+\end{urbiscript}
+
+One can monitor updates using the \lstinline|changed| \emph{slot} (not
+property).
+
+
+\paragraph{\lstinline|constant|}
+The \lstinline|constant| property defines whether a slot can be assigned a
+new value.
+
+\begin{urbiscript}
+var c = 0;
+[00000000] 0
+c = 1;
+[00000000] 1
+
+c->constant = true;
+[00000000] true
+c = 2;
+[00000000:error] !!! cannot modify const slot
+
+c->constant = false;
+[00000000] false
+c = 3;
+[00000000] 3
+\end{urbiscript}
+
+A new slot can be declared constant when first defined:
+
+\begin{urbiscript}
+const var two = 2;
+[00000036] 2
+two = 3;
+[00000037:error] !!! cannot modify const slot
+two->constant;
+[00000038] true
+\end{urbiscript}
+
+
+
+\subsection{Prototypes}
+
+\subsubsection{Manipulation}
+
+\us is a prototype-based language, unlike most classical object oriented
+language, which are class-based. In prototype-based languages, objects have
+no type, only \dfn{prototypes}, from which they inherit behavior.
+
+\us objects can have several prototypes. The list of prototypes is given by
+the \refSlot[Object]{protos} method; they can be added or removed with
+\refSlot[Object]{addProto} and \refSlot[Object]{removeProto}.  See
+\autorefObject{Object} for more documentation.
+
+\begin{urbiscript}
+var ob = Object.new|
+assert (ob.protos == [Object]);
+
+ob.addProto(Pair);
+[00000000] (nil, nil)
+assert (ob.protos == [(nil, nil), Object]);
+
+ob.removeProto(Object);
+[00000000] (nil, nil)
+assert (ob.protos == [(nil, nil)]);
+\end{urbiscript}
+
+\subsubsection{Inheritance}
+
+Objects inherit their prototypes' slots: \lstinline|getSlot| will also
+look in an object prototypes' slots. \lstinline|getSlot| performs a
+depth-first traversal of the prototypes hierarchy to find slots. That
+is, when looking for a slot in an object:
+
+\begin{itemize}
+\item \lstinline|getSlot| checks first if the object itself has the
+  requested slot. If so, it returns its value.
+\item Otherwise, it applies the same research on every prototype, in the
+  order of the prototype list (since \lstinline|addProto| inserts in the
+  front of the prototype list, the last prototype added has priority). This
+  search is recursive: \lstinline|getSlot| will also look in the first
+  prototype's prototype, etc. before looking in the second prototype. If the
+  slot is found in a prototype, it is returned.
+\item Finally, if no prototype had the slot, an error is raised.
+\end{itemize}
+
+The following example shows how slots are inherited.
+
+\begin{urbiscript}[firstnumber=1]
+var a = Object.new|
+var b = Object.new|
+var c = Object.new|
+a.setSlot("x", "slot in a")|
+b.setSlot("x", "slot in b")|
+// c has no "x" slot
+c.getSlot("x");
+[00000000:error] !!! lookup failed: x
+// c can inherit the "x" slot from a.
+c.addProto(a)|
+c.getSlot("x");
+[00000000] "slot in a"
+// b is prepended to the prototype list, and has thus priority.
+c.addProto(b)|
+c.getSlot("x");
+[00000000] "slot in b"
+// A local slot in c has priority over prototypes.
+c.setSlot("x", "slot in c")|
+c.getSlot("x");
+[00000000] "slot in c"
+\end{urbiscript}
+
+\subsubsection{Copy on write}
+
+The \lstinline|updateSlot| method has a particular behavior with respect to
+prototypes. Although performing an \lstinline|updateSlot| on a non existent
+slot is an error, it is valid if the slot is inherited from a prototype. In
+this case, the slot is however not updated in the prototype, but rather
+created in the object itself, with the new value. This process is called
+\dfn{copy on write}; thanks to it, prototypes are not altered when the slot
+is overridden in a child object.
+
+\begin{urbiscript}
+var p = Object.new|
+var p.slot = 0|
+var d = Object.new|
+d.addProto(p)|
+d.slot;
+[00000000] 0
+d.slot = 1;
+[00000000] 1
+// p's slot was not altered
+p.slot;
+[00000000] 0
+// It was copied in d
+d.slot;
+[00000000] 1
+\end{urbiscript}
+
+\subsection{Sending messages}
+
+A \dfn{message} in \us consists in a message name and arguments. One can
+send a message to an object with the dot (\lstinline|.|) operator, followed
+by the message name (which can be any valid identifier) and the arguments,
+as shown below. When there are no arguments, the parentheses can be
+omitted. As you might see, sending messages is very similar to calling
+methods in classical languages.
+
+\begin{urbiunchecked}
+// Send the message msg to object obj, with arguments arg1 and arg2.
+obj.msg(arg1, arg2);
+// Send the message msg to object obj, with no arguments.
+obj.msg();
+// This is strictly equivalent.
+obj.msg;
+\end{urbiunchecked}
+
+When a message \var{msg} is sent to object \var{obj}:
+
+\begin{itemize}
+\item The \var{msg} slot of \var{obj} is retrieved (i.e.,
+  \lstinline[style=varInString]|\var{obj}.getSlot("\var{msg}")|). If the
+  slot is not found, a lookup error is raised.
+\item If the object is a \dfn{routine} (either a primitive, written in \Cxx
+  for instance, or a function implemented in \us), it is invoked with the
+  message arguments, and the returned value is the result. As a consequence,
+  the number of arguments in the message sending must match the one required
+  by the routine.
+\item Otherwise (the object is not a routine), this object is the result of
+  the message sending. There must be no argument.
+\end{itemize}
+
+Such message sending is illustrated below.
+
+\begin{urbiscript}
+var obj = Object.new|
+var obj.a = 42|
+var obj.b = function (x) { x + 1 }|
+obj.a;
+[00000000] 42
+obj.a();
+[00000000] 42
+obj.a(50);
+[00000000:error] !!! a: expected 0 argument, given 1
+obj.b;
+[00000000:error] !!! b: expected 1 argument, given 0
+obj.b();
+[00000000:error] !!! b: expected 1 argument, given 0
+obj.b(50);
+[00000000] 51
+\end{urbiscript}
+
+\section{Enumeration types}
+\label{sec:lang:enum}
+
+Enumeration types enable to create types represented by a finite set of
+values, like the \lstinline{enum} declaration in \langC.
+
+\begin{urbiscript}
+enum Suit
+{
+  hearts,
+  diamonds,
+  clubs,
+  spades, // Last comma is optional
+};
+[00000001] Suit
+\end{urbiscript}
+
+Since everything is an object in \us, enums are too, with
+\refObject{Enumeration} as prototype.
+
+\begin{urbiscript}
+Suit;
+[00000001] Suit
+Suit.protos;
+[00000002] [Enumeration]
+\end{urbiscript}
+
+The possible enum values are stored inside the enum object. They inherit the
+enum object, so you can easily test whether an object is a Suit or not.
+
+\begin{urbiscript}
+Suit.hearts;
+[00000001] hearts
+Suit.diamonds;
+[00000002] diamonds
+Suit.clubs.isA(Suit);
+[00000003] true
+42.isA(Suit);
+[00000003] false
+\end{urbiscript}
+
+Enumeration values support comparison and pattern matching. You can iterate
+on the enum object to cycle through all possible values.
+
+\begin{urbiscript}
+function find_ace(var suit)
+{
+  switch (suit)
+  {
+    case Suit.spades: "The only card I need is";
+    default:          "I have";
+  }
+}|;
+
+for (var suit in Suit)
+  echo("%s the ace of %s." % [find_ace(suit), suit]);
+[00000001] *** I have the ace of hearts.
+[00000002] *** I have the ace of diamonds.
+[00000003] *** I have the ace of clubs.
+[00000004] *** The only card I need is the ace of spades.
+\end{urbiscript}
+
+\section{Structural Pattern Matching}
+\label{sec:lang:pattern}
+
+Structural \dfn{pattern matching} is useful to deconstruct tuples, lists and
+dictionaries with a small and readable syntax.
+
+These patterns can be used in the following clauses:
+\begin{itemize}
+\item The left hand side of an assignment.
+\item \lstinline{case}
+\item \lstinline{catch}
+\item \lstinline{at}
+\item \lstinline{waituntil}
+\item \lstinline{whenever}
+\end{itemize}
+
+The following examples illustrate the possibilities of \dfn{structural
+  pattern matching} inside \lstinline{case} clauses:
+
+\begin{urbiscript}
+switch ( ("foo", [1, 2]) )
+{
+  // The pattern does not match the values of the list.
+  case ("foo", [2, 1]):
+    echo("fail");
+
+  // The pattern does not match the tuple.
+  case ["foo", [1, 2]]:
+    echo("fail");
+
+  // The pattern matches and binds the variable "l"
+  // but the condition is not verified.
+  case ("foo", var l) if l.size == 0:
+    echo("fail");
+
+  // The pattern matches.
+  case ("foo", [var a, var b]):
+    echo("foo(%s, %s)" % [a, b]);
+};
+[00000000] *** foo(1, 2)
+\end{urbiscript}
+
+\subsection{Basic Pattern Matching}
+
+Matching is used in many locations and allows to match literal values (e.g.,
+\refObject{List}, \refObject{Tuple}, \refObject{Dictionary},
+\refObject{Float}, \refObject{String}).  In the following expressions each
+pattern (on the left hand side) matches the value (on the right hand side).
+
+\begin{urbiscript}
+(1, "foo") = (1, "foo");
+[00000000] (1, "foo")
+[1, "foo"] = [1, "foo"];
+[00000000] [1, "foo"]
+["b" => "foo", "a" => 1] = ["a" => 1, "b" => "foo"];
+[00000000] ["a" => 1, "b" => "foo"]
+\end{urbiscript}
+
+A \refSlot[Exception]{MatchFailure} exception is thrown when a pattern does
+not match.
+
+\begin{urbiscript}
+try
+{
+  (1, 2) = (3, 4)
+}
+catch (var e if e.isA(Exception.MatchFailure))
+{
+  e.message
+};
+[00000000] "pattern did not match"
+\end{urbiscript}
+
+\subsection{Variable}
+
+Patterns can contain variable declarations, to match any value and to bind
+it to a new variable.
+
+\begin{urbiscript}
+{
+  (var a, var b) = (1, 2);
+  echo("a = %d, b = %d" % [a, b]);
+};
+[00000000] *** a = 1, b = 2
+{
+  [var a, var b] = [1, 2];
+  echo("a = %d, b = %d" % [a, b]);
+};
+[00000000] *** a = 1, b = 2
+{
+  ["b" => var b, "a" => var a] = ["a" => 1, "b" => 2, "c" => 3];
+  echo("a = %d, b = %d" % [a, b]);
+};
+[00000000] *** a = 1, b = 2
+\end{urbiscript}
+
+\subsection{Guard}
+
+Patterns used inside a \lstinline{switch}, a \lstinline{catch} or an event
+catching construct accept guards.
+
+\dfn[guard]{Guard} are used by appending a \lstinline{if} after a pattern or
+after a matched event.
+
+The following example is inspired from the \refObject{TrajectoryGenerator}
+where a \refObject{Dictionary} is used to set the trajectory type.
+
+\begin{urbiscript}
+switch (["speed" => 2, "time" => 6s])
+{
+  case ["speed" => var s] if s > 3:
+    echo("Too fast");
+  case ["speed" => var s, "time" => var t] if s * t > 10:
+    echo("Too far");
+};
+[00000000] *** Too far
+\end{urbiscript}
+
+The same guard are available for \lstinline{catch} statement.
+
+\begin{urbiscript}
+try
+{
+  throw ("message", 0)
+}
+catch (var e if e.isA(Exception))
+{
+  echo(e.message)
+}
+catch ((var msg, var value) if value.isA(Float))
+{
+  echo("%s: %d" % [msg, value])
+};
+[00000000] *** message: 0
+\end{urbiscript}
+
+Events catchers can have guards on the pattern arguments.  You can add these
+inside \lstinline{at}, \lstinline{whenever} and \lstinline{waituntil}
+statements.
+
+\begin{urbiscript}
+{
+  var e = Event.new;
+  at (e?(var msg, var value) if value % 2 == 0)
+    echo("%s: %d" % [msg, value]);
+
+  // Does not trigger the "at" because the guard is not verified.
+  e!("message", 1);
+
+  // Trigger the "at".
+  e!("message", 2);
+};
+[00000000] *** message: 2
+\end{urbiscript}
+
+%% \subsection{Extension}
+%% \refObject{Pattern}
+%% \refSlot[Pattern]{Binding}
+%% \refSlot[List]{matchAgainst}
+
+\section{Imperative flow control}
+
+\subsection{break}
+
+When encountered within a \lstinline|for| or a \lstinline|while| loop,
+\lstinline|break| makes the execution jump after the loop.
+
+\begin{urbiscript}
+var i = 5|
+for (; true; echo(i))
+{
+  if (i > 8)
+    break;
+  i++;
+};
+[00000000] *** 6
+[00000000] *** 7
+[00000000] *** 8
+[00000000] *** 9
+\end{urbiscript}
+
+\subsection{continue}
+
+When encountered within a \lstinline|for| or a \lstinline|while| loop,
+\lstinline|continue| short-circuits the rest of the loop-body, and
+runs the next iteration (if there remains one).
+
+\begin{urbiscript}
+for (var i = 0; i < 8; i++)
+{
+  if (i % 2 != 0)
+    continue;
+  echo(i);
+};
+[00000000] *** 0
+[00000000] *** 2
+[00000000] *** 4
+[00000000] *** 6
+\end{urbiscript}
+
+\subsection{do}
+
+The \lstinline|do| construct changes the target (\this)
+when evaluating an expression.  It is a convenient means to avoid
+repeating the same target several times.
+
+\begin{urbiunchecked}
+do (\var{target})
+{
+  \var{body}
+};
+\end{urbiunchecked}
+
+It evaluates \var{body}, with \this being \var{target}, as
+shown below.  The whole construct evaluates to the value
+of \var{body}.
+
+\begin{urbiscript}
+do (1024)
+{
+  assert(this == 1024);
+  assert(sqrt == 32);
+  setSlot("y", 23);
+}.y;
+[00000000] 23
+\end{urbiscript}
+
+
+\subsection{if}
+\label{sec:lang:if}
+As in most programming languages, conditionals are expressed with
+\lstinline|if|.
+
+\begin{urbiunchecked}
+if (\var{condition}) \var{then-clause}
+if (\var{condition}) \var{then-clause} else \var{else-clause}
+\end{urbiunchecked}
+
+First \var{condition} is evaluated; if it evaluates to a value which
+is true (\autoref{sec:truth}), evaluate \var{then-clause}, otherwise,
+if applicable, evaluate \var{else-clause}.
+
+\begin{urbiscript}
+if (true) assert(true) else assert(false);
+if (false) assert(false) else assert(true);
+if (true) assert(true);
+\end{urbiscript}
+
+Beware that \emph{there must not be a terminator after the
+  \var{then-clause}}:
+
+\begin{urbiscript}
+if (true)
+  assert(true);
+else
+  assert(false);
+[00000002:error] !!! syntax error: unexpected else
+\end{urbiscript}
+
+Contrary to \langC/\Cxx, it has value: it also implements the
+\lstinline|\var{condition} ? \var{then-clause} : \var{else-clause}|
+construct.  Unfortunately, due to syntactic constraints inherited from
+\langC, it is a \emph{statement}: it cannot be used directly as an
+expression.  But as everywhere else in \us, to use a statement where
+an expression is expected, use braces:
+
+\begin{urbiscript}
+assert(1 + if (true) 3 else 4 == 4);
+[00000003:error] !!! syntax error: unexpected if
+assert(1 + { if (true) 3 else 4 } == 4);
+\end{urbiscript}
+
+The \var{condition} can be any statement list.  Variables which it
+declares are visible in both the \var{then-clause} and the
+\var{else-clause}, but do not escape the \lstinline|if| construct.
+
+\begin{urbiscript}
+assert({if (false) 10 else 20} == 20);
+assert({if (true)  10 else 20} == 10);
+
+assert({if (true) 10         } == 10);
+
+assert({if (var x = 10) x + 2 else x - 2} == 12);
+assert({if (var x = 0)  x + 2 else x - 2} == -2);
+
+if (var xx = 123) xx | xx;
+[00000005:error] !!! lookup failed: xx
+\end{urbiscript}
+
+\subsection{for}
+\label{sec:lang:for}
+\lstinline|for| comes in several flavors.
+
+\subsubsection{C-like for}
+
+\us support the classical \langC-like \lstinline|for| construct.
+
+\begin{urbiunchecked}
+for (\var{initialization}; \var{condition}; \var{increment})
+  \var{body}
+\end{urbiunchecked}
+
+It has the exact same behavior as \langC's \lstinline|for|:
+
+\begin{enumerate}
+\item The \var{initialization} is evaluated.
+\item \var{condition} is evaluated. If the result is false, executions
+  jump after \lstinline|for|.
+\item \var{body} is evaluated. If \lstinline|continue| is encountered,
+  execution jumps to point 4. If \lstinline|break| is encountered,
+  executions jumps after the \lstinline|for|.
+\item The \var{increment} is evaluated.
+\item Execution jumps to point 2.
+\item The loop evaluates to \lstinline|void|.
+\end{enumerate}
+
+\subsubsection{Range-for}
+\label{sec:lang:for:each}
+
+\us supports iteration over a collection with another form of the
+\lstinline|for| loop.
+
+\begin{urbiunchecked}
+for (var \var{name} : \var{collection})
+   \var{body};
+\end{urbiunchecked}
+
+It evaluates \var{body} for each element in \var{collection}. The loop
+evaluates to \lstinline|void|.  Inside \var{body}, the current element
+is accessible via the \var{name} local variable. The listing below
+illustrates this.
+
+\begin{urbiscript}
+for (var x : [0, 1, 2, 3, 4])
+  echo(x.sqr);
+[00000000] *** 0
+[00000000] *** 1
+[00000000] *** 4
+[00000000] *** 9
+[00000000] *** 16
+\end{urbiscript}
+
+This form of \lstinline|for| simply sends the \lstinline|each| message
+to \var{collection} with one argument: the function that takes the
+current element and performs \lstinline|action| over it. Thus, you can
+make any object acceptable in a \lstinline|for| by defining an
+adequate \lstinline|each| method.
+
+\begin{urbiscript}
+var Hobbits = Object.new|
+function Hobbits.each (action)
+{
+  action("Frodo");
+  action("Merry");
+  action("Pippin");
+  action("Sam");
+}|
+for (var name in Hobbits)
+  echo("%s is a hobbit." % [name]);
+[00000000] *** Frodo is a hobbit.
+[00000000] *** Merry is a hobbit.
+[00000000] *** Pippin is a hobbit.
+[00000000] *** Sam is a hobbit.
+// This for statement is equivalent to:
+Hobbits.each(function (name) { echo("%s is a hobbit." % [name]) });
+[00000000] *** Frodo is a hobbit.
+[00000000] *** Merry is a hobbit.
+[00000000] *** Pippin is a hobbit.
+[00000000] *** Sam is a hobbit.
+\end{urbiscript}
+
+\subsubsection{for $n$-times}
+\label{sec:lang:for:n}
+
+\us provides some support for simple replication of computations: it
+allow to repeat a loop body $n$-times.  With the exception that the
+loop index is not available within the body, \lstinline|for (n)| is
+equivalent to \lstinline|for (var i: n)|.  It supports the same
+flavors: \lstinline|for;|, \lstinline{for|}, and \lstinline|for&|. The
+loop evaluates to \lstinline|void|.
+
+\begin{urbiassert}
+{ var res = []; for (3) { res << 1; res << 2 } ; res }
+        == [1, 2, 1, 2, 1, 2];
+
+{ var res = []; for|(3) { res << 1; res << 2 } ; res }
+        == [1, 2, 1, 2, 1, 2];
+
+{ var res = []; for&(3) { res << 1; res << 2 } ; res }
+        == [1, 1, 1, 2, 2, 2];
+\end{urbiassert}
+
+Note that since these \lstinline|for| loops are merely anonymous
+foreach-style loops, the argument needs not being an integer, any
+iterable value can be used.
+
+\begin{urbiassert}
+3 == { var r = 0; for ([1, 2, 3]) r += 1; r};
+3 == { var r = 0; for ("123")     r += 1; r};
+\end{urbiassert}
+
+
+\subsection{if}
+
+\us supports the usual \lstinline|if| constructs.
+
+\begin{urbiunchecked}
+if (\var{condition})
+  \var{action};
+
+if (\var{condition})
+  \var{action}
+else
+  \var{otherwise};
+\end{urbiunchecked}
+
+If the \var{condition} evaluation is true, \var{action} is
+evaluated. Otherwise, in the latter version, \var{otherwise} is
+executed.  Contrary to \langC/\Cxx, there \emph{must not} be a semicolon
+after the \var{action}; it would end the
+\lstinline|if|/\lstinline|else| construct prematurely.
+
+\subsection{loop}
+
+Endless loops can be created with \lstinline|loop|, which is
+equivalent to \lstinline|while (true)|.  The loop evaluates to
+\lstinline|void|.  Both sequential flavors, \lstinline|loop;| and
+\lstinline'loop;', are supported.  The default flavor is
+\lstinline|loop;|.
+
+\begin{urbiassert}
+{
+  var n = 10|;
+  var res = []|;
+  loop;
+  {
+    n--;
+    res << n;
+    if (n == 0)
+      break
+  };
+  res
+}
+==
+[9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+\end{urbiassert}
+
+\begin{urbiassert}
+{
+  var n = 10|;
+  var res = []|;
+  loop|
+  {
+    n--;
+    res << n;
+    if (n == 0)
+      break
+  };
+  res
+}
+==
+[9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+\end{urbiassert}
+
+\subsection{switch}
+
+The \lstinline|switch| statement in \us is similar to \langC's one.
+
+\begin{urbiunchecked}
+switch (\var{value})
+{
+  case \var{value_one}:
+    \var{action_one};
+  case \var{value_two}:
+    \var{action_two};
+//case ...:
+//  ...
+  default:
+    \var{default_action};
+};
+\end{urbiunchecked}
+
+It might contain an arbitrary number of cases, and optionally a
+default case. The \var{value} is evaluated first, and then the
+result is compared sequentially with the evaluation of all cases
+values, with the \lstinline|==| operator, until one comparison is
+true. If such a match is found, the corresponding action is executed,
+and execution jumps after the \lstinline|switch|. Otherwise, the
+default case --- if any --- is executed, and execution jumps after the
+switch. The switch itself evaluates to case that was evaluated, or to
+void if no match was found and there's no default case. The listing below
+illustrates \lstinline|switch| usage.
+
+Unlike \langC, there are no \lstinline|break| to end \lstinline|case|
+clauses: execution will never span over several cases.  Since the
+comparisons are performed with the generic \lstinline|==| operator,
+\lstinline|switch| can be performed on any comparable data type.
+
+\begin{urbiscript}
+function sw(v)
+{
+  switch (v)
+  {
+    case "":
+      echo("Empty string");
+    case "foo":
+      "bar";
+    default:
+      v[0];
+  }
+}|;
+sw("");
+[00000000] *** Empty string
+sw("foo");
+[00000000] "bar"
+sw("foobar");
+[00000000] "f"
+\end{urbiscript}
+% $ Pacify emacs math mode.
+
+\subsection{while}
+
+The \lstinline|while| loop is similar to \langC's one.
+
+\begin{urbiunchecked}
+while (\var{condition})
+  \var{body};
+\end{urbiunchecked}
+
+If \var{condition} evaluation, is true, \var{body} is evaluated and
+execution jumps before the \lstinline|while|, otherwise execution
+jumps after the \lstinline|while|.
+
+\begin{urbiscript}
+var j = 3|
+while (0 < j)
+{
+  echo(j);
+  j--;
+};
+[00000000] *** 3
+[00000000] *** 2
+[00000000] *** 1
+\end{urbiscript}
+
+The default flavor for \lstinline|while| is \lstinline|while;|.
+
+\subsubsection{while;}
+
+The semantics of
+
+\begin{urbiunchecked}
+while; (\var{condition})
+  \var{body};
+\end{urbiunchecked}
+
+\noindent
+is the same as
+
+\begin{urbiunchecked}
+\var{condition} | \var{body} ; \var{condition} | \var{body} ; ...
+\end{urbiunchecked}
+
+\noindent
+as long as \var{cond} evaluates to true, or until \lstinline|break| is
+invoked.  If \lstinline|continue| is evaluated, the rest of the body
+is skipped, and the next iteration is started.
+
+\begin{urbiscript}
+{
+  var i = 4|
+  while (true)
+  {
+    i -= 1;
+    echo ("in: " + i);
+    if (i == 1)
+      break
+    else if (i == 2)
+      continue;
+    echo ("out: " + i);
+  };
+};
+[00000000] *** in: 3
+[00000000] *** out: 3
+[00000000] *** in: 2
+[00000000] *** in: 1
+\end{urbiscript}
+
+
+\subsubsection{while|}
+
+The semantics of
+
+\begin{urbiunchecked}
+while| (\var{condition})
+  \var{body};
+\end{urbiunchecked}
+
+\noindent
+is the same as
+
+\begin{urbiunchecked}
+\var{condition} | \var{body} | \var{condition} | \var{body} | ...
+\end{urbiunchecked}
+
+The execution is can be controlled by \lstinline|break| and
+\lstinline|continue|.
+
+\begin{urbiscript}
+{
+  var i = 4|
+  while| (true)
+  {
+    i -= 1;
+    echo ("in: " + i);
+    if (i == 1)
+      break
+    else if (i == 2)
+      continue;
+    echo ("out: " + i);
+  };
+};
+[00000000] *** in: 3
+[00000000] *** out: 3
+[00000000] *** in: 2
+[00000000] *** in: 1
+\end{urbiscript}
+
+
+\section{Exceptions}
+\label{sec:lang:except}
+\subsection{Throwing exceptions}
+
+Use the \lstinline|throw| keyword to \dfn[exception!throwing]{throw
+  exceptions}, as shown below. Thrown exceptions will break the execution
+upward until they are caught, or until they reach the top-level --- as in
+\Cxx.  Contrary to \Cxx, exceptions reaching the top-level are printed, and
+won't abort the kernel --- other and new connections will continue to
+execute normally.
+
+\begin{urbiscript}
+throw 42;
+[00000000:error] !!! 42
+function inner() { throw "exn" } |
+function outer() { inner() }|
+// Exceptions propagate to parent call up to the top-level
+outer();
+[00000000:error] !!! exn
+[00000000:error] !!!    called from: inner
+[00000000:error] !!!    called from: outer
+\end{urbiscript}
+
+\subsection{Catching exceptions}
+\label{sec:lang:catch}
+
+Exceptions are \dfn[exception!catching]{caught} with the
+\lstinline|try|/\lstinline|catch| construct. Its syntax is as follows:
+
+\begin{bnf}
+<try-statement>
+  ::= "try" "{" <statement>* "}" <catch-clause>+ <else-clause>? <finally-clause>?
+    | "try" "{" <statement>* "}" <finally-clause>
+
+<catch-clause>
+  ::= "catch" "(" <pattern> ")" "{" <statement>* "}"
+    | "catch" "{" <statement>* "}"
+
+<else-clause>
+  ::= "else" "{" <statement>* "}"
+
+<finally-clause>
+  ::= "finally" "{" <statement>* "}"
+\end{bnf}
+
+It consists of a first block of statements (the \dfn{try-block}), from which
+we want to catch exceptions, and one or more catch clauses to stop the
+exception (\dfn{catch-blocks}).
+
+Each \lstinline|catch| clause defines a pattern against which the thrown
+exception is matched. If no pattern is specified, the catch clause matches
+systematically (equivalent to \lstinline|catch (...)| in \Cxx).  It is a
+syntax error if this catch-all clause is followed by a catch-clause with a
+pattern:
+
+\begin{urbiscript}
+try {} catch {} catch (var e) {};
+[00000701:error] !!! syntax error: catch: exception already caught by a previous clause
+\end{urbiscript}
+
+\noindent
+The catch-all clause, if present, must be last:
+
+\begin{urbiscript}
+try {} catch (var e) {} catch {};
+\end{urbiscript}
+
+Exceptions thrown from the \lstinline|try| block are matched sequentially
+against all catch clauses. The first matching clause is executed, and
+control jumps after the whole try/catch block. If no catch clause matches,
+the exceptions isn't stopped and continues upward.
+
+\begin{urbiscript}
+function test(e)
+{
+  try
+  { throw e;  }
+  catch (0)
+  { echo("zero") }
+  catch ([var x, var y])
+  { echo(x + y) }
+} | {};
+test(0);
+[00002126] *** zero
+test([22, 20]);
+[00002131] *** 42
+test(51);
+[00002143:error] !!! 51
+[00002143:error] !!!    called from: test
+\end{urbiscript}
+
+If an \lstinline|else|-clause is specified, it is executed if the
+\lstinline|try| block did not raise an exception.
+
+\begin{urbiscript}
+try   { echo("try") }
+catch { echo("catch")}
+else  { echo("else")};
+[00002855] *** try
+[00002855] *** else
+
+try   { echo("try"); echo("throw"); throw 0 }
+catch { echo("catch")}
+else  { echo("else")};
+[00002855] *** try
+[00002855] *** throw
+[00002855] *** catch
+\end{urbiscript}
+
+The value of the whole construct is:
+\begin{itemize}
+\item if the \lstinline|try| block raised an exception
+  \begin{itemize}
+  \item if the exception is not caught (or an exception is thrown from the
+    catch-clause), then there is no value, as the control flow is broken;
+  \item if the exception is caught; then it's the value of the corresponding
+    catch clause.
+\begin{urbiscript}
+try { throw 0; "try" } catch (0) { "catch" } else { "else" };
+[00467080] "catch"
+\end{urbiscript}
+  \end{itemize}
+\item if the \lstinline|try| block finish properly, then
+  \begin{itemize}
+  \item if there is an \lstinline|else|-clause, its value.
+\begin{urbiscript}
+try { "try" } catch (0) { "catch" } else { "else" };
+[00467080] "else"
+\end{urbiscript}
+  \item otherwise the value of the \lstinline|try|-block.
+\begin{urbiscript}
+try { "try" } catch (0) { "catch" };
+[00467080] "try"
+\end{urbiscript}
+  \end{itemize}
+\end{itemize}
+
+
+\subsection{Inspecting exceptions}
+
+An \refObject{Exception} is a regular object, on which introspection
+can be performed.
+
+\begin{urbiscript}
+try
+{
+  Math.cos(3,1415);
+}
+catch (var e)
+{
+  echo ("Exception type: %s" % e.type);
+  if (e.isA(Exception.Arity))
+  {
+    echo("Routine: %s" % e.routine);
+    echo("Number of effective arguments: %s" % e.effective);
+  };
+};
+[00000132] *** Exception type: Arity
+[00000133] *** Routine: cos
+[00000134] *** Number of effective arguments: 2
+\end{urbiscript}
+
+\subsection{Finally}
+\label{sec:lang:except:finally}
+
+Using the finally-clause construct, you can ensure some code is executed
+upon exiting a try-clause, be it naturally or through an exception,
+\lstinline|return|, \lstinline|continue|, \ldots
+
+\subsubsection{Regular execution}
+
+The finally-clause is executed when the try-clause exits normally.
+
+\begin{urbiscript}
+try
+{
+  echo("inside");
+}
+finally
+{
+  echo("finally");
+};
+[00000001] *** inside
+[00000002] *** finally
+\end{urbiscript}
+
+The value of the whole construct is that of the finally-clause.
+
+\begin{urbiscript}
+try { 51 } finally { 42 };
+[00000001] 51
+\end{urbiscript}
+
+
+\subsubsection{Control-flow}
+
+The finally clause is executed even if \lstinline|return| is run.
+
+\begin{urbiscript}
+function with_return(var enable)
+{
+  try
+  {
+    echo("before return");
+    if (enable)
+      return;
+    echo("after return");
+  }
+  finally
+  {
+    echo("finally");
+  };
+  echo("after try-block")
+}|
+
+with_return(false);
+[00001983] *** before return
+[00001985] *** after return
+[00001985] *** finally
+[00001986] *** after try-block
+
+with_return(true);
+[00001991] *** before return
+[00001992] *** finally
+\end{urbiscript}
+
+It is also the case when the control flow is disrupted by
+\lstinline|continue| or \lstinline|break|.
+
+\begin{urbiscript}
+for (var i : ["1", "continue", "2", "break", "3"])
+  try
+  {
+    echo("before:  " + i);
+    switch (i)
+    {
+      case "break":    break;
+      case "continue": continue;
+    };
+    echo("after:   " + i);
+  }
+  finally
+  {
+    echo("finally: " + i);
+  };
+[00000663] *** before:  1
+[00000671] *** after:   1
+[00000671] *** finally: 1
+[00000673] *** before:  continue
+[00000675] *** finally: continue
+[00000682] *** before:  2
+[00000703] *** after:   2
+[00000703] *** finally: 2
+[00000704] *** before:  break
+[00000705] *** finally: break
+\end{urbiscript}
+
+
+\subsubsection{Exceptions}
+
+Exceptions caught in the try-catch clause are much like a regular execution
+flow.  In particular, the value of the construct is that of the try-catch
+clause regardless of the execution of the \lstinline|finally| clause.
+
+\begin{urbiscript}
+try           { echo("try");     "try" }
+catch (var e) { echo("catch");   "catch" }
+finally       { echo("finally"); "finally" };
+[00000614] *** try
+[00000615] *** finally
+[00000616] "try"
+
+try           { echo("try");     "try" }
+catch (var e) { echo("catch");   "catch" }
+else          { echo("else");    "else" }
+finally       { echo("finally"); "finally" };
+[00000614] *** try
+[00000615] *** else
+[00000615] *** finally
+[00000616] "else"
+
+try                      { echo("throw 42"); throw 42; "try" }
+catch (var e if e == 42) { echo("caught " + e);        "catch" }
+finally                  { echo("finally");            "finally" };
+[00000626] *** throw 42
+[00000626] *** caught 42
+[00000631] *** finally
+[00000631] "catch"
+\end{urbiscript}
+
+
+Uncaught exceptions (i.e., exceptions for which there were no handlers) are
+propagated after the exception of the finally-clause.
+
+\begin{urbiscript}
+try                      { echo("throw"); throw 51; "try" }
+catch (var e if e == 42) { echo("caught " + e);     "catch" }
+finally                  { echo("finally");         "finally" };
+[00000616] *** throw
+[00000617] *** finally
+[00000625:error] !!! 51
+\end{urbiscript}
+
+Exceptions launched in the finally-clause override previous exceptions.
+
+\begin{urbiscript}
+try     { throw "throw" }
+catch   { throw "catch" }
+finally { throw "finally" };
+[00005200:error] !!! finally
+\end{urbiscript}
+
+
+%% FIXME: \subsection{Exceptions and parallelism}
+
+\section{Assertions}
+\label{sec:lang:assert}
+\label{sec:assertions}
+
+\dfn[assertion]{Assertions} allow to embed consistency checks in the
+code.  They are particularly useful when developing a program since
+they allow early catching of errors.  Yet, they can be costly in
+production mode: the run-time cost of verifying every single assertion
+might be prohibitive.  Therefore, as in \langC-like languages, assertions
+are disabled when \refSlot[System]{ndebug} is true, see \refObject{System}.
+
+\us supports assertions in two different ways: with a function-like
+syntax, which is adequate for single claims, and a block-like syntax,
+to group claims together.
+
+\subsection{Asserting an Expression}
+
+\begin{urbiscript}
+assert(true);
+assert(42);
+\end{urbiscript}
+
+Failed assertions are displayed in a user friendly fashion: first the
+assertion is displayed before evaluation, then the effective values are
+reported.
+
+\begin{urbiscript}
+function fail () { false }|;
+assert (fail);
+[00010239:error] !!! failed assertion: fail (fail == false)
+
+function lazyFail { call.evalArgAt(0); false }|;
+assert (lazyFail(1+2, "+" * 2));
+[00010241:error] !!! failed assertion: lazyFail(1.'+'(2), "+".'*'(2)) (lazyFail(3, ?) == false)
+\end{urbiscript}
+
+The following example is more realistic.
+
+\begin{urbiscript}
+function areEqual
+{
+  var res = true;
+  if (!call.args.empty)
+  {
+    var args = call.evalArgs;
+    var a = args[0];
+    for (var b : args.tail)
+      if (a != b)
+      {
+        res = false;
+        break;
+      }
+  };
+  res
+}|;
+assert (areEqual);
+assert (areEqual(1));
+assert (areEqual(1, 0 + 1));
+assert (areEqual(1, 1, 1+1));
+[00001388:error] !!! failed assertion: areEqual(1, 1, 1.'+'(1)) (areEqual(1, 1, 2) == false)
+assert (areEqual(1+2, 3+3, 4*6));
+[00001393:error] !!! failed assertion: areEqual(1.'+'(2), 3.'+'(3), 4.'*'(6)) (areEqual(3, 6, 24) == false)
+\end{urbiscript}
+
+Comparison operators are recognized, and displayed specially:
+\begin{urbiscript}
+assert(1 == 1 + 1);
+[00000002:error] !!! failed assertion: 1 == 1.'+'(1) (1 != 2)
+\end{urbiscript}
+
+Note however that if opposite comparison operators are absurd (i.e., if for
+instance \lstinline|a == b| is not true, but \lstinline|a != b| is not true
+either), them the message is unlikely to make sense.
+
+\subsection{Assertion Blocks}
+
+Groups of assertions are more readable when used with the
+\lstinline|assert{\var{exp1}; \var{exp2}; ...}| construct.  The
+(possibly empty) list of claims may be ended with a semicolon.
+
+\begin{urbiscript}
+assert
+{
+  true;
+  42;
+  1 == 1 + 1;
+};
+[00000002:error] !!! failed assertion: 1 == 1.'+'(1) (1 != 2)
+\end{urbiscript}
+
+For sake of readability and compactness, this documentation shows
+assertion blocks as follows.
+
+\begin{urbiassert}
+true;
+42;
+1 == 1 + 1;
+[00000002:error] !!! failed assertion: 1 == 1.'+'(1) (1 != 2)
+\end{urbiassert}
+
+
+\section{Parallel and event-based flow control}
+
+\subsection{\lstinline'at'}
+\label{sec:lang:at}
+Using the \lstindex{at} construct, one can arm code that will be
+triggered each time some condition is true.
+
+The \lstinline'at' construct is as follows:
+
+\begin{urbiunchecked}
+at (\var{condition})
+  \var{statement1}
+onleave
+  \var{statement2}
+\end{urbiunchecked}
+
+The \var{condition} can be of two different kinds:
+\lstinline|\var{e}?(\var{args})| to catch when events are sent, or
+\lstinline|\var{exp}| to catch each time a Boolean \var{exp} becomes
+true.
+
+The \lstinline|onleave \var{statement2}| part is optional.  Note that,
+as is the case for the \lstinline|if| statement, there must not be a
+semicolon after \var{statement1} if there is an \lstinline|onleave|
+clause.
+
+\subsubsection{\lstinline'at' on Events}
+%% FIXME: More details are needed.  Don't bounce elsewhere.
+See \autoref{sec:tut:events} for an example of using \lstinline|at|
+statements to watch events.
+
+\paragraph{Durations}
+
+Since events may last for a given duration
+%% Beware of wrapping.
+(\lstinline|e! ~ \var{duration}|),
+%%
+event handlers may also require an event to be sustained for a given amount
+of time before being ``accepted'' (\lstinline|at (e? ~ \var{duration})|).
+
+\begin{urbiscript}[firstnumber=1]
+var e = Event.new|;
+at (e?(var start) ~ 1s)
+  echo("in : %s" % (time - start).round)
+onleave
+  echo("out: %s" % (time - start).round);
+
+// This emission is too short to trigger the at.
+e!(time);
+
+// This one is long enough.
+// The body triggers 1s after the emission started.
+e!(time) ~ 2s;
+[00001000] *** in : 1
+[00002000] *** out: 2
+\end{urbiscript}
+
+
+\subsubsection{\lstinline'at' on Boolean Expressions}
+
+The \lstinline|at| construct can be used to watch a given Boolean
+expression.
+
+\begin{urbiscript}[firstnumber=1]
+var x = 0 |
+var x_is_two = false |
+at (x == 2)
+  x_is_two = true
+onleave
+  x_is_two = false;
+
+x = 3|;  assert(!x_is_two);
+x = 2|;  assert( x_is_two);
+x = 2|;  assert( x_is_two);
+x = 3|;  assert(!x_is_two);
+\end{urbiscript}
+
+It can also wait for some condition to hold long enough:
+\lstinline|\var{exp} ~ \var{duration}|, as a condition, denotes the
+fact that \var{exp} was true for \var{duration} seconds.
+
+\begin{urbiscript}[firstnumber=1]
+var x = 0 |
+var x_was_two_for_two_seconds = false |
+at (x == 2 ~ 2s)
+  x_was_two_for_two_seconds = true
+onleave
+  x_was_two_for_two_seconds = false;
+
+x = 2       | assert(!x_was_two_for_two_seconds);
+sleep(1.5s) | assert(!x_was_two_for_two_seconds);
+sleep(1.5s) | assert( x_was_two_for_two_seconds);
+
+x = 3|; sleep(0.1s);  assert(!x_was_two_for_two_seconds);
+
+x = 2       | assert(!x_was_two_for_two_seconds);
+sleep(1.5s) | assert(!x_was_two_for_two_seconds);
+x = 3|; x = 2|; sleep (1s) | assert(!x_was_two_for_two_seconds);
+\end{urbiscript}
+
+\subsubsection{Synchronous and asynchronous \lstinline'at'}
+\label{sec:lang:at:sync-async}
+
+By default, \lstinline{at} is asynchronous: the enter and leave actions are
+executed in detached jobs and won't interfere with the execution flow of the
+job that triggered it.
+
+\begin{urbiscript}[firstnumber=1]
+var e = Event.new;
+[00000001] Event_0xADDR
+
+at (e?)
+{
+  sleep(1s);
+  echo("in");
+}
+onleave
+{
+  sleep(2s);
+  echo("out");
+};
+
+e!;
+// Actions are triggered in the background and won't block
+// the execution flow.
+sleep(500ms);
+echo("Not blocked");
+[00000002] *** Not blocked
+sleep(1s);
+[00000003] *** in
+echo("Not blocked");
+[00000004] *** Not blocked
+sleep(500ms);
+[00000003] *** out
+\end{urbiscript}
+
+When using the \lstinline{sync} keyword after \lstinline{at}, it becomes
+synchronous: when a job triggers it, all enter and leave actions are
+executed synchronously before the triggering statement returns.
+
+\begin{urbiscript}[firstnumber=1]
+var e = Event.new;
+[00000001] Event_0xADDR
+
+at sync (e?)
+{
+  sleep(1s);
+  echo("in");
+}
+onleave
+{
+  sleep(1s);
+  echo("out");
+};
+
+e!;
+// Actions are triggered synchronously, the next line will be executed
+// when they're done.
+echo("Blocked");
+[00000002] *** in
+[00000003] *** out
+[00000004] *** Blocked
+\end{urbiscript}
+
+\subsubsection{Scoping at \lstinline'at'}
+
+\lstinline'at' statements are not scoped.  But, using a \refObject{Tag}
+object, one can control them.  In the following example,
+\refSlot[Tag]{scope} is used to label the \lstinline|at| statement.  When
+the function ends, the \lstinline|at| is no longer active.
+
+\begin{urbiscript}[firstnumber=1]
+var x = 0 |
+var x_is_two = false |;
+
+{
+  Tag.scope:
+    at (x == 2)
+      x_is_two = true
+    onleave
+      x_is_two = false;
+  sleep(2s);
+},
+x = 2 |; assert(x_is_two);
+x = 1 |; assert(!x_is_two);
+sleep(3s);
+x = 2 | assert(!x_is_two);
+\end{urbiscript}
+
+\subsection{\lstinline'every'}
+
+The \lstindex{every} statement enables to execute a block of code
+repeatedly, with the given period.
+
+\begin{urbiscript}
+// Print out a message every second.
+timeout (2.1s)
+  every (1s)
+    echo("Are you still there?");
+[00000000] *** Are you still there?
+[00001000] *** Are you still there?
+[00002000] *** Are you still there?
+\end{urbiscript}
+
+It exists in several flavors.
+
+\subsubsection{\lstinline'every|'}
+The whole \lstinline'every|' statement itself remains in foreground:
+statements attached after it with \lstinline';' or \lstinline'|' will
+not be reached unless you \lstinline'break' out of it.  You may use
+\lstinline|continue| to finish one iteration.  In that case, the
+following iteration is not immediately started, it will be launched as
+expected, at the given period.
+
+% We used to use 100ms instead of 1s, but severely loaded machines
+% (the Mac Mini) fail way too often.
+\begin{urbiscript}
+{
+  var count = 4;
+  var start = time;
+  echo("before");
+  every| (1s)
+  {
+    count -= 1;
+    echo("begin: %s @ %1.0fs" % [count, time - start]);
+    if (count == 2)
+      continue;
+    if (count == 0)
+      break;
+    echo("end:   " + count);
+  };
+  echo("after");
+};
+[00000597] *** before
+[00000598] *** begin: 3 @ 0s
+[00000599] *** end:   3
+[00000698] *** begin: 2 @ 1s
+[00000798] *** begin: 1 @ 2s
+[00000799] *** end:   1
+[00000898] *** begin: 0 @ 3s
+[00000899] *** after
+\end{urbiscript}
+
+The \lstinline{every|} flavor does not let iterations overlap. If an
+iteration takes too long, the following iterations are delayed. That
+is, the next iterations will start immediately after the end of the
+current one, and next iterations will occur normally from this point.
+
+\begin{urbiscript}
+{
+  var too_long = true|;
+
+  var count = 5;
+  // Every other iteration exceeds the period, and will delay the
+  // following one.
+  every| (1s)
+  {
+    if (! count -=1)
+      break;
+
+    if (too_long)
+    {
+      too_long = false;
+      echo("Long in");
+      sleep(1.5s);
+      echo("Long out");
+    }
+    else
+    {
+      too_long = true;
+      echo("Short");
+    };
+  };
+};
+[00000000] *** Long in
+[00001500] *** Long out
+[00001500] *** Short
+[00002500] *** Long in
+[00004000] *** Long out
+[00004000] *** Short
+\end{urbiscript}
+
+The flow-control constructs \lstinline|break| and \lstinline|continue|
+are supported.
+
+\begin{urbiscript}
+{
+  var count = 0;
+  every| (250ms)
+  {
+    count += 1;
+    if (count == 2)
+      continue;
+    if (count == 4)
+      break;
+    echo(count);
+  }
+};
+/*(*/sleep(2s);/*)*/
+[00000000] *** 1
+[00001500] *** 3
+\end{urbiscript}
+
+
+\subsection{watch}
+\label{sec:lang:watch}
+
+The \lstinline|watch| construct is similar in spirit to using the
+\lstinline|at| construct to monitor expressions, except it enables you to be
+notified when an arbitrary expression changed, not only when it becomes true
+or false. This makes \lstinline|watch| a more primitive tool than
+\lstinline|at| on expressions.  Actually, \lstinline|at| on expressions uses
+\lstinline|watch| to determine when to reevaluate its condition.
+
+\lstinline|watch(\var{expression})| evaluates to an \refObject{Event} that
+triggers every time \var{expression} changes, with its new value as payload.
+
+\begin{urbiscript}[firstnumber=1]
+var x = 0;
+[00000000] 0
+var y = 0;
+[00000000] 0
+var e = watch(x + y);
+[00000000] Event_0x103a1e978
+at (e?(var value))
+  echo("x + y = %s" % value);
+x = 1;
+[00000000] 1
+[00000000] *** x + y = 1
+y = 2;
+[00000000] 2
+[00000000] *** x + y = 3
+\end{urbiscript}
+
+Note that ``the expression changed'' might be ambiguous: Urbi considers the
+expression to have changed when any component involved in its evaluation
+changed.  If a \refObject{Float} is replaced with another Float of the same
+value, the expression has changed, since the new Float may have different
+slots.
+
+\begin{urbiscript}[firstnumber=1]
+var x = 0;
+[00000000] 0
+at (watch(x)?(var value))
+  echo("x = %s" % value);
+// This is considered as a change, although the new float value is also 0.
+x = 0;
+[00000000] 0
+[00000000] *** x = 0
+\end{urbiscript}
+
+Also, some modification may modify the evaluation, but still yield the same
+result.
+
+\begin{urbiscript}[firstnumber=1]
+var x = 1;
+[00000000] 1
+at (watch(x % 2)?(var value))
+  echo("x %% 2 = %s" % value);
+
+// This is considered as a change, although the computation yields the
+// same result.
+x = 3;
+[00000000] 3
+[00000000] *** x % 2 = 1
+\end{urbiscript}
+
+\subsubsection{\lstinline'every,'}
+The default flavor, \lstinline|every,| launches the execution of the
+block in the background every given period. Iterations may overlap.
+
+% Cut the previous every, no
+\begin{urbiscript}[firstnumber=1]
+// If an iteration is longer than the given period, it will overlap
+// with the next one.
+timeout (2.8s)
+  every (1s)
+  {
+    echo("In");
+    sleep(1.5s);
+    echo("Out");
+  };
+[00000000] *** In
+[00001000] *** In
+[00001500] *** Out
+[00002000] *** In
+[00002500] *** Out
+\end{urbiscript}
+
+\subsection{for}
+
+The \lstinline|for| loops come into several flavors, depending one the
+actual kind of \lstinline|for| loop.
+
+\subsubsection{C-for,}
+\experimentalremoved{}
+
+\lstinline|for,| is syntactic sugar for \lstinline|while,|, see
+\autoref{sec:lang:while:comma}.
+
+\begin{urbiscript}
+for, (var i = 3; 0 < i; i -= 1)
+{
+  var j = i |
+  echo ("in: i = %s, j = %s" % [i, j]);
+  sleep(j/10);
+  echo ("out: i = %s, j = %s" % [i, j]);
+};
+echo ("done");
+[00000144] *** in: i = 3, j = 3
+[00000145] *** in: i = 2, j = 2
+[00000145] *** in: i = 1, j = 1
+[00000246] *** out: i = 0, j = 1
+[00000346] *** out: i = 0, j = 2
+[00000445] *** out: i = 0, j = 3
+[00000446] *** done
+\end{urbiscript}
+
+\begin{urbiscript}
+for, (var i = 9; 0 < i; i -= 1)
+{
+  var j = i;
+  if (j % 2)
+    continue
+  else if (j == 4)
+    break
+  else
+    echo("%s: done" % j)
+};
+echo("done");
+[00000146] *** 8: done
+[00000148] *** 6: done
+[00000150] *** done
+\end{urbiscript}
+
+
+\subsubsection{range-for\& (:)}
+\label{sec:lang:for:each:and}
+
+One can iterate concurrently over the members of a collection.
+
+\begin{urbiscript}
+for& (var i: [0, 1, 2])
+{
+  echo (i * i);
+  echo (i * i);
+};
+[00000000] *** 0
+[00000000] *** 1
+[00000000] *** 4
+[00000000] *** 0
+[00000000] *** 1
+[00000000] *** 4
+\end{urbiscript}
+
+If an iteration executes \lstinline|continue|, it is stopped; the
+other iterations are not affected.
+
+\begin{urbiscript}
+for& (var i: [0, 1, 2])
+{
+  var j = i;
+  if (j == 1)
+    continue;
+  echo (j);
+};
+[00020653] *** 0
+[00021054] *** 2
+\end{urbiscript}
+
+If an iteration executes \lstinline|break|, all the iterations
+including this one, are stopped.
+
+\begin{urbiscript}
+for& (var i: [0, 1, 2])
+{
+  var j = i;
+  echo (j);
+  if (j == 1)
+   { echo ("break");
+    break;};
+  sleep(1s);
+  echo (j);
+};
+[00000001] *** 0
+[00000001] *** 1
+[00000001] *** 2
+[00000002] *** break
+\end{urbiscript}
+
+\subsubsection{for\& (n)}
+
+Since \lstinline|for& (\var{n}) \var{body}| is processed as
+\lstinline|for& (var \var{tmp}: \var{n}) \var{body}|, which \var{tmp}
+a hidden variable, see \autoref{sec:lang:for:each:and} for details.
+
+
+\subsection{loop,}
+\experimentalremoved{}
+
+This is syntactic sugar for \lstinline|while,(true)|.  In the
+following example, care must be taken that concurrent executions don't
+modify \lstinline|n| simultaneously.  This would happen had
+\lstinline|;| been used instead of \lstinline'|'.
+
+\begin{urbiassert}
+{
+  var n = 10|;
+  var res = []|;
+  loop,
+  {
+    n-- |
+    res << n |
+    if (n == 0)
+      break
+  };
+  res.sort
+}
+==
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+\end{urbiassert}
+
+\subsection{\lstinline|waituntil|}
+\label{sec:lang:waituntil}
+
+The \lstinline|waituntil| construct is used to hold the execution
+until some condition is verified.  Similarly to \lstinline|at|
+(\autoref{sec:lang:at}) and the other event-based constructs,
+\lstinline|waituntil| may work on events, or on Boolean expressions.
+
+\subsubsection{\lstinline'waituntil' on Events}
+
+When the execution flow enters a \lstinline|waituntil|, the execution
+flow is held until the event is fired.  Once caught, the event is
+consumed, another \lstinline|waituntil| will require another event
+emission.
+
+\begin{urbiscript}
+{
+  var e = Event.new;
+  {
+    waituntil (e?);
+    echo ("caught e");
+  },
+  e!;
+[00021054] *** caught e
+  e!;
+};
+\end{urbiscript}
+
+In the case of lasting events (see \refSlot[Event]{trigger}), the
+condition remains verified as long as the event is ``on''.
+
+\begin{urbiscript}
+{
+  var e = Event.new;
+  e.trigger;
+  {
+    waituntil (e?);
+    echo ("caught e");
+  };
+[00021054] *** caught e
+  {
+    waituntil (e?);
+    echo ("caught e");
+  };
+[00021054] *** caught e
+  {
+    waituntil (e?);
+    echo ("caught e");
+  };
+[00021054] *** caught e
+};
+\end{urbiscript}
+
+The event specification may use pattern-matching to specify the
+accepted events.
+
+\begin{urbiscript}
+{
+  var e = Event.new;
+  {
+    waituntil (e?(1, var b));
+    echo ("caught e(1, %s)" % b);
+  },
+  e!;
+  e!(1);
+  e!(2, 2);
+  e!(1, 2);
+[00021054] *** caught e(1, 2)
+  e!(1, 2);
+};
+\end{urbiscript}
+
+Events sent before do not release the construct.
+
+\begin{urbiscript}
+{
+  var e = Event.new;
+  e!;
+  {
+    waituntil (e?);
+    echo ("caught e");
+  },
+  e!;
+[00021054] *** caught e
+};
+\end{urbiscript}
+
+\subsubsection{\lstinline'waituntil' on Boolean Expressions}
+
+You may use any expression that evaluates to a truth value as argument
+to \lstinline'waituntil'.
+
+\begin{urbiscript}
+{
+  var foo = Object.new;
+  {
+    waituntil (foo.hasLocalSlot("bar"));
+    echo(foo.getLocalSlot("bar"));
+  },
+  var foo.bar = 123|;
+};
+[00021054] *** 123
+\end{urbiscript}
+
+\subsection{\lstinline|whenever|}
+\label{sec:lang:whenever}
+
+The \lstinline|whenever| construct really behaves like a never-ending
+\lstinline|loop if| construct.  It also works on events and Boolean
+expressions, and triggers each time the condition \emph{becomes}
+verified.
+
+\begin{urbiunchecked}
+whenever (\var{condition})
+  \var{statement1}
+\end{urbiunchecked}
+
+It supports an optional \lstinline|else| clause, which is run whenever
+the condition changes ``from true to false''.
+
+\begin{urbiunchecked}
+whenever (\var{condition})
+  \var{statement1}
+else
+  \var{statement2}
+\end{urbiunchecked}
+
+The execution of a \lstinline|whenever| clause is ``instantaneous'',
+there is no mean to use \samp{,} to put it in background.  It is also
+asynchronous with respect to the condition: the emission of an event
+is not held until all its watchers have completed their job.
+
+\subsubsection{\lstinline'whenever' on Events}
+
+A \lstinline'whenever' clause can be used to catch events with or
+without payloads.
+
+\begin{urbiunchecked}[firstnumber=1]
+var e = Event.new|;
+whenever (e?)
+  echo("e on")
+else
+  echo("e off");
+[00000001] *** e off
+[00000002] *** e off
+[00000003] *** ...
+e!;
+[00000004] *** e on
+[00000005] *** e off
+[00000006] *** e off
+[00000007] *** ...
+e!(1) & e!(2);
+[00000008] *** e on
+[00000009] *** e on
+[00000010] *** e off
+[00000011] *** e off
+[00000012] *** ...
+\end{urbiunchecked}
+
+The pattern-matching and guard on the payload is available.
+
+\begin{urbiunchecked}[firstnumber=1]
+var e = Event.new|;
+whenever (e?("arg", var arg) if arg % 2)
+  echo("e (%s) on" % arg)
+else
+  echo("e off");
+e!("param", 23);
+e!("arg", 52);
+e!("arg", 23);
+[00000001] *** e (23) on
+[00000002] *** e off
+[00000003] *** e off
+[00000004] *** ...
+e!("arg", 52);
+e!("arg", 17);
+[00000005] *** e (17) on
+[00000006] *** e off
+[00000007] *** e off
+[00000008] *** ...
+\end{urbiunchecked}
+
+
+If the body of the \lstinline|whenever| lasts for a long time, it is
+possible that two executions be run concurrently.
+
+\begin{urbiscript}[firstnumber=1]
+var e = Event.new|;
+whenever (e?(var d))
+{
+  echo("e (%s) on begin" % d);
+  sleep(d);
+  echo("e (%s) on end" % d);
+};
+
+e!(0.3s) & e!(1s);
+sleep(3s);
+[00000202] *** e (1) on begin
+[00000202] *** e (0.3) on begin
+[00000508] *** e (0.3) on end
+[00001208] *** e (1) on end
+\end{urbiscript}
+
+\subsubsection{\lstinline'whenever' on Boolean Expressions}
+
+A \lstinline'whenever' construct will repeatedly evaluate its body as
+long as its condition holds.  The number of evaluation of the bodies
+is typically non-deterministic, as not only does it depend on how
+long the condition holds, but also ``how fast'' the \urbi kernel runs.
+
+\begin{urbiscript}[firstnumber=1]
+var x = 0|;
+var count = 0|;
+var t = Tag.new|;
+t:
+  whenever (x % 2)
+  {
+    if (!count)
+      echo("x is now odd (%s)" % x);
+    count++;
+  }
+  else
+  {
+    if (!count)
+      echo("x is now even (%s)" % x);
+    count++;
+  };
+
+t:
+  whenever (100 < count)
+  {
+    count = 0 |
+    x++;
+  };
+waituntil(x == 4);
+[00000769] *** x is now even (0)
+[00000809] *** x is now odd (1)
+[00000846] *** x is now even (2)
+[00000886] *** x is now odd (3)
+[00000924] *** x is now even (4)
+t.stop;
+\end{urbiscript}
+
+
+\subsection{While}
+\subsubsection{\lstinline|while,|}
+\label{sec:lang:while:comma}
+\experimentalremoved{}
+
+This construct provides a means to run concurrently multiple instances
+of statements.  The semantics of
+
+\begin{urbiunchecked}
+while, (\var{condition})
+  \var{body};
+\end{urbiunchecked}
+
+\noindent
+is the same as
+
+\begin{urbiunchecked}
+\var{condition} | \var{body} , \var{condition} | \var{body} , ...
+\end{urbiunchecked}
+
+Attention must be paid to the fact that the (concurrent) iterations
+share a common access to the environment, therefore if, for instance,
+you want to keep the value of some index variable, use a local
+variable inside the loop body:
+
+% Cut the previous every, no
+\begin{urbiscript}[firstnumber=1]
+{
+  var i = 4|
+  while, (i)
+  {
+    var j = i -= 1;
+    echo ("in: i = %s, j = %s" % [i, j]);
+    sleep(j/10);
+    echo ("out: i = %s, j = %s" % [i, j]);
+  }|
+  echo ("done");
+}|
+[00000144] *** in: i = 2, j = 3
+[00000145] *** in: i = 1, j = 2
+[00000145] *** in: i = 0, j = 1
+[00000146] *** in: i = 0, j = 0
+[00000146] *** out: i = 0, j = 0
+[00000246] *** out: i = 0, j = 1
+[00000346] *** out: i = 0, j = 2
+[00000445] *** out: i = 0, j = 3
+[00000446] *** done
+\end{urbiscript}
+
+As for the other flavors, \lstinline|continue| skips the current
+iteration, and \lstinline|break| ends the loop.  Note that
+\lstinline|break| stops all the running iterations.  This semantics is
+likely to be changed to ``\lstinline|break| ends the current iteration
+and stops the generation of others, but lets the other concurrent
+iterations finish'', so do not rely on this feature.
+
+Control flow is passed to the following statement when all the
+iterations are done.
+
+\begin{urbiscript}
+{
+  var i = 10|
+  while, (i)
+  {
+    var j = i -= 1;
+    if (j % 2)
+      continue
+    else if (j == 4)
+      break
+    else
+      echo("%s: done" % j)
+  }|
+  echo("done");
+};
+[00000146] *** 8: done
+[00000148] *** 6: done
+[00000150] *** done
+\end{urbiscript}
+
+
+%% FIXME: \section{Pattern matching}
+
+\section{Trajectories}
+\label{sec:lang:traj}
+
+In robotics, \dfn[trajectory]{trajectories} are often used: they are a
+means to change the value of a variable (actually, a slot) over time.
+This can be done using detached executions, for instance using a
+combination of \lstinline|every| and \lstinline|detach|, but \us
+provides syntactic sugar to this end.
+
+For instance the following drawing shows how the \lstinline|y|
+variable is moved smoothly from its \dfn{initial value}
+(\lstinline|0|) to its \dfn{target value} (\lstinline|100|) in 3
+seconds (the value given to the \lstinline|smooth| \dfn{attribute}.
+
+\urbitrajectory{smooth}
+
+Trajectories can be frozen and unfrozen, using tags
+(\autoref{sec:tut:tags}).  In that case, ``time is suspended'', and
+the trajectory resumes as if the trajectory was never interrupted.
+
+\urbitrajectory{smooth-frozen}
+
+When the target value is reached, the trajectory generator is detached
+from the variables: changes to the value of the variable no longer
+trigger the trajectory generator.
+
+\urbitrajectory{smooth-continued}
+
+See the specifications of \refObject{TrajectoryGenerator} for the list
+of supported trajectories.
+
+\section{Garbage collection and limitations}
+\label{sec:lang:gc}
+
+\us provides automatic garbage collection. That is, you can create new
+objects and don't have to worry about reclaiming the memory when you're done
+with them. We use a reference counting algorithm for garbage collection:
+every object has a counter indicating how many references to it
+exist. When that counter drops to zero, nobody has a reference to the object
+anymore, and it is thus deleted.
+
+\begin{urbiunchecked}
+{
+  var x = List.new; // A new list is allocated
+  x << 42;
+};
+// The list will be automatically freed, since there are no references to it left.
+\end{urbiunchecked}
+
+This is not part of the language interface, and we might change the garbage
+collecting system in the future. Therefore, do not rely on the current
+garbage collecting behavior, and especially not on the determinism of the
+destruction time of objects.
+
+However, this implementation has a limitation you should be aware of: cycle
+of object references won't be properly reclaimed. Indeed if object A has a
+reference to B, and B has a reference to A, none of them will ever be
+reclaimed since they both have a reference pointing to them. As a
+consequence, avoid creating cycles in object references, or if you really
+have to, break the cycle manually before releasing your last reference to
+the object.
+
+\begin{urbiunchecked}
+// Create a reference cycle
+var A = Object.new;
+var A.B = Object.new; // A refers to B
+var A.B.A = A; // B refers back to A
+
+removeLocalSlot("A"); // delete our last reference to A
+// Although we have no reference left to A or B,
+// they won't be deleted since they refer to each other.
+\end{urbiunchecked}
+
+If you really need the cycle, this is how you could break it manually:
+
+\begin{urbiunchecked}
+A.B.removeLocalSlot("A"); // Break the cycle
+removeLocalSlot("A"); // Delete our last reference to A
+// A will be deleted since it's not referred from anywhere.
+// Since A held the last reference to B, B will be deleted too.
+\end{urbiunchecked}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% coding: utf-8
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

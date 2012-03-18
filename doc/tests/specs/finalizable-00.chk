@@ -1,0 +1,110 @@
+syncline << "doc/specs/finalizable.tex:20";
+[01234567:#] "doc/specs/finalizable.tex:20"
+//#line 20 "doc/specs/finalizable.tex"
+var obj =
+  do (Finalizable.new)
+  {
+    function finalize ()
+    {
+      echo ("Ouch");
+    }
+  }|;
+
+syncline << "doc/specs/finalizable.tex:35";
+[01234567:#] "doc/specs/finalizable.tex:35"
+//#line 35 "doc/specs/finalizable.tex"
+var alias = obj|;
+obj = nil|;
+
+syncline << "doc/specs/finalizable.tex:44";
+[01234567:#] "doc/specs/finalizable.tex:44"
+//#line 44 "doc/specs/finalizable.tex"
+alias = nil|;
+[00000004] *** Ouch
+
+syncline << "doc/specs/finalizable.tex:59";
+[01234567:#] "doc/specs/finalizable.tex:59"
+//#line 59 "doc/specs/finalizable.tex"
+Finalizable.new;
+[00000527] Finalizable_0x135360
+
+syncline << "doc/specs/finalizable.tex:72";
+[01234567:#] "doc/specs/finalizable.tex:72"
+//#line 72 "doc/specs/finalizable.tex"
+class o1 : Finalizable.new
+{
+  function finalize()
+  {
+    echo("Ouch");
+  }
+}|;
+[00000008:error] !!! apply: cannot inherit from a Finalizable without being one
+
+class o2
+{
+  protos = [Finalizable];
+  function finalize()
+  {
+    echo("Ouch");
+  }
+}|;
+[00000010:error] !!! updateSlot: cannot inherit from a Finalizable without being one
+
+syncline << "doc/specs/finalizable.tex:95";
+[01234567:#] "doc/specs/finalizable.tex:95"
+//#line 95 "doc/specs/finalizable.tex"
+var o3 =
+  do (Finalizable.new)
+  {
+    function finalize()
+    {
+      echo("Ouch");
+    }
+  }|;
+
+syncline << "doc/specs/finalizable.tex:110";
+[01234567:#] "doc/specs/finalizable.tex:110"
+//#line 110 "doc/specs/finalizable.tex"
+class Global.Foo
+{
+  function init()
+  {
+    echo("1");
+  };
+}|;
+
+class Global.FinalizableFoo
+{
+  addProto(Foo.new);
+
+  function 'new'()
+  {
+    var r = clone |
+    r.init |
+    Finalizable.new.addProto(r);
+  };
+
+  function init()
+  {
+    echo("2");
+  };
+
+  function finalize()
+  {
+    echo("3");
+  };
+
+}|;
+
+var i = FinalizableFoo.new|;
+[00000117] *** 1
+[00000117] *** 2
+
+i = nil;
+[00000117] *** 3
+
+syncline << "doc/specs/finalizable.tex:158";
+[01234567:#] "doc/specs/finalizable.tex:158"
+//#line 158 "doc/specs/finalizable.tex"
+Finalizable.new.setSlot("finalize", function() { echo("Ouch") })|;
+[00033240] *** Ouch

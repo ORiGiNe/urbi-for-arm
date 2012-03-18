@@ -1,0 +1,120 @@
+#! @SHELL@
+# @configure_input@
+# Wrapper around a non installed umake component to make it work as
+# an installed one.
+
+# No unnoticed problem.
+set -e
+
+case $VERBOSE in
+  (x) set -x;;
+esac
+
+me=$(basename "$0")
+
+stderr ()
+{
+  echo >&2 "$0: $@"
+}
+
+fatal ()
+{
+  stderr "$@"
+  exit 1
+}
+
+abs_top_builddir='@abs_top_builddir@'
+abs_top_srcdir='@abs_top_srcdir@'
+sdk_remote_srcdir=$abs_top_srcdir/sdk-remote
+sdk_remote_builddir=$abs_top_builddir/sdk-remote
+
+test -d "$sdk_remote_builddir" ||
+  fatal "cannot find top build directory: $sdk_remote_builddir"
+
+param_mk=$sdk_remote_builddir/sdk/param.mk
+test -f "$param_mk" ||
+  fatal "cannot find $param_mk"
+
+: ${LIBTOOL=$abs_top_builddir/libtool}
+test -f "$LIBTOOL" ||
+  fatal "cannot find $LIBTOOL"
+
+export umaindir="${sdk_remote_srcdir}/src/liburbi"
+
+# umake-link does not support -P.
+case $me in
+  (umake-link)
+      ;;
+  (*)
+      set x --param-mk "$param_mk" "$@"
+      shift
+      ;;
+esac
+
+# special case for kernel and umake-remote
+case $me in
+   (umake-remote|umake-shared)
+     remotedir="$sdk_remote_builddir/src/libuobject"
+     prefix="$sdk_remote_builddir"
+     ;;
+   (*)
+     # Use the libuobject from the kernel.
+     remotedir="$sdk_remote_builddir/../src"
+     prefix="$sdk_remote_builddir"
+     ;;
+esac
+
+# Recover EXTRA_CPPFLAGS and EXTRA_LDFLAGS on command line
+set x "$@" myseparator ; shift
+while true; do
+  arg=$1
+  shift
+  case $arg in
+    (EXTRA_*FLAGS=*)
+      var=$(echo "$arg" | sed -e 's/=.*//')
+      val=$(echo "$arg" | sed -e 's/[^=]*=//')
+      eval "$var+=' $val'"
+      ;;
+    (myseparator)
+      break ;;
+    (*)
+      set x "$@" "$arg"; shift
+      ;;
+  esac
+done
+
+# FIXME: Instead of exporting, we should have a means to give
+# it to wrappee only, maybe via command line?
+export UMAKE=$sdk_remote_builddir/sdk/umake
+wrappee=$sdk_remote_builddir/sdk/$me
+
+# Find Boost headers and libs.
+EXTRA_CPPFLAGS+=" @BOOST_CPPFLAGS@"
+EXTRA_LDFLAGS+=" @BOOST_THREAD_LDFLAGS@"
+
+# PREURBI can be valgrind for instance.  Admittedly useless here, since
+# these are scripts.
+set x                                           \
+    $PREURBI "$wrappee"                         \
+    LIBTOOL="$LIBTOOL"                          \
+    remotedir="$remotedir"                      \
+    "$@"                                        \
+    --kernel="$kernel_dir"                      \
+    --prefix="$prefix"                          \
+    -I$sdk_remote_srcdir/include                \
+    -I$sdk_remote_builddir/include              \
+    -I$sdk_remote_srcdir/libport/include        \
+    -I$sdk_remote_builddir/libport/include      \
+    EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS"            \
+    EXTRA_LDFLAGS="$EXTRA_LDFLAGS"
+shift
+
+case $@ in
+  (*" --quiet "* | *"-q"*);;
+  (*)  stderr "running: $*";;
+esac
+exec "$@"
+
+# Local Variables:
+# mode: shell-script
+# End:

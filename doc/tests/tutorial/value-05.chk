@@ -1,0 +1,16 @@
+syncline << "doc/tutorial/value.tex:462";
+[01234567:#] "doc/tutorial/value.tex:462"
+//#line 462 "doc/tutorial/value.tex"
+function test(arg)
+{
+  var arg.flag;  // add a slot in arg
+  echo(arg.uid); // print its uid
+} |;
+var x = Object.clone;
+[00000000] Object_0x1
+x.uid;
+[00000000] "0x1"
+test(x);
+[00000000] *** 0x1
+x.localSlotNames;
+[00000000] ["flag"]

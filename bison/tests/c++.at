@@ -1,0 +1,451 @@
+# Checking the output filenames.                    -*- Autotest -*-
+
+# Copyright (C) 2004-2005, 2007-2012 Free Software Foundation, Inc.
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+AT_BANNER([[C++ Features.]])
+
+
+## ---------- ##
+## Variants.  ##
+## ---------- ##
+
+# AT_CHECK_VARIANTS([DIRECTIVES])
+# -------------------------------
+# Check the support of variants in C++, with the additional DIRECTIVES.
+m4_define([AT_CHECK_VARIANTS],
+[AT_SETUP([Variants $1])
+
+# Store strings and integers in a list of strings.
+AT_DATA_GRAMMAR([list.yy],
+[[%debug
+%skeleton "lalr1.cc"
+%defines
+%define variant
+%locations
+]m4_bpatsubst([$1], [\\n], [
+])[
+
+%code requires // code for the .hh file
+{
+#include <list>
+#include <string>
+typedef std::list<std::string> strings_type;
+}
+
+%code // code for the .cc file
+{
+#include <iostream>
+#include <sstream>
+
+  static
+#if defined USE_LEX_SYMBOL
+  yy::parser::symbol_type yylex ();
+#else
+  yy::parser::token_type yylex (yy::parser::semantic_type* yylval,
+                                yy::parser::location_type* yylloc);
+#endif
+
+  // Printing a list of strings (for %printer).
+  // Koening look up will look into std, since that's an std::list.
+  namespace std
+  {
+    std::ostream&
+    operator<<(std::ostream& o, const strings_type& s)
+    {
+      o << '(';
+      for (strings_type::const_iterator i = s.begin(); i != s.end (); ++i)
+        {
+          if (i != s.begin ())
+            o << ", ";
+          o << *i;
+        }
+      return o << ')';
+    }
+  }
+
+  // Conversion to string.
+  template <typename T>
+    inline
+    std::string
+    string_cast (const T& t)
+  {
+    std::ostringstream o;
+    o << t;
+    return o.str();
+  }
+}
+
+%token <::std::string> TEXT;
+%token <int> NUMBER;
+%token END_OF_FILE 0;
+
+%type <::std::string> item;
+// Using the template type to exercize its parsing.
+// Starting with :: to ensure we don't output "<::" which starts by the
+// digraph for the left square bracket.
+%type <::std::list<std::string>> list result;
+
+%printer { debug_stream() << $][$; }
+  <int> <::std::string> <::std::list<::std::string>>;
+%%
+
+result:
+  list          { std::cout << $][1 << std::endl; }
+;
+
+list:
+  /* nothing */ { /* Generates an empty string list */ }
+| list item     { std::swap($][$,$][1); $$.push_back($][2); }
+| list error    { std::swap($][$,$][1); }
+;
+
+item:
+  TEXT          { std::swap($][$,$][1); }
+| NUMBER        { if ($][1 == 3) YYERROR; else $][$ = string_cast($][1); }
+;
+%%
+
+#define STAGE_MAX 5
+static
+#if defined USE_LEX_SYMBOL
+yy::parser::symbol_type yylex()
+#else
+yy::parser::token_type yylex(yy::parser::semantic_type* yylval,
+                             yy::parser::location_type* yylloc)
+#endif
+{
+  typedef yy::parser::token token;
+  typedef yy::parser::location_type location_type;
+  static int stage = -1;
+  ++stage;
+  if (stage == STAGE_MAX)
+    {
+#if defined USE_LEX_SYMBOL
+      return yy::parser::make_END_OF_FILE (location_type ());
+#else
+      *yylloc = location_type ();
+      return token::END_OF_FILE;
+#endif
+    }
+  else if (stage % 2)
+    {
+#if defined USE_LEX_SYMBOL
+      return yy::parser::make_NUMBER (stage, location_type ());
+#else
+# if defined ONE_STAGE_BUILD
+      yylval->build(stage);
+# else
+      yylval->build<int>() = stage;
+# endif
+      *yylloc = location_type ();
+      return token::NUMBER;
+#endif
+    }
+  else
+    {
+#if defined USE_LEX_SYMBOL
+      return yy::parser::make_TEXT (string_cast (stage), location_type ());
+#else
+# if defined ONE_STAGE_BUILD
+      yylval->build (string_cast (stage));
+# else
+      yylval->build<std::string>() = string_cast (stage);
+# endif
+      *yylloc = location_type ();
+      return token::TEXT;
+#endif
+    }
+  abort();
+}
+
+void
+yy::parser::error(const yy::parser::location_type&,
+                  const std::string& message)
+{
+  std::cerr << message << std::endl;
+}
+
+int
+main (void)
+{
+  yy::parser p;
+  p.set_debug_level(!!getenv("YYDEBUG"));
+  return p.parse();
+}
+]])
+
+AT_BISON_CHECK([-o list.cc list.yy])
+AT_COMPILE_CXX([list])
+AT_CHECK([./list], 0,
+         [(0, 1, 2, 4)
+])
+
+AT_CLEANUP
+])
+
+AT_CHECK_VARIANTS([])
+AT_CHECK_VARIANTS([%define parse.assert])
+AT_CHECK_VARIANTS([[%define parse.assert %code {\n#define ONE_STAGE_BUILD\n}]])
+AT_CHECK_VARIANTS([[%define parse.assert %define lex_symbol %code {\n#define USE_LEX_SYMBOL\n}]])
+AT_CHECK_VARIANTS([[%define parse.assert %define lex_symbol %code {\n#define USE_LEX_SYMBOL\n} %define api.tokens.prefix "TOK_"]])
+
+
+## ----------------------- ##
+## Doxygen Documentation.  ##
+## ----------------------- ##
+
+m4_define([AT_CHECK_DOXYGEN],
+[m4_case([$1],
+         [Public],  [m4_pushdef([AT_DOXYGEN_PRIVATE], [NO])],
+         [Private], [m4_pushdef([AT_DOXYGEN_PRIVATE], [YES])],
+         [m4_fatal([invalid argument: $1])])
+AT_SETUP([Doxygen $1 Documentation])
+
+AT_DATA([input.yy],
+[[%skeleton "lalr1.cc"
+%locations
+%debug
+%defines
+%%
+exp:;
+%%
+yy::parser::error (const location& l, const std::string& m)
+{
+  std::cerr << l << s << std::endl;
+}
+]])
+
+AT_BISON_CHECK([-o input.cc input.yy], 0)
+
+AT_DATA([Doxyfile],
+[# The PROJECT_NAME tag is a single word (or a sequence of words
+# surrounded by quotes) that should identify the project.
+PROJECT_NAME = "Bison C++ Parser"
+
+# The QUIET tag can be used to turn on/off the messages that are
+# generated by doxygen. Possible values are YES and NO. If left blank
+# NO is used.
+QUIET = YES
+
+# The WARNINGS tag can be used to turn on/off the warning messages
+# that are generated by doxygen. Possible values are YES and NO. If
+# left blank NO is used.
+WARNINGS     = YES
+# If WARN_IF_UNDOCUMENTED is set to YES, then doxygen will generate
+# warnings for undocumented members. If EXTRACT_ALL is set to YES then
+# this flag will automatically be disabled.
+WARN_IF_UNDOCUMENTED   = YES
+# If WARN_IF_DOC_ERROR is set to YES, doxygen will generate warnings
+# for potential errors in the documentation, such as not documenting
+# some parameters in a documented function, or documenting parameters
+# that don't exist or using markup commands wrongly.
+WARN_IF_DOC_ERROR      = YES
+# The WARN_FORMAT tag determines the format of the warning messages
+# that doxygen can produce. The string should contain the $file,
+# $line, and $text tags, which will be replaced by the file and line
+# number from which the warning originated and the warning text.
+WARN_FORMAT            = "$file:$line: $text"
+
+# If the EXTRACT_ALL tag is set to YES doxygen will assume all
+# entities in documentation are documented, even if no documentation
+# was available.  Private class members and static file members will
+# be hidden unless the EXTRACT_PRIVATE and EXTRACT_STATIC tags are set
+# to YES
+EXTRACT_ALL            = YES
+
+# If the EXTRACT_PRIVATE tag is set to YES all private members of a
+# class will be included in the documentation.
+EXTRACT_PRIVATE        = AT_DOXYGEN_PRIVATE
+
+# If the EXTRACT_STATIC tag is set to YES all static members of a file
+# will be included in the documentation.
+EXTRACT_STATIC         = AT_DOXYGEN_PRIVATE
+])
+
+AT_CHECK([doxygen --version || exit 77], 0, ignore)
+AT_CHECK([doxygen], 0, [], [ignore])
+
+AT_CLEANUP
+
+m4_popdef([AT_DOXYGEN_PRIVATE])
+])# AT_CHECK_DOXYGEN
+
+AT_CHECK_DOXYGEN([Public])
+AT_CHECK_DOXYGEN([Private])
+
+
+## ------------ ##
+## Namespaces.  ##
+## ------------ ##
+
+# AT_CHECK_NAMESPACE(NAMESPACE-DECL, [COMPILE-ERROR])
+# ---------------------------------------------------
+# See if Bison can handle %define namespace "NAMESPACE-DECL".  If COMPILE-ERROR
+# is specified, then Bison should accept the input, but compilation will fail,
+# so don't check compilation.
+m4_define([AT_CHECK_NAMESPACE],
+[
+
+AT_DATA_GRAMMAR([[input.y]],
+[[%language "C++"
+%defines
+%define api.namespace "]$1["
+%union { int i; }
+%define global_tokens_and_yystype
+%locations
+
+%code {
+  // YYSTYPE contains a namespace reference.
+  int yylex (YYSTYPE *lval, const ]$1[::parser::location_type*) {
+    lval->i = 3;
+    return 0;
+  }
+}
+
+%%
+
+start: ;
+
+%%
+
+void
+]$1[::parser::error (const ]$1[::parser::location_type &loc,
+                     const std::string &msg)
+{
+  std::cerr << "At " << loc << ": " << msg << std::endl;
+}
+
+int
+main (void)
+{
+  ]$1[::parser p;
+  return p.parse ();
+}
+]])
+
+AT_BISON_CHECK([[-o input.cc input.y]])
+
+m4_if([$#], [1],
+[AT_COMPILE_CXX([[input]], [[input.cc]])
+AT_PARSER_CHECK([[./input]])])
+
+])
+
+AT_SETUP([[Relative namespace references]])
+AT_CHECK_NAMESPACE([[foo]])
+AT_CHECK_NAMESPACE([[foo::bar]])
+AT_CHECK_NAMESPACE([[foo::bar::baz]])
+AT_CLEANUP
+
+AT_SETUP([[Absolute namespace references]])
+AT_CHECK_NAMESPACE([[::foo]])
+AT_CHECK_NAMESPACE([[::foo::bar]])
+AT_CHECK_NAMESPACE([[::foo::bar::baz]])
+AT_CHECK_NAMESPACE([[	::foo]])
+AT_CHECK_NAMESPACE([[  	 ::foo::bar]])
+AT_CHECK_NAMESPACE([[  ::foo::bar::baz]])
+AT_CLEANUP
+
+AT_SETUP([[Syntactically invalid namespace references]])
+AT_CHECK_NAMESPACE([[:foo:bar]], [[-]])
+AT_CHECK_NAMESPACE([[foo: :bar]], [[-]])
+# This one is interesting because `[3]' is encoded as `@<:@3@:>@', which
+# contains single occurrences of `:'.
+AT_CHECK_NAMESPACE([[foo[3]::bar::baz]], [[-]])
+AT_CHECK_NAMESPACE([[foo::bar,baz]], [[-]])
+AT_CHECK_NAMESPACE([[foo::bar::(baz /* Pacify Emacs ) */]], [[-]])
+AT_CLEANUP
+
+
+## -------------------------------------- ##
+## Syntax error discarding no lookahead.  ##
+## -------------------------------------- ##
+
+# After a syntax error, lalr1.cc used to not check whether there
+# actually is a lookahead before discarding the lookahead.  As a result,
+# it mistakenly invoked the destructor for the previous lookahead.
+
+AT_SETUP([[Syntax error discarding no lookahead]])
+
+AT_DATA_GRAMMAR([[input.yy]],
+[[%skeleton "lalr1.cc"
+
+%code {
+  #include <string>
+  int yylex (yy::parser::semantic_type *, yy::location *);
+  #define USE(Args)
+}
+
+%defines
+%locations
+%define parse.error verbose
+
+%nonassoc 'a' ;
+
+%destructor {
+  std::cerr << "Discarding 'a'." << std::endl;
+} 'a'
+
+%%
+
+start: error-reduce consistent-error 'a' { USE ($3); };
+
+error-reduce:
+  'a' 'a' consistent-error 'a' { USE (($1, $2, $4)); }
+| 'a' error { std::cerr << "Reducing 'a'." << std::endl; USE ($1); }
+;
+
+consistent-error:
+  'a'
+| /*empty*/ %prec 'a'
+;
+
+// Provide another context in which all rules are useful so that this
+// test case looks a little more realistic.
+start: 'b' consistent-error ;
+
+%%
+
+int
+yylex (yy::parser::semantic_type *, yy::location *)
+{
+  static char const *input = "aa";
+  return *input++;
+}
+
+void
+yy::parser::error (const location_type &, const std::string &m)
+{
+  std::cerr << m << std::endl;
+}
+
+int
+main (void)
+{
+  yy::parser parser;
+  return parser.parse ();
+}
+]])
+AT_BISON_CHECK([[-o input.cc input.yy]])
+AT_COMPILE_CXX([[input]])
+# This used to print "Discarding 'a'." again at the end.
+AT_PARSER_CHECK([[./input]], [[1]], [[]],
+[[syntax error
+Discarding 'a'.
+Reducing 'a'.
+]])
+
+AT_CLEANUP

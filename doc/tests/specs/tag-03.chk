@@ -1,0 +1,33 @@
+syncline << "doc/specs/tag.tex:100";
+[01234567:#] "doc/specs/tag.tex:100"
+//#line 100 "doc/specs/tag.tex"
+var ping = Tag.new("ping")|;
+ping:
+  every (1s)
+    echo("ping"),
+assert(!ping.blocked);
+sleep(2.1s);
+[00000000] *** ping
+[00002000] *** ping
+[00002000] *** ping
+
+ping.block;
+assert(ping.blocked);
+
+ping:
+  every (1s)
+    echo("pong"),
+
+// Neither new nor old code runs.
+ping.unblock;
+assert(!ping.blocked);
+sleep(2.1s);
+
+// But we can use the tag again.
+ping:
+  every (1s)
+    echo("ping again"),
+sleep(2.1s);
+[00004000] *** ping again
+[00005000] *** ping again
+[00006000] *** ping again

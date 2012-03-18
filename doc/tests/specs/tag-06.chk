@@ -1,0 +1,25 @@
+syncline << "doc/specs/tag.tex:190";
+[01234567:#] "doc/specs/tag.tex:190"
+//#line 190 "doc/specs/tag.tex"
+{
+  var t = scopeTag;
+  t: every(1s)
+      echo("foo"),
+  sleep(2.2s);
+};
+[00006562] *** foo
+[00006562] *** foo
+[00006562] *** foo
+
+{
+  var t = scopeTag;
+  t: every(1s)
+      echo("bar"),
+  sleep(2.2s);
+  throw 42;
+};
+[00006562] *** bar
+[00006562] *** bar
+[00006562] *** bar
+[00006562:error] !!! 42
+sleep(2s);

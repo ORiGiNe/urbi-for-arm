@@ -1,0 +1,33 @@
+syncline << "doc/specs/lang.tex:4094";
+[01234567:#] "doc/specs/lang.tex:4094"
+//#line 4094 "doc/specs/lang.tex"
+var x = 0|;
+var count = 0|;
+var t = Tag.new|;
+t:
+  whenever (x % 2)
+  {
+    if (!count)
+      echo("x is now odd (%s)" % x);
+    count++;
+  }
+  else
+  {
+    if (!count)
+      echo("x is now even (%s)" % x);
+    count++;
+  };
+
+t:
+  whenever (100 < count)
+  {
+    count = 0 |
+    x++;
+  };
+waituntil(x == 4);
+[00000769] *** x is now even (0)
+[00000809] *** x is now odd (1)
+[00000846] *** x is now even (2)
+[00000886] *** x is now odd (3)
+[00000924] *** x is now even (4)
+t.stop;

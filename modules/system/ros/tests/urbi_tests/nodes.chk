@@ -1,0 +1,32 @@
+//#roscore
+//#plug urbi/ros
+
+var nodes = Ros.nodes|;
+for (var n: nodes.asList.sort)
+{
+  if (n.first[0,6] == "/urbi_")
+  {
+    echo("/urbi_");
+    echo(Ros.name == n.first);
+  }
+  else
+    echo(n.first)
+};
+[00000001] *** /rosout
+[00000002] *** /urbi_
+[00000003] *** true
+
+nodes["/rosout"]["publish"];
+[00000004] ["/rosout_agg"]
+
+nodes["/rosout"]["services"].sort;
+[00000005] ["/rosout/get_loggers", "/rosout/set_logger_level"]
+
+Ros.topics["/rosout_agg"]["publishers"];
+[00000006] ["/rosout"]
+
+Ros.topics["/rosout_agg"]["subscribers"];
+[00000007] []
+
+Ros.topics["/rosout_agg"]["type"];
+[00000008] "rosgraph_msgs/Log"

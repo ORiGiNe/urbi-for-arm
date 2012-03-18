@@ -1,0 +1,182 @@
+#! /usr/bin/perl -w
+
+=head1 NAME
+
+  check-include-deps - copy includes we depend upon.
+
+=head1 SYNOPSIS
+
+  check-include-deps [OPTIONS...] -i DESTDIR/include DIR...
+
+=head1 DESCRIPTION
+
+Traverse all the DIR... looking for Make-dependency files.  Select
+those we are interested in (currently only /boost/), and copy them in
+the destination include-dir.
+
+Exit with failure if invalid dependencies remain.
+
+=head1 OPTIONS
+
+General options:
+
+=over 4
+
+=item B<-c>, B<--check>
+
+Don't install the missing files: report them, and fail.
+
+=item B<-h>, B<--help>
+
+Display this message and exit.
+
+=item B<-i>, B<--include-dir>=I<include-dir>
+
+Copy the selected files into I<include-dir>.  Mandatory option.
+
+=item B<-q>, B<--quiet>
+
+Be less verbose.  Accumulates.
+
+=item B<-v>, B<--verbose>
+
+Be more verbose.  Accumulates.
+
+=back
+
+=head1 FUNCTIONS
+
+=over 4
+
+=cut
+
+BEGIN
+{
+  use File::Basename;
+  unshift @INC, dirname($0) . '/../lib/perl';
+}
+
+use BuildAux::FileUtils;
+use BuildAux::Verbose;
+use IO::File;       # IO::File.
+use File::Basename; # dirname.
+use File::Copy;     # copy.
+use File::Find;     # find.
+use File::Path;     # mkpath.
+use strict;
+
+# Whether we should check instead of installing.
+my $check = 0;
+
+# The base directory where dependencies will be copied into.
+my $includedir;
+
+# A hash whose keys are paths of needed files in the source tree, and
+# the value is the directory where it must be installed in the install
+# tree.
+my %needed;
+
+# Same keys, but the value is the list of files that depend on this
+# file.
+my %needers;
+
+=head1 FUNCTIONS
+
+=over 4
+
+=cut
+
+sub wanted
+{
+  if ($File::Find::name =~ m(\.deps\/[^/]*\.Plo\z)s)
+  {
+    my $in = new IO::File("$_")
+      or die "$me: cannot open $File::Find::name: $!\n";
+    while (my $line = $in->getline)
+    {
+      if ($line =~ m((.*/(boost/.*)):$))
+      {
+        my $file = $1;
+        # The hierarchy may look like
+        # /home/build/.wine/dosdevices/z\:/home/build/local/boost/boost_1_39/boost/algorithm/string.hpp.
+        # So we do expect the first `.*' to be greedy, so that
+        # we only have the last "/boost/" component here
+        # (boost/algorithm).
+        my $install = dirname($2);
+        # On wine, we escape colons in file names.
+        $file =~ s/\\:/:/g;
+        $needed{$file} = $install;
+        push @{$needers{$file}}, $File::Find::name;
+      }
+    }
+  }
+}
+
+######################################################################
+
+=item C<getopt()>
+
+Process the command line arguments.
+
+=cut
+
+sub getopt ()
+{
+  use BuildAux::Getopt qw($message);
+  $message = "Copy include files we depend upon";
+  BuildAux::Getopt::getopt
+    (
+     "c|check"           => \$check,
+     "i|include-dir=s"   => \$includedir,
+    );
+
+  die "$me: passing --include-dir is mandatory\n"
+    unless defined $includedir;
+
+  warn "$me: --include-dir does not end with `/include': $includedir\n"
+    unless $includedir =~ /\/include$/;
+}
+
+## ------ ##
+## Main.  ##
+## ------ ##
+
+my $status = 0;
+getopt;
+File::Find::find({wanted => \&wanted}, @ARGV);
+map
+{
+  my $to = "$includedir/$needed{$_}/" . basename($_);
+  if (! -f $to)
+  {
+    if ($check)
+    {
+      stderr ("missing header: $_ requested by:",
+             map { "  $_" } @{$needers{$_}});
+      $status = 1;
+    }
+    else
+    {
+      file_install($_, $to);
+    }
+  }
+}
+sort keys %needed;
+exit $status;
+
+### Setup "Gostai" style for perl-mode and cperl-mode.
+## Local Variables:
+## perl-indent-level: 2
+## perl-continued-statement-offset: 2
+## perl-continued-brace-offset: -2
+## perl-brace-offset: 0
+## perl-brace-imaginary-offset: 0
+## perl-label-offset: -2
+## cperl-indent-level: 2
+## cperl-brace-offset: 0
+## cperl-continued-brace-offset: -2
+## cperl-label-offset: -2
+## cperl-extra-newline-before-brace: t
+## cperl-merge-trailing-else: nil
+## cperl-continued-statement-offset: 2
+## End:

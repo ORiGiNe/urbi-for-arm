@@ -1,0 +1,41 @@
+var x = "foobar";
+[00000001] "foobar"
+
+x[0]; x[3]; x[5];
+[00000002] "f"
+[00000003] "b"
+[00000004] "r"
+
+x[-1]; x[6];
+[00000005:error] !!! input.u:@.1-5: []: argument 1: expected non-negative integer, got -1
+[00000006:error] !!! input.u:9.8-11: []: invalid index: 6
+
+x[0, 1]; x[0, 4]; x[3, 6]; x[4, 4];
+[00000007] "f"
+[00000008] "foob"
+[00000009] "bar"
+[00000010] ""
+
+x[-1, 0]; x[0, -1]; x[0, 7]; x[7, 7]; x[1, 0];
+[00000011:error] !!! input.u:@.1-8: []: argument 1: expected non-negative integer, got -1
+[00000012:error] !!! input.u:19.11-18: []: argument 2: expected non-negative integer, got -1
+[00000013:error] !!! input.u:19.21-27: []: invalid index: 7
+[00000014:error] !!! input.u:19.30-36: []: invalid index: 7
+[00000015:error] !!! input.u:19.39-45: []: range starting after its end does not make sense: 1, 0
+
+x[5] = "z";
+[00000016] "z"
+x;
+[00000017] "foobaz"
+x[0, 3] = "bar";
+[00000018] "bar"
+x;
+[00000019] "barbaz"
+
+// Test on local variables.
+{
+  var s = "flo";
+  s[1] = "o";
+  echo(s);
+};
+[00000020] *** foo

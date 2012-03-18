@@ -1,0 +1,21 @@
+var x = 0|;
+
+tag: at ({echo("eval")| x == 1}) echo("in");
+[00000002] *** eval
+
+echo("TRIGGER");
+[00000003] *** TRIGGER
+
+x = 1;
+[00000004] *** eval
+[00000005] 1
+[00000006] *** in
+
+echo("DEAD");
+[00000007] *** DEAD
+
+tag.stop;
+sleep(0.1s);
+
+x = 0;
+[00000008] 0

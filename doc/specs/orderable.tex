@@ -1,0 +1,48 @@
+%% Copyright (C) 2009-2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Orderable}
+
+Objects that have a concept of ``less than''.  See also
+\refObject{Comparable}.
+
+This object, made to serve as prototype, provides a definition of
+\lstinline{<} based on \lstinline{>}, and vice versa; and definition
+of \lstinline{<=}/\lstinline{>=} based on
+\lstinline{<}/\lstinline{>}\lstinline{==}.  You \strong{must} define
+either \lstinline{<} or \lstinline{>}, otherwise invoking either
+method will result in endless recursions.
+
+\begin{urbiscript}[firstnumber=1]
+class Foo : Orderable
+{
+  var value = 0;
+  function init (v)   { value = v; };
+  function '<' (that) { value < that.value; };
+  function asString() { "<" + value.asString + ">"; };
+}|;
+var one = Foo.new(1)|;
+var two = Foo.new(2)|;
+
+assert
+{
+   one <= one  ;   one <= two  ; !(two <= one);
+ !(one >  one) ; !(one >  two) ;   two >  one;
+  (one >= one) ; !(one >= two) ;   two >= one;
+};
+\end{urbiscript}
+
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

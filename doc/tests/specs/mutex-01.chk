@@ -1,0 +1,15 @@
+syncline << "doc/specs/mutex.tex:29";
+[01234567:#] "doc/specs/mutex.tex:29"
+//#line 29 "doc/specs/mutex.tex"
+var m = Mutex.new|;
+m: echo("this is critical section");
+[00000001] *** this is critical section
+
+syncline << "doc/specs/mutex.tex:42";
+[01234567:#] "doc/specs/mutex.tex:42"
+//#line 42 "doc/specs/mutex.tex"
+var m1 = Mutex.new|;
+assert
+{
+  m1.asMutex === m1;
+};

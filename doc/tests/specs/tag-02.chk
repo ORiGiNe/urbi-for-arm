@@ -1,0 +1,14 @@
+syncline << "doc/specs/tag.tex:70";
+[01234567:#] "doc/specs/tag.tex:70"
+//#line 70 "doc/specs/tag.tex"
+var t = Tag.new("t")|;
+var res;
+res = t: every(1s) echo("computing"),
+sleep(2.2s);
+[00000001] *** computing
+[00000002] *** computing
+[00000003] *** computing
+
+t.stop("result");
+assert(res == "result");
+[00000004:error] !!! failed assertion: res == "result" (Tag<t> != "result")

@@ -1,0 +1,100 @@
+%% Copyright (C) 2009-2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Formatter}
+
+A \dfn{formatter} stores format information of a format string like
+used in \code{printf} in the C library or in \code{boost::format}.
+
+\subsection{Prototypes}
+
+\begin{refObjects}
+\item[Object]
+\end{refObjects}
+
+\subsection{Construction}
+
+Formatters are created with the format string. It cuts the string to
+separate regular parts of string and formatting patterns, and stores
+them.
+
+\begin{urbiscript}[firstnumber=1]
+Formatter.new("Name:%s, Surname:%s;");
+[00000001] Formatter ["Name:", %s, ", Surname:", %s, ";"]
+\end{urbiscript}
+
+Actually, formatting patterns are translated into
+\refObject{FormatInfo}.
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+\item[asList]
+  Return the content of the \dfn{formatter} as a list of strings and
+  \refObject{FormatInfo}.
+\begin{urbiassert}
+Formatter.new("Name:%s, Surname:%s;").asList.asString
+       == "[\"Name:\", %s, \", Surname:\", %s, \";\"]";
+\end{urbiassert}
+
+-\item \lstinline|'%'(\var{args})|\\
+  Use \this as format string and \var{args} as the list of
+  arguments, and return the result (a \refObject{String}).  The arity
+  of the Formatter (i.e., the number of expected arguments) and the
+  size of \var{args} must match exactly.
+
+  This operator concatenates regular strings and the strings that are
+  result of \lstinline|asString| called on members of \var{args} with
+  the appropriate \refObject{FormatInfo}.
+\begin{urbiassert}
+Formatter.new("Name:%s, Surname:%s;") % ["Foo", "Bar"]
+       == "Name:Foo, Surname:Bar;";
+\end{urbiassert}
+
+  If \var{args} is not a \refObject{List}, then the call is equivalent
+  to calling \lstinline|'%'([\var{args}])|.
+\begin{urbiassert}
+Formatter.new("%06.3f") % Math.pi
+       == "03.142";
+\end{urbiassert}
+
+  Note that \lstinline|String.'%'| provides a nicer interface to this
+  operator:
+\begin{urbiassert}
+"%06.3f" % Math.pi == "03.142";
+\end{urbiassert}
+
+  It is nevertheless interesting to use the Formatter for performance
+  reasons if the format is reused many times.
+\begin{urbiscript}
+{
+  // Some large database of people.
+  var people =
+    [["Foo", "Bar" ],
+     ["One", "Two" ],
+     ["Un",  "Deux"],];
+  var f = Formatter.new("Name:%7s, Surname:%7s;");
+  for (var p: people)
+    echo (f % p);
+};
+[00031939] *** Name:    Foo, Surname:    Bar;
+[00031940] *** Name:    One, Surname:    Two;
+[00031941] *** Name:     Un, Surname:   Deux;
+\end{urbiscript}
+
+
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

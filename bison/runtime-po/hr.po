@@ -1,0 +1,63 @@
+# Translation of bision to Croatian
+# Copyright (C) 2002 Free Software Foundation, Inc.
+# Denis Lackovic <delacko@fly.srk.fer.hr>, 2002.
+# This file is distributed under the same license as the bison package.
+# Denis Lackovic <delacko@fly.srk.fer.hr>, 2002.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: bison 1.34a\n"
+"Report-Msgid-Bugs-To: bug-bison@gnu.org\n"
+"POT-Creation-Date: 2012-01-30 16:28+0000\n"
+"PO-Revision-Date: 2002-04-10 22:20+01\n"
+"Last-Translator: Denis Lackovic <delacko@fly.srk.fer.hr>\n"
+"Language-Team: Croatian <lokalizacija@linux.hr>\n"
+"Language: hr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-2\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n==1 ? 0 : 1);\n"
+
+#: data/glr.c:872 data/yacc.c:660
+msgid "syntax error: cannot back up"
+msgstr ""
+
+#: data/glr.c:1758
+msgid "syntax is ambiguous"
+msgstr ""
+
+#: data/glr.c:2081 data/glr.c:2159 data/glr.c:2197 data/glr.c:2466
+#: data/lalr1.cc:1058 data/lalr1.cc:1078 data/yacc.c:1281 data/yacc.c:1805
+#: data/yacc.c:1811
+msgid "syntax error"
+msgstr ""
+
+#: data/glr.c:2160 data/lalr1.cc:1059 data/yacc.c:1282
+#, c-format
+msgid "syntax error, unexpected %s"
+msgstr ""
+
+#: data/glr.c:2161 data/lalr1.cc:1060 data/yacc.c:1283
+#, c-format
+msgid "syntax error, unexpected %s, expecting %s"
+msgstr ""
+
+#: data/glr.c:2162 data/lalr1.cc:1061 data/yacc.c:1284
+#, c-format
+msgid "syntax error, unexpected %s, expecting %s or %s"
+msgstr ""
+
+#: data/glr.c:2163 data/lalr1.cc:1062 data/yacc.c:1285
+#, c-format
+msgid "syntax error, unexpected %s, expecting %s or %s or %s"
+msgstr ""
+
+#: data/glr.c:2164 data/lalr1.cc:1063 data/yacc.c:1286
+#, c-format
+msgid "syntax error, unexpected %s, expecting %s or %s or %s or %s"
+msgstr ""
+
+#: data/glr.c:2526 data/yacc.c:1369 data/yacc.c:1371 data/yacc.c:1567
+#: data/yacc.c:1960
+msgid "memory exhausted"
+msgstr "iscrpljeni memorijski resursi"

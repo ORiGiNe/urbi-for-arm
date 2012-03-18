@@ -1,0 +1,98 @@
+%% Copyright (C) 2009-2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Timeout}
+
+Timeout objects can be used as \refObject[Tag]{Tags} to execute some
+code in limited time.
+
+\subsection{Prototypes}
+\begin{itemize}
+\item \refObject{Tag}
+\end{itemize}
+
+\subsection{Construction}
+At construction, a Timeout takes a duration, and a \refObject{Boolean}
+stating whether an exception should be thrown on timeout (by default,
+it does).
+
+\begin{urbiscript}
+Timeout.new(300ms);
+[00000000] Timeout_0x953c1e0
+Timeout.new(300ms, false);
+[00000000] Timeout_0x953c1e0
+\end{urbiscript}
+
+\subsection{Examples}
+
+Use it as a tag:
+
+\begin{urbiscript}
+var t = Timeout.new(300ms);
+[00000000] Timeout_0x133ec0
+t:{
+  echo("This will be displayed.");
+  sleep(500ms);
+  echo("This will not.");
+};
+[00000000] *** This will be displayed.
+[00000007:error] !!! Timeout_0x133ec0 has timed out.
+\end{urbiscript}
+
+The same Timeout, \lstinline|t| can be reused.  It is armed again each
+time it is used to tag some code.
+
+\begin{urbiscript}
+t: { echo("Open"); sleep(1s); echo("Close"); };
+[00000007] *** Open
+[00000007:error] !!! Timeout_0x133ec0 has timed out.
+t: { echo("Open"); sleep(1s); echo("Close"); };
+[00000007] *** Open
+[00000007:error] !!! Timeout_0x133ec0 has timed out.
+\end{urbiscript}
+
+%%% FIXME: Something is wrong here.
+%%%
+%%%A Timeout cannot be used several times at the same time though.
+%%%
+%%%\begin{urbiscript}
+%%%// Note the commas.
+%%%t: { echo("Open"); sleep(1s); echo("Close"); },
+%%%[00035424:error] !!! Timeout_0x44e89e0 is already running
+%%%t: { echo("Open"); sleep(1s); echo("Close"); },
+%%%[00000007] *** Open
+%%%[00000007:error] !!! Timeout_0x133ec0 has timed out.
+%%%sleep(2s);
+%%%\end{urbiscript}
+Even if exceptions have been disabled, you can check whether the
+count-down expired with \lstinline|timedOut|.
+
+\begin{urbiscript}
+t:sleep(500ms);
+[00000007:error] !!! Timeout_0x133ec0 has timed out.
+if (t.timedOut)
+  echo("The Timeout expired.");
+[00000000] *** The Timeout expired.
+\end{urbiscript}
+
+\subsection{Slots}
+\begin{urbiscriptapi}
+\item[launch]
+  Fire \this.
+
+%% FIXME: there is more.
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

@@ -1,0 +1,17 @@
+syncline << "doc/tutorial/value.tex:439";
+[01234567:#] "doc/tutorial/value.tex:439"
+//#line 439 "doc/tutorial/value.tex"
+var a = 42;
+[00000000] 42
+var b = a;
+[00000000] 42
+// b and a point to the same integer.
+a === b;
+[00000000] true
+// Updating b won't change the referred value, 42,
+// it makes it reference a fresh integer with value 51.
+b = 51;
+[00000000] 51
+// Thus, a is left unchanged:
+a;
+[00000000] 42

@@ -1,0 +1,36 @@
+//#roscore
+//#no-fast
+//#plug urbi/ros
+
+if (Platform.hostOs[0,6] == "darwin")
+  testSkip("Too stressy for mac os x");
+
+var pub = Ros.Topic.new("/utests/image")|;
+pub.advertise("utopics/BinaryData")|;
+var count = 0|;
+var time0;
+var time350;
+
+var m = pub.structure.clone|;
+m["encoding"] = "rgb"|;
+m["width"] = 640|;
+m["height"] = 480|;
+m["data"] = Binary.new("rgb 640 480", "\xff\xaa\x00" * 640 * 480)|;
+
+every|(20ms)
+{
+  if (count++ == 0)
+    time0 = time|
+
+  pub << m|
+
+  if (count == 350)
+  {
+    time350 = time|
+    break|
+  }
+};
+
+Math.round(time350 - time0);
+[00000001] 7
+

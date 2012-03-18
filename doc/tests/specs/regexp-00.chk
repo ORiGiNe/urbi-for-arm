@@ -1,0 +1,108 @@
+syncline << "doc/specs/regexp.tex:27";
+[01234567:#] "doc/specs/regexp.tex:27"
+//#line 27 "doc/specs/regexp.tex"
+Regexp.new(".");
+[00000001] Regexp(".")
+
+syncline << "doc/specs/regexp.tex:37";
+[01234567:#] "doc/specs/regexp.tex:37"
+//#line 37 "doc/specs/regexp.tex"
+Regexp.new("");
+[00000001:error] !!! new: invalid regular expression `': Empty expression
+
+syncline << "doc/specs/regexp.tex:48";
+[01234567:#] "doc/specs/regexp.tex:48"
+//#line 48 "doc/specs/regexp.tex"
+assert {
+           Regexp.new("abc").asPrintable == "Regexp(\"abc\")";
+Regexp.new("\\d+(\\.\\d+)?").asPrintable == "Regexp(\"\\\\d+(\\\\.\\\\d+)?\")";
+};
+
+syncline << "doc/specs/regexp.tex:54";
+[01234567:#] "doc/specs/regexp.tex:54"
+//#line 54 "doc/specs/regexp.tex"
+assert {
+           Regexp.new("abc").asString == "abc";
+Regexp.new("\\d+(\\.\\d+)?").asString == "\\d+(\\.\\d+)?";
+};
+
+syncline << "doc/specs/regexp.tex:63";
+[01234567:#] "doc/specs/regexp.tex:63"
+//#line 63 "doc/specs/regexp.tex"
+assert {
+"23.03"     in Regexp.new("^\\d+\\.\\d+$");
+"-3.14" not in Regexp.new("^\\d+\\.\\d+$");
+};
+
+syncline << "doc/specs/regexp.tex:70";
+[01234567:#] "doc/specs/regexp.tex:70"
+//#line 70 "doc/specs/regexp.tex"
+// Ordinary characters
+var r = Regexp.new("oo")|
+assert
+{
+  r.match("oo");
+  r.match("foobar");
+  !r.match("bazquux");
+};
+
+// ^, anchoring at the beginning of line.
+r = Regexp.new("^oo")|
+assert
+{
+  r.match("oops");
+  !r.match("woot");
+};
+
+// $, anchoring at the end of line.
+r = Regexp.new("oo$")|
+assert
+{
+  r.match("foo");
+  !r.match("mooh");
+};
+
+// *, greedy repetition, 0 or more.
+r = Regexp.new("fo*bar")|
+assert
+{
+  r.match("fbar");
+  r.match("fooooobar");
+  !r.match("far");
+};
+
+// (), grouping.
+r = Regexp.new("f(oo)*bar")|
+assert
+{
+  r.match("foooobar");
+  !r.match("fooobar");
+};
+
+syncline << "doc/specs/regexp.tex:120";
+[01234567:#] "doc/specs/regexp.tex:120"
+//#line 120 "doc/specs/regexp.tex"
+var re = Regexp.new("([a-zA-Z0-9._]+)@([a-zA-Z0-9._]+)")|;
+assert
+{
+  re.match("Someone <someone@somewhere.com>");
+  re.matches == ["someone@somewhere.com", "someone", "somewhere.com"];
+
+  "does not match" not in re;
+  re.matches == [];
+};
+
+syncline << "doc/specs/regexp.tex:134";
+[01234567:#] "doc/specs/regexp.tex:134"
+//#line 134 "doc/specs/regexp.tex"
+var d = Regexp.new("(1+)(2+)(3+)")|;
+assert
+{
+  "01223334" in d;
+  d[0] == "122333";
+  d[1] == "1";
+  d[2] == "22";
+  d[3] == "333";
+};
+d[4];
+[00000009:error] !!! []: out of bound index: 4

@@ -1,0 +1,36 @@
+//#uobject test/all
+//#timeout 2
+// Synchronisation between two processes running under qemu is tricky, skip for now.
+//#skip-if case $host in (*arm*) true;; (*)false ;;esac
+
+// Make it work even with high load.
+var granularity = 1s |;
+// Check that yield blocks flow without blocking the kernel.
+var tag = Tag.new |;
+var cnt = 0 |;
+tag: every (granularity)
+  cnt++,
+
+sleep(granularity/2)
+| 3.print
+| remall.yield_for(granularity * 2 * 1000000)
+| tag.stop
+| -1;
+[00000001] 3
+[00000002] -1
+
+cnt >= 3;
+[00000003] true
+
+// Check that remote works while yielding
+remall.yield_for(400000) | 1.print,
+sleep(50ms) | remall.init(0);
+[00000004] 0
+[00000005] 1
+
+sleep(500ms);
+// Check that yield_until_things_changed works.
+var t = time() | {};
+sleep(1s) | remall.init(0),
+sleep(200ms) | remall.yield_until_things_changed() | time-t > 0.5;
+[00000006] true

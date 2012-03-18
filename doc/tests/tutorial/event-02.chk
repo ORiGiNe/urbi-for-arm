@@ -1,0 +1,20 @@
+syncline << "doc/tutorial/event.tex:72";
+[01234567:#] "doc/tutorial/event.tex:72"
+//#line 72 "doc/tutorial/event.tex"
+var x = false;
+[00000000] false
+whenever (x)
+{
+  echo("ping");
+  sleep(1s);
+};
+x = true;
+[00000000] true
+sleep(3s);
+// Whenever keeps triggering
+[00000000] *** ping
+[00001000] *** ping
+[00002000] *** ping
+x = false;
+[00002000] false
+// Whenever stops triggering

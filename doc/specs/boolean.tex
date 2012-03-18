@@ -1,0 +1,97 @@
+%% Copyright (C) 2009-2010, 2012, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Boolean}
+
+There is no object \lstinline|Boolean| in \us, but two specific
+objects \lstindex{true} and \lstindex{false}.  They are the result of
+all the comparison statements.
+
+
+\subsection{Prototypes}
+
+The objects \lstinline|true| and \lstinline|false| have the following
+prototype.
+
+\begin{refObjects}
+\item[Singleton]
+\end{refObjects}
+
+\subsection{Construction}
+
+There are no constructors, use \lstinline|true| and \lstinline|false|.
+Since they are singletons, \lstinline|clone| will return themselves,
+not new copies.
+
+\begin{urbiassert}[firstnumber=1]
+true;
+!false;
+2 < 6 === true;
+true.new === true;
+6 < 2 === false;
+\end{urbiassert}
+
+\subsection{Truth Values}
+\label{sec:truth}
+
+As in many programming languages, conditions may be more than only
+\lstinline|true| and \lstinline|false|.  Whether some value is
+considered as true depends on the type of \this.  Actually,
+by default objects as considered ``true'', objects evaluating to
+``false'' are the exception:
+\begin{itemize}
+\item \lstinline|false|, \lstinline|nil|\\
+  \lstinline|false|.
+\item[void]
+  raise an error.
+\item[Float]
+  \lstinline|false| iff null (\refObject{Float}).
+\item \lstinline|Dictionary|, \lstinline|List|,  \lstinline|String|\\
+  \lstinline|false| iff empty (\refObject{Dictionary},
+  \refObject{List}, \refObject{String}).
+\item otherwise\\
+  \lstinline|true|.
+\end{itemize}
+
+The method \refSlot[Object]{asBool} is in charge of converting some
+arbitrary value into a Boolean.
+\begin{urbiscript}
+assert(Global.asBool == true);
+assert(nil.asBool ==    false);
+void.asBool;
+[00000421:error] !!! unexpected void
+\end{urbiscript}
+
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+\item \lstinline|'!'|\\
+  Logical negation. If \this is \lstinline|false| return \lstinline|true|
+  and vice-versa.
+\begin{urbiassert}
+!true == false;
+!false == true;
+\end{urbiassert}
+
+\item[asBool]
+  Identity.
+\begin{urbiassert}
+true.asBool ==  true;
+false.asBool == false;
+\end{urbiassert}
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

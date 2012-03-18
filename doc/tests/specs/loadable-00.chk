@@ -1,0 +1,84 @@
+syncline << "doc/specs/loadable.tex:25";
+[01234567:#] "doc/specs/loadable.tex:25"
+//#line 25 "doc/specs/loadable.tex"
+class Motor: Loadable
+{
+  var val = 0;
+  function go(var d)
+  {
+    if (load)
+      val += d
+    else
+      echo("cannot advance, the motor is off")|;
+  };
+};
+[00000002] Motor
+
+var m = Motor.new;
+[00000003] Motor_0xADDR
+
+m.load;
+[00000004] false
+
+m.go(1);
+[00000006] *** cannot advance, the motor is off
+
+m.on;
+[00000007] Motor_0xADDR
+
+m.go(123);
+m.val;
+[00000009] 123
+
+syncline << "doc/specs/loadable.tex:68";
+[01234567:#] "doc/specs/loadable.tex:68"
+//#line 68 "doc/specs/loadable.tex"
+assert {
+do (Loadable.new)
+{
+  assert
+  {
+    !load;
+    off === this;
+    !load;
+    on === this;
+    load;
+    off === this;
+    !load;
+  };
+};
+};
+
+syncline << "doc/specs/loadable.tex:86";
+[01234567:#] "doc/specs/loadable.tex:86"
+//#line 86 "doc/specs/loadable.tex"
+assert {
+do (Loadable.new)
+{
+  assert
+  {
+    !load;
+    on === this;
+    load;
+    on === this;
+    load;
+  };
+};
+};
+
+syncline << "doc/specs/loadable.tex:103";
+[01234567:#] "doc/specs/loadable.tex:103"
+//#line 103 "doc/specs/loadable.tex"
+assert {
+do (Loadable.new)
+{
+  assert
+  {
+    !load;
+    toggle === this;
+    load;
+    toggle === this;
+    !load;
+  };
+};
+};

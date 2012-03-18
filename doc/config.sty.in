@@ -1,0 +1,20 @@
+\newcommand{\absTopSrcdir}{@abs_top_srcdir@}
+\newcommand{\packageTarname}{@PACKAGE_TARNAME@}
+\newcommand{\packageName}{@PACKAGE_NAME@}
+\newcommand{\packageMajor}{@PACKAGE_MAJOR@}
+\newcommand{\packageMinor}{@PACKAGE_MINOR@}
+\newcommand{\packageVersion}{@PACKAGE_VERSION@}
+\newcommand{\packagePatchlevel}{@PACKAGE_PATCHLEVEL@}
+\newcommand{\gostaiUrl}{http://www.gostai.com}
+\newcommand{\downloadUrl}{\gostaiUrl/downloads}
+\newcommand{\docurl}{\downloadUrl/urbi/\packageVersion/doc}
+
+\titleImage{figs/urbi-sdk/\packageMajor.\packageMinor/cube-and-disc}
+
+% What chapters of "Platforms" should be compiled in?
+@enable_doc_sections@
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "urbi-sdk"
+%%% End:

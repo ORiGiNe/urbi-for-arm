@@ -1,0 +1,29 @@
+//#uobject test/all
+
+
+all.transmitD(1);
+[00000001] -1
+var a = all.transmitD(1);
+[00000002] -1
+a;
+[00000003] -1
+
+all.transmitS("coin");
+[00000004] "oi"
+var b = all.transmitS("coin");
+[00000005] "oi"
+b;
+[00000006] "oi"
+
+var d = all.transmitM(["coin" => [42, "string", [ => ]]]);
+[00000007] ["coin" => [42, "string", [ => ]]]
+d;
+[00000008] ["coin" => [42, "string", [ => ]]]
+
+/*-------.
+| List.  |
+`-------*/
+var l = all.transmitL([1,"coin",[b]]);
+[00000011] [["oi"], "coin", 1]
+l;
+[00000012] [["oi"], "coin", 1]

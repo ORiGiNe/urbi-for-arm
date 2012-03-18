@@ -1,0 +1,177 @@
+#! /usr/bin/perl -w
+
+=head1 NAME
+
+print-env - print the environment in a human and sh readable maner.
+
+=head1 SYNOPSIS
+
+  print-env [OPTIONS...] [FILE...]
+
+Without argument, print the current environment variables, removing
+ignored ones.  Otherwise read the FILEs as lines of C<var=value> to be
+filtered as if it were the environment as produced by C<env>.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-i>, B<--ignore>=I<pattern>
+
+Do not report variables that match the Perl regular expression
+C<^I<pattern>$>.
+
+=item B<-I>, B<--ignore-standard>
+
+Ignore some standard, uninteresting, variables.
+
+=item B<-h>, B<--help>
+
+Display this message and exit.
+
+=item B<-q>, B<--quiet>
+
+Be less verbose.  Accumulates.
+
+=item B<-v>, B<--verbose>
+
+Be more verbose.  Accumulates.
+
+=back
+
+=cut
+
+BEGIN
+{
+  use File::Basename;
+  unshift @INC, dirname($0) . '/../lib/perl';
+}
+
+use BuildAux::FileUtils;
+use BuildAux::Utils;
+use BuildAux::Verbose;
+use English;
+use strict;
+
+# Variables to ignore.
+my @ignore = ();
+
+# Variables we don't care about.
+my @ignore_standard =
+  qw{
+    AM_COLOR_TESTS
+    Apple_PubSub.*
+    BASH.*
+    CCACHE_.*
+    CVS_.*
+    DBUS_.*
+    DISPLAY
+    EDITOR
+    EMAIL
+    FULLNAME
+    GIT_.*
+    HOME
+    LANG
+    LANGUAGE
+    LC_.*
+    LOGNAME
+    MAKEFLAGS
+    MAKELEVEL
+    MAKEOVERRIDES
+    MANPATH
+    MFLAGS
+    OLDPWD
+    PAGER
+    PS[1234]
+    PYTHONPATH
+    SECURITYSESSIONID
+    SHELL
+    SHLVL
+    SSH_.*
+    TERM
+    TERMCAP
+    TERM_.*
+    TEXI2DVI_.*
+    TMPDIR
+    USER
+    VISUAL
+    _
+    __CF_USER_.*
+    as_.*
+  };
+
+=head1 FUNCTIONS
+
+=over 4
+
+=item C<getopt()>
+
+Process the command line arguments.
+
+=cut
+
+sub getopt ()
+{
+  use BuildAux::Getopt qw($message);
+  $message = "Print (some) environment variables";
+  BuildAux::Getopt::getopt
+    (
+     "i|ignore=s"         => \@ignore,
+     "I|ignore-standard"  => sub { push @ignore, @ignore_standard },
+    );
+}
+
+sub print_env(\%$)
+{
+  my ($env, $ignore) = @_;
+  for my $v (sort keys %$env)
+  {
+    printf "%s=%s\n", $v, shellescape $env->{$v}
+    unless $v =~ m/$ignore/o;
+  }
+}
+
+## ------ ##
+## Main.  ##
+## ------ ##
+
+getopt;
+
+my $ignore = '^(' . join ('|', @ignore) . ')$';
+verbose 2, "ignore pattern: $ignore";
+if (@ARGV == 0)
+{
+  print_env(%ENV, $ignore);
+}
+else
+{
+  require 'shellwords.pl';
+  for my $f (@ARGV)
+  {
+    my $contents = contents($f);
+    my %env;
+    for my $var (shellwords($contents))
+    {
+      $var =~ m{(.*?)=(.*)};
+      $env{$1} = $2;
+    }
+    print_env(%env, $ignore);
+  }
+}
+
+### Setup "Gostai" style for perl-mode and cperl-mode.
+## Local Variables:
+## perl-indent-level: 2
+## perl-continued-statement-offset: 2
+## perl-continued-brace-offset: -2
+## perl-brace-offset: 0
+## perl-brace-imaginary-offset: 0
+## perl-label-offset: -2
+## cperl-indent-level: 2
+## cperl-brace-offset: 0
+## cperl-continued-brace-offset: -2
+## cperl-label-offset: -2
+## cperl-extra-newline-before-brace: t
+## cperl-merge-trailing-else: nil
+## cperl-continued-statement-offset: 2
+## End:

@@ -1,0 +1,23 @@
+syncline << "doc/tutorial/event.tex:25";
+[01234567:#] "doc/tutorial/event.tex:25"
+//#line 25 "doc/tutorial/event.tex"
+var x = 0;
+[00000000] 0
+at (x > 5)
+  echo("ping");
+x = 5;
+[00000000] 5
+// This triggers the event.
+x = 6;
+[00000000] 6
+[00000000] *** ping
+// Does not trigger, since the condition is already true.
+x = 7;
+[00000000] 7
+// The condition becomes false here.
+x = 3;
+[00000000] 3
+
+x = 10;
+[00000000] 10
+[00000000] *** ping

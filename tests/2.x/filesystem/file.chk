@@ -1,0 +1,24 @@
+//! echo line 1 >> file
+//! echo line 2 >> file
+//! echo line 3 >> file
+//! cp file dos-file
+//! unix2dos dos-file
+//! touch bad
+//! chmod 0 bad
+//$ chmod 700 bad
+//$ rm -f bad file dos-file
+
+skipIfRoot;
+
+File.new("pouf");
+[00000001:error] !!! input.u:@.1-16: new: does not exist: pouf
+
+
+File.new("bad").asList;
+[00000002:error] !!! input.u:@.1-22: asList: File not readable: bad
+
+
+File.new("file").asList;
+[00000003] ["line 1", "line 2", "line 3"]
+File.new("dos-file").asList;
+[00000004] ["line 1", "line 2", "line 3"]

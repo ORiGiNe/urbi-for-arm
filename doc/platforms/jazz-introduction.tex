@@ -1,0 +1,47 @@
+%% Copyright (C) 2012, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\begin{minipage}[c]{0.5\textwidth}
+  \begin{center}
+    \includegraphics[width=.98\textwidth]{img/jazz/white-jazz}
+  \end{center}
+\end{minipage}
+\begin{minipage}[c]{.5\textwidth}
+  \chapter*{Disclaimer}
+
+  The information contained in this
+  \ifthenelse{\boolean{urbisdk}}{chapter}{document} is subject to change
+  without notice. Gostai makes no warranty of any kind with regard to this
+  manual, including, but not limited to, the implied warranties of
+  merchantability and fitness for a particular purpose. Gostai shall not be
+  liable for errors contained herein or direct, indirect, special,
+  incidental or consequential damage in connection with the furnishing,
+  performance, or use of this material.
+
+  \bigskip
+
+  This \ifthenelse{\boolean{urbisdk}}{chapter}{document} contains
+  information which is protected by copyright. All rights are
+  reserved. Reproduction, adaptation, or translation without prior written
+  permission is prohibited, except as allowed under the copyright laws. Use
+  of this manual is restricted to this product only. Additional copies of
+  the programs may be made for security and back-up purposes only. Resale of
+  the programs in its present form or with alterations, is expressly
+  prohibited.
+\end{minipage}
+
+\ifthenelse{\boolean{urbisdk}}{\clearpage}{\tableofcontents}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: t
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

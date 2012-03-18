@@ -1,0 +1,19 @@
+//#uobject test/all
+all.a = 1;
+[00000001] 1
+var inu = all.setOwned(0);
+[00000002] 0
+
+inu=all.setNotifyChange(0);
+[00000003] 0
+
+inu=all2.setNotifyChangeByName("all.a");
+[00000004] 0
+
+//urbi write to owned val should not trigger notifychange from others.
+{all.lastChange = ""; all.lastAccess = ""; all2.lastChange = "";1};
+[00000005] 1
+all.a = 3;
+[00000006] 3
+[all.lastChange, all.lastAccess, all2.lastChange];
+[00000007] ["all.a", "", ""]

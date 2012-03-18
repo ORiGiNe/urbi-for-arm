@@ -1,0 +1,18 @@
+// Test Event.onSubscribe
+
+var e = Event.new|
+var e.onSubscribe = Event.new|;
+at(e.onSubscribe?) "subscriber".print;
+
+at(e?(12)) 1.print;
+[00000001] "subscriber"
+
+waituntil(e?(15)) | 2.print,
+[00000002] "subscriber"
+
+e!(12);
+[00000003] 1
+e!(15);
+[00000004] 2
+
+sleep(2s);

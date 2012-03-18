@@ -1,0 +1,6 @@
+var y = 0;
+assign: y = 20 time:3s,
+{
+  sleep(2s);
+  y = 30;
+},

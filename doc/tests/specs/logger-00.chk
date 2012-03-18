@@ -1,0 +1,108 @@
+syncline << "doc/specs/logger.tex:29";
+[01234567:#] "doc/specs/logger.tex:29"
+//#line 29 "doc/specs/logger.tex"
+var logger = Logger.new("Category")|;
+
+logger.dump << "Low level debug message"|;
+// Nothing displayed, unless the debug level is set to DUMP.
+
+logger.warn << "something wrong happened, proceeding"|;
+[       Category        ] something wrong happened, proceeding
+
+logger.err << "something really bad happened!"|;
+[       Category        ] something really bad happened!
+
+syncline << "doc/specs/logger.tex:44";
+[01234567:#] "doc/specs/logger.tex:44"
+//#line 44 "doc/specs/logger.tex"
+Logger.log("message", "Category") |;
+[       Category        ] message
+
+Logger.log("message", "Category") :
+{
+  Logger.log("indented message", "SubCategory")
+}|;
+[       Category        ] message
+[      SubCategory      ]   indented message
+
+syncline << "doc/specs/logger.tex:66";
+[01234567:#] "doc/specs/logger.tex:66"
+//#line 66 "doc/specs/logger.tex"
+Logger.log("foo");
+[        Logger         ] foo
+[00004702] Logger<Logger>
+
+Logger.log("foo", "Category") |;
+[       Category        ] foo
+
+var l = Logger.new("Category2");
+[00004703] Logger<Category2>
+
+l.log("foo")|;
+[       Category2       ] foo
+
+l.log("foo", "ForcedCategory") |;
+[    ForcedCategory     ] foo
+
+syncline << "doc/specs/logger.tex:93";
+[01234567:#] "doc/specs/logger.tex:93"
+//#line 93 "doc/specs/logger.tex"
+l = Logger.new("Category", Logger.Levels.Log);
+[00090939] Logger<Category>
+l << "foo";
+[       Category        ] foo
+[00091939] Logger<Category>
+
+syncline << "doc/specs/logger.tex:105";
+[01234567:#] "doc/specs/logger.tex:105"
+//#line 105 "doc/specs/logger.tex"
+// None of these are displayed unless the current level is at least DEBUG.
+logger.debug << "debug 1"|;
+logger.debug("debug 2")|;
+logger.debug("debug 3", "Category2")|;
+
+syncline << "doc/specs/logger.tex:116";
+[01234567:#] "doc/specs/logger.tex:116"
+//#line 116 "doc/specs/logger.tex"
+// None of these are displayed unless the current level is at least DEBUG.
+logger.dump << "dump 1"|;
+logger.dump("dump 2")|;
+logger.dump("dump 3", "Category2")|;
+
+syncline << "doc/specs/logger.tex:136";
+[01234567:#] "doc/specs/logger.tex:136"
+//#line 136 "doc/specs/logger.tex"
+Logger.Levels.values;
+[00000001] [None, Log, Trace, Debug, Dump]
+
+syncline << "doc/specs/logger.tex:144";
+[01234567:#] "doc/specs/logger.tex:144"
+//#line 144 "doc/specs/logger.tex"
+logger.log << "log 1"|;
+[       Category        ] log 1
+
+logger.log("log 2")|;
+[       Category        ] log 2
+
+logger.log("log 3", "Category2")|;
+[       Category2       ] log 3
+
+syncline << "doc/specs/logger.tex:167";
+[01234567:#] "doc/specs/logger.tex:167"
+//#line 167 "doc/specs/logger.tex"
+// None of these are displayed unless the current level is at least TRACE.
+logger.trace << "trace 1"|;
+logger.trace("trace 2")|;
+logger.trace("trace 3", "Category2")|;
+
+syncline << "doc/specs/logger.tex:177";
+[01234567:#] "doc/specs/logger.tex:177"
+//#line 177 "doc/specs/logger.tex"
+logger.warn << "warn 1"|;
+[       Category        ] warn 1
+
+logger.warn("warn 2")|;
+[       Category        ] warn 2
+
+logger.warn("warn 3", "Category2")|;
+[       Category2       ] warn 3

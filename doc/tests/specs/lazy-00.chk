@@ -1,0 +1,101 @@
+syncline << "doc/specs/lazy.tex:36";
+[01234567:#] "doc/specs/lazy.tex:36"
+//#line 36 "doc/specs/lazy.tex"
+// This function supposedly performs expensive computations.
+function heavy_computation()
+{
+  echo("Heavy computation");
+  return 1 + 1;
+}|;
+
+// We want to do the heavy computations only if needed,
+// and make it a lazy value to be able to evaluate it "on demand".
+var v = Lazy.new(closure () { heavy_computation() });
+[00000000] heavy_computation()
+/* some code */;
+// So far, the value was not needed, and heavy_computation
+// was not evaluated.
+/* some code */;
+// If the value is needed, heavy_computation is evaluated.
+v.value;
+[00000000] *** Heavy computation
+[00000000] 2
+// If the value is needed a second time, heavy_computation
+// is not reevaluated.
+v.value;
+[00000000] 2
+
+syncline << "doc/specs/lazy.tex:78";
+[01234567:#] "doc/specs/lazy.tex:78"
+//#line 78 "doc/specs/lazy.tex"
+class UnaryLazy
+{
+  function init(f)
+  {
+    results = [ => ];
+    func = f;
+  };
+  function value(p)
+  {
+    var sp = p.asString;
+    if (results.has(sp))
+      return results[sp];
+    var res = func(p);
+    results[sp] = res |
+    res
+  };
+  var results;
+  var func;
+} |
+// The function to cache.
+var inc = function(x) { echo("incing " + x) | x+1 } |
+// The function with cache.
+// Use "getSlot" to get the function, not its evaluation.
+var p = UnaryLazy.new(getSlot("inc"));
+[00062847] UnaryLazy_0x78b750
+p.value(1);
+[00066758] *** incing 1
+[00066759] 2
+p.value(1);
+[00069058] 2
+p.value(2);
+[00071558] *** incing 2
+[00071559] 3
+p.value(2);
+[00072762] 3
+p.value(1);
+[00074562] 2
+
+syncline << "doc/specs/lazy.tex:132";
+[01234567:#] "doc/specs/lazy.tex:132"
+//#line 132 "doc/specs/lazy.tex"
+Lazy.new(closure () { /* Value to make lazy */ 0 });
+[00000000] 0
+
+syncline << "doc/specs/lazy.tex:143";
+[01234567:#] "doc/specs/lazy.tex:143"
+//#line 143 "doc/specs/lazy.tex"
+assert {
+Lazy.new(closure () { 1 + 1 }) == Lazy.new(closure () { 1 + 1 });
+Lazy.new(closure () { 1 + 2 }) != Lazy.new(closure () { 2 + 1 });
+};
+
+syncline << "doc/specs/lazy.tex:147";
+[01234567:#] "doc/specs/lazy.tex:147"
+//#line 147 "doc/specs/lazy.tex"
+{
+  var l1 = Lazy.new(closure () { 1 + 1 });
+  var l2 = Lazy.new(closure () { 1 + 1 });
+  assert (l1 == l2);
+  l1.eval;
+  assert (l1 != l2);
+  l2.eval;
+  assert (l1 == l2);
+};
+
+syncline << "doc/specs/lazy.tex:162";
+[01234567:#] "doc/specs/lazy.tex:162"
+//#line 162 "doc/specs/lazy.tex"
+assert {
+Lazy.new(closure () { echo(1); 1 }).asString == "echo(1);\n1";
+};

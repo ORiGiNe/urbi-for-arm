@@ -1,0 +1,106 @@
+syncline << "doc/uobject/quick-start.tex:261";
+[01234567:#] "doc/uobject/quick-start.tex:261"
+//#line 261 "doc/uobject/quick-start.tex"
+//#plug test/machine
+//#no-fast
+
+syncline << "doc/uobject/quick-start.tex:265";
+[01234567:#] "doc/uobject/quick-start.tex:265"
+//#line 265 "doc/uobject/quick-start.tex"
+class TwoMachineFactory
+{
+  // A shorthand common to all the Two Machine factories.
+  var UMachine = uobjects.UMachine;
+
+  // Default machines.
+  var fastMachine = UMachine.new(10ms);
+  var slowMachine = UMachine.new(100ms);
+
+  // The urbiscript constructor.
+  // Build two machines, a fast one, and a slow one.
+  function init(fast = 10ms, slow = 100ms)
+  {
+    // Make sure fast <= slow.
+    if (slow < fast)
+      [fast, slow] = [slow, fast];
+    // Two machines for each instance of TwoMachineFactory.
+    fastMachine = UMachine.new(fast);
+    slowMachine = UMachine.new(slow);
+  };
+
+  // Wrappers to make invocation of the machine simpler.
+  function fast(input) { fastMachine.assemble(input) };
+  function slow(input) { slowMachine.assemble(input) };
+
+  // Use the slow machine for large jobs.
+  function assemble(input)
+  {
+    var res|
+    var machine|
+    if (5 < input.size)
+      { machine = "slow" | res = slow(input); }
+    else
+      { machine = "fast" | res = fast(input); } |
+    echo ("Used the %s machine (%s => %s)" % [machine, input, res]) |
+    res
+  };
+};
+[00000001] TwoMachineFactory
+
+syncline << "doc/uobject/quick-start.tex:309";
+[01234567:#] "doc/uobject/quick-start.tex:309"
+//#line 309 "doc/uobject/quick-start.tex"
+var f = TwoMachineFactory.new|;
+f.assemble([1, 2, 3, 4, 5, 6]);
+[00000002] *** Used the slow machine ([1, 2, 3, 4, 5, 6] => 123456)
+[00000003] "123456"
+f.assemble([1]);
+[00000004] *** Used the fast machine ([1] => 1)
+[00000005] "1"
+
+syncline << "doc/uobject/quick-start.tex:345";
+[01234567:#] "doc/uobject/quick-start.tex:345"
+//#line 345 "doc/uobject/quick-start.tex"
+f.assemble([1, 2, 3, 4, 5, 6]),
+f.assemble([1]),
+[00000002] *** Used the slow machine ([1, 2, 3, 4, 5, 6] => 123456)
+[00000004] *** Used the fast machine ([1] => 1)
+
+syncline << "doc/uobject/quick-start.tex:368";
+[01234567:#] "doc/uobject/quick-start.tex:368"
+//#line 368 "doc/uobject/quick-start.tex"
+echo(f.slow([1, 2, 3, 4, 5, 6])),
+echo("ping");
+[00000002] *** 123456
+[00000002] *** ping
+
+syncline << "doc/uobject/quick-start.tex:407";
+[01234567:#] "doc/uobject/quick-start.tex:407"
+//#line 407 "doc/uobject/quick-start.tex"
+do (TwoMachineFactory)
+{
+  fast = function (input) { fastMachine.threadedAssemble(input) };
+  slow = function (input) { slowMachine.threadedAssemble(input) };
+}|;
+
+syncline << "doc/uobject/quick-start.tex:417";
+[01234567:#] "doc/uobject/quick-start.tex:417"
+//#line 417 "doc/uobject/quick-start.tex"
+f.assemble([1, 2, 3, 4, 5, 6]),
+f.assemble([1]),
+[00000004] *** Used the fast machine ([1] => 1)
+[00000002] *** Used the slow machine ([1, 2, 3, 4, 5, 6] => 123456)
+sleep(200ms);
+
+syncline << "doc/uobject/quick-start.tex:434";
+[01234567:#] "doc/uobject/quick-start.tex:434"
+//#line 434 "doc/uobject/quick-start.tex"
+var c1 = Channel.new("c1")|;
+var c2 = Channel.new("c2")|;
+c1 << f.assemble([10, 20, 30, 40, 50, 60]),
+c2 << f.assemble([100]),
+sleep(200ms);
+[00000535] *** Used the fast machine ([100] => 100)
+[00000535:c2] "100"
+[00000625] *** Used the slow machine ([10, 20, 30, 40, 50, 60] => 102030405060)
+[00000625:c1] "102030405060"

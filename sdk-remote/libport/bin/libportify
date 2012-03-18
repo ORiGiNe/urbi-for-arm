@@ -1,0 +1,1051 @@
+#! /usr/bin/perl -w
+
+=head1 NAME
+
+libportify - sanitize sources/upgrade libport usage
+
+=head1 SYNOPSIS
+
+libportify [OPTIONS...] DIR|FILE...
+
+=head1 OPTIONS
+
+General options:
+
+=over 4
+
+=item B<-h>, B<--help>
+
+Display this message and exit.  More complete with B<--verbose>.
+
+=item B<-e>, B<--exact>
+
+Instead of trusting the copyright years in the file header, ask git
+for the commit years.  This is expensive, and should only be used in
+case of doubt.
+
+=item B<-f>, B<--foreign>
+
+This package is foreign, run only the steps that make sense for
+non-libport packages.
+
+=item B<-g>, B<--git>
+
+Use C<git ls-file> to recurse into the directories, instead of reading
+the directories.
+
+=item B<-n>, B<--no-recurse>
+
+Don't enter the directories.
+
+=item B<-s>, B<--step>=I<step>
+
+Run the step C<step>.  Accumulates.  If B<-s> is not used at all, run
+all the steps in the order the are presented in above.
+
+=item B<-q>, B<--quiet>
+
+Be less verbose.  Accumulates.
+
+=item B<-v>, B<--verbose>
+
+Be more verbose.  Accumulates.
+
+Verbosity levels:
+
+=over 4
+
+=item 0
+
+Display nothing.
+
+=item 1 (default)
+
+Display skipped files.
+
+=item 2
+
+Display processed files.
+
+=back
+
+=back
+
+=head1 DESCRIPTION
+
+Traverse all the DIR and FILE... and process them.
+
+The steps are, in the execution order (starred items are the only ones
+run for foreign packages):
+
+=over 4
+
+=item spaces *
+
+Nuke trailing white spaces.  Convert from DOS to Unix if needed.  Map
+initial tabs to spaces.  Delete initial and final empty lines.  Ensure
+ending '\n'.
+
+=item relicense *
+
+Make the various license header standard, and update the copyright
+years.  If there is no license, include the default one.
+
+=item copyright *
+
+Update copyright years.  Works only on valid license notices.  This
+step is quite expensive, as it runs git on the file to get its list of
+commit years.
+
+=item headers
+
+Fix headers (e.g., when libport provides replacement headers, use them
+instead of system headers).
+
+=item debug
+
+Update C<GD_DEBUG> calls.
+
+=item renamings
+
+Fix names and bad spelling.
+
+=item aver
+
+Convert C<aver(a, b)> to C<aver_eq(a, b) and so forth.  If the
+assertion fails, the values of C<a> and C<b> are reported.
+
+=back
+
+=cut
+
+# We need a fairly recent version of Perl to have powerful regexps.
+use 5.010_000;
+
+BEGIN
+{
+  use File::Basename;
+  unshift @INC, dirname($0) . '/../build-aux/lib/perl';
+}
+
+use strict;
+use BuildAux::FileUtils;
+use BuildAux::Utils;
+use BuildAux::Verbose;
+use BuildAux::XFile;
+use File::Basename;
+
+# Whether running git to get commit years.
+my $exact = 0;
+
+# Whether a foreign package.
+my $foreign = 0;
+
+# Whether to use git to recurse.
+my $git = 0;
+
+# Whether to recurse in directories.
+my $recurse = 1;
+
+# Steps to run, in order.
+my @step;
+
+# The current year.
+my $year = 1900 + (localtime)[5];
+
+=head1 FUNCTIONS
+
+=over 4
+
+=item C<aver_name($op)>
+
+Map an operator name to its (alphabetical) suffix for aver.  For
+instance C<==> maps to C<aver_eq>.
+
+=cut
+
+sub aver_name($)
+{
+  my ($op) = @_;
+  my %op =
+    (
+     '!='  => 'ne',
+     '!==' => 'mne',
+     '<'   => 'lt',
+     '<='  => 'le',
+     '=='  => 'eq',
+     '===' => 'meq',
+     '>'   => 'gt',
+     '>='  => 'ge',
+    );
+  print STDERR "$op\n";
+  "aver_" . $op{$op};
+}
+
+=item C<libport_aver ($file, \$contents)>
+
+Convert uses such as C<aver(a == b)> into C<aver_eq(a, b)>.
+
+=cut
+
+sub libport_aver ($\$)
+{
+  my ($file, $contents_ref) = @_;
+
+  local $_ = $$contents_ref;
+
+  # aver_eq is clearer when there are failures.
+  #
+  # Be also woried about precedence.  1 < 2 == true should not be
+  # cut on `<'.  I don't feel like parsing urbi in Perl...
+  s{^(\s*)                 # $1 indentation
+     aver
+     \s*\(
+     ($braced)             # $2 lhs
+     \s*
+     (?<![!=])
+     (<|<=|>|>=|!=|==)     # $3 operator
+     \s*}
+   { $1 . aver_name($3) . '(' . strip ($2) . ", "}gmsex;
+
+  $$contents_ref = $_;
+}
+
+
+=item C<libport_headers ($file, \$contents)>
+
+Normalize the use of libport and system headers.
+
+=cut
+
+sub libport_headers ($\$)
+{
+  my ($file, $contents_ref) = @_;
+  my $type = file_type($file);
+  return
+    unless $type && $type eq 'c++';
+
+  local $_ = $$contents_ref;
+
+  # C-system headers.
+  s{include\s*<
+    (assert
+    |ctype
+    |errno
+    |limits
+    |locale
+    |math
+    |setjmp
+    |signal
+    |stdarg
+    |stddef
+    |stdio
+    |stdint
+    |stdlib
+    |string
+    |time
+    ).h>}
+   {include <c$1>}gx;
+
+  # Libport headers.
+  # FIXME: Compute this list.
+  s{<(cassert
+     |cerrno
+     |cmath
+     |csignal
+     |cstdint
+     |cstdio
+     |cstdlib
+     |cstring
+     |ctime
+     |fcntl.h
+     |pthread.h
+     |semaphore.h
+     |unistd.h
+     |sys/param.h
+     |sys/prctl.h
+     |sys/select.h
+     |sys/socket.h
+     |sys/stat.h
+     |sys/time.h
+     |sys/wait.h
+     |sys/types.h)>}
+  {
+    my $header = $1;
+    # System header wrappers must include system headers, they must not
+    # be converted to including themselves.
+    $file =~ $header ? "<$header>" : "<libport/$header>"
+  }gxe;
+
+  # Some Boost headers have a version in Libport that avoids warnings.
+  s{<boost/(bind|lexical_cast|format).hpp>}
+   {
+     my $header = $1;
+     # We use -, they use _.
+     (my $dash_header = $header) =~ tr/_/-/;
+     $file =~ $dash_header ? "<boost/$header.hpp>" : "<libport/$dash_header.hh>";
+   }gxe;
+
+  # Prefer aver to other assertion mechanisms.
+  s{<libport/(assert|contract).hh>}{<libport/cassert>}g;
+  s{<debug/gdebug.hh>}{<libport/debug.hh>}g;
+
+  $$contents_ref = $_;
+}
+
+## --------------- ##
+## libport.debug.  ##
+## --------------- ##
+
+# to_format $STREAM
+# -----------------
+# Take a C++ stream content sequence without the stream itself
+# and return a format string and arguments.
+#
+# For instance
+#
+#    "this is a message"
+#    => ("this is a message", "")
+#    "this is a message " << foo << ": " << bar
+#    => ("this is a message %s: %s", "(foo)(bar)")
+sub to_format ($)
+{
+  my ($stream) = @_;
+  my $res = "";
+  my @arg;
+  for my $c (split(/\s*<<\s*/, $stream))
+  {
+    $c =~ s/^\s+//;
+    $c =~ s/\s+$//;
+    if ($c =~ /^"(.*)"$/ || $c =~ /^'(.*)'$/)
+    {
+      $res .= $1;
+    }
+    else
+    {
+      $res .= "%s";
+      push @arg, $c
+    }
+  }
+  my $args = join ', ', @arg;
+  return ("\"$res\"", $args);
+}
+
+# gdebug($CATEGORY, [$FORMAT, $ARGS])
+# -----------------------------------
+sub gdebug($@)
+{
+  my ($category, ($format, $args)) = @_;
+  if ($args)
+  {
+    return "GD_F$category($format, $args)";
+  }
+  else
+  {
+    return "GD_$category($format)";
+  }
+}
+
+# trace_num_to_category($NUM)
+# ---------------------------
+# TRACE is used for informative messages.  Bounce to INFO.
+sub trace_num_to_category ($)
+{
+  my ($num) = @_;
+  my @cat = ("log", "trace", "debug", "dump");
+  my $res = $cat[$num] || "dump";
+  return "INFO_" . uc $res;
+}
+
+# libport_debug ($FILE, \$CONTENTS)
+# --------------------------------
+# Convert from gdebug.hh to Libport.Debug.
+sub libport_debug ($\$)
+{
+  my ($file, $contents_ref) = @_;
+  local $_ = $$contents_ref;
+
+  # TRACE(0, "foo: " << foo);
+  # GDEBUG (2, "getting associated content for hash: " << hash);
+  s{(?:GDEBUG|GERROR|GWARN|TRACE)\s*\((\d),\s*($balanced)\)}
+   {gdebug(trace_num_to_category($1), to_format($2))}ges;
+
+  # DEBUG_LOG("-> Remote") << "askForStreamDestruction (" << cnx_id << ")" << std::endl;
+  # DEBUG_LOG(session_id)  << std::endl;
+  # DEBUG_LOG(session_id) << "parseRTSPUrl: "<< e.what ();
+  s{DEBUG_LOG\s*\((.*?)\)(.*?)(?:\s*<<\s*std::endl)?\s*;}
+   {gdebug("INFO_LOG", to_format("'[' << $1 << \"] \" $2")) . ";";}ges;
+
+  # Move from "Format, (Arg1)(Arg2)" to "Format, Arg1, Arg2"...
+  s{
+    ([ \t]*)
+    (GD_F(?:INFO(?:_LOG|_TRACE|_DEBUG|_DUMP)?|WARN|ERROR|PUSH|ABORT))
+    \(
+      (".*?"),\s*
+      ((?:\($balanced+\)\s*)+)
+    \)
+   }
+   {
+     my $spaces = $1;
+     my $channel = $2;
+     my $format = $3;
+     my $args = $4;
+     my @arg = ($format);
+     $args =~ s/\(($balanced+)\)\s*/push @arg, $1/ges;
+
+     # Chose the separator: if fits on a single line, simply ','.
+     # Otherwise, indeed each argument on its line.
+     my $tab = $spaces . " " x length("$channel(");
+     my $res = $spaces . "$channel(" . (join ", ", @arg) . ")";
+     $res = $spaces . "$channel(" . (join ",\n$tab", @arg) . ")"
+       if 76 < length $res;
+     $res;
+   }xges;
+
+
+  $$contents_ref = $_;
+}
+
+# libport_renamings ($FILE, \$CONTENTS)
+# -------------------------------------
+# Convert old symbol names to new names.
+sub libport_renamings ($\$)
+{
+  my ($file, $contents_ref) = @_;
+  local $_ = $$contents_ref;
+
+  my $type = file_type($file);
+  if (defined $type && $type eq 'c++')
+  {
+    # aver is nicer than assert.
+    # Don't change the definition of our assert though.
+    s/\b(?:post|pre)condition\s*\(/aver(/g;
+    s/\bunreached\s*\(/unreachable(/g;
+    s/\bassert\s*\((?!Assertion\))/aver(/g;
+
+    # We are now simply using Boost.Unordered.
+    s/libport::hash_map/boost::unordered_map/g;
+  }
+
+  # Denottalify.
+  s/\ballready\b/already/g;
+  s/\bwether\b/whether/g;
+  s/\bwritting\b/writing/g;
+
+  $$contents_ref = $_;
+}
+
+
+=item C<libport_spaces ($file, \$contents)>
+
+Clean up blank uses.
+
+=cut
+
+sub libport_spaces ($\$)
+{
+  my ($file, $contents_ref) = @_;
+
+  $$contents_ref =~ s{^(\t+)}{ " " x (8 * length($1)) }gme
+    unless file_type($file) eq "makefile";
+  $$contents_ref =~ s/[ \t\r]+$//gm;
+  $$contents_ref =~ s/\A\n+//;
+  $$contents_ref =~ s/\n*\Z/\n/;
+}
+
+
+## ------------- ##
+## Year ranges.  ##
+## ------------- ##
+
+=item C<range_first($range)>
+
+The first year of the range, possibly reduced to a single year.
+
+=cut
+
+sub range_first ($)
+{
+  my ($res) = @_;
+  $res =~ s/-.*//g;
+  $res;
+}
+
+=item C<range_last($range)>
+
+The last year of the range, possibly reduced to a single year.
+
+=cut
+
+sub range_last ($)
+{
+  my ($res) = @_;
+  $res =~ s/.*-//g;
+  $res;
+}
+
+=item C<range_new($y1, $y2)>
+
+Build a new range from two years, possible equal.
+
+=cut
+
+sub range_new ($$)
+{
+  ($_[0] != $_[1]) ? "$_[0]-$_[1]": "$_[0]";
+}
+
+=item C<libport_range(@range)>
+
+Clean up the list of ranges C<@range>, and return the result.  For
+instance:
+
+  2005, 2007,2008,2010 => 2005, 2007-2008, 2010
+
+=cut
+
+sub libport_range(@)
+{
+  my @range = @_;
+  my @res;
+  my $prev;
+  for my $range (sort (map { split /,\s*/ } @range))
+  {
+    if (defined $prev)
+    {
+      if (range_last($prev) == range_first($range)
+          || range_last($prev) + 1 == range_first($range))
+      {
+        $prev = range_new(range_first($prev), range_last($range));
+      }
+      else
+      {
+        push @res, $prev;
+        $prev = $range;
+      }
+    }
+    else
+    {
+      $prev = $range;
+    }
+  }
+  push @res, $prev
+    if defined $prev;
+  my $res = join (', ', @res);
+  verbose 5, "range: @range => $res";
+  $res;
+}
+
+
+## ---------- ##
+## Licenses.  ##
+## ---------- ##
+
+my @license_re =
+(
+q{(?:<file>: )?(?:This file is part of <project>\\.)?
+<copyright> (?:<years>, <holder>|<holder>, <years>\.)
+
+<asis>
+
+See the LICENSE file for more information.
+<urbiforge>?},
+
+q{(?:\\\\file <file>)?
+This file is part of <project>\.?
+<copyright> (?:<years>, <holder>|<holder>, <years>\.)
+
+Permission to use, copy, modify, and redistribute this software for
+non-commercial use is hereby granted.
+
+<asis>
+
+<urbiforge>},
+
+q{\\\\file <file>
+
+ File: .*
+ <brief>
+
+ This file is part of
+ <project>
+ <copyright> <years>.*
+
+ Permission to use, copy, modify, and redistribute this software for
+ non-commercial use is hereby granted.
+
+<asis>
+
+ <urbiforge>},
+
+q{(?:\\\\file <file>)?
+
+<brief>?
+
+<copyright> <years> <holder>.  All rights reserved.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or \(at your option\) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.}
+);
+
+# The "syntax" of some interesting fields.
+my %license_field =
+(
+
+ asis      => q{This software is provided "?as is"? without warranty
+                of any kind, either expressed or implied, including
+                but not limited to the implied warranties of fitness
+                for a particular purpose.},
+ brief     => q{(?:Definition|Implementation).*},
+ copyright => q{Copyright\s*\([cC]\)},
+ file      => q{[\\-\\w\\./]+},
+ holder    => q{(?:Gostai (?:SAS|S.A.S.?)?|Jean-Christophe Baillie)},
+ project   => q{[^\\n]*},
+ urbiforge => q{For (?:comments, bug reports and feedback|more information,
+                comments, bug reports): http://www\.urbiforge\.(?:com|net|org)},
+ years     => q{[\\d\\-]+(?:,\s*[\\d\\-]+)*},
+);
+
+=item C<libport_license_setup()>
+
+Make the regexps more flexible.
+
+=cut
+
+sub libport_license_setup ()
+{
+  for my $re (@license_re)
+  {
+    for my $field (keys %license_field)
+    {
+      $re =~ s{<$field>}{(?<$field>$license_field{$field})}g;
+    }
+
+    $re =~ s{\n+}{\\s*}gs;
+
+    verbose 4, "Regexp C:", split(/\n/, $re);
+    $re =~ s/\s+/\\s+/gm;
+
+    verbose 4, "Regexp:", split(/\n/, $re);
+  }
+}
+
+=item C<libport_license($type, %group)>
+
+The proper license notice based on the C<%group>.
+
+C<$type> is the file type.
+
+=cut
+
+sub libport_license ($%)
+{
+  my ($type, %group) = @_;
+  # Clean up the years.
+  $group{years} = libport_range($group{years});
+  for my $key (sort keys %group)
+  {
+    verbose 6, "$key => {{$group{$key}}}";
+  }
+
+  my $res = license($type, $group{years}) . "\n";
+
+  {
+    my $info = '';
+    $info .= "\\file $group{file}\n"
+      if defined $group{file};
+    $info .= "\\brief $group{brief}\n"
+      if defined $group{brief};
+    $info .= "This file is part of $group{project}.\n"
+      if defined $group{project};
+
+    $res .= make_comment($type, $info, 1) . "\n"
+      if $info;
+  }
+
+  $res;
+}
+
+=item C<relicense($type, \$str)>
+
+Update C<$$str> by applying all our license updaters on it.  C<$$str>
+is expected to be pure text, strip from comment markup.  Trailing and
+starting white spaces are stripped.
+
+Return 1 if there was an updated, 0 otherwise.
+
+C<$type> is the file type.
+
+=cut
+
+sub relicense($\$)
+{
+  my ($type, $str) = @_;
+
+  $$str =~ s/^[\t\ *]+//gm;
+  $$str =~ s{^\s+}{};
+  $$str =~ s{\s+$}{};
+
+  my $res = 0;
+  for my $re (@license_re)
+  {
+    verbose 5, "AGAINST: ", $re;
+    $$str =~ s{$re}
+    {
+      $res = 1;
+      libport_license($type, %+)
+    }smegi;
+  }
+  $res;
+}
+
+
+=item C<libport_relicense($file, \$contents)>
+
+Update the license notice.  Add one if there was none.
+
+=cut
+
+sub libport_relicense ($\$)
+{
+  my ($file, $contents_ref) = @_;
+
+  # Do not alter files not from us.
+  return
+    if $file =~ m{(?:flex-lexer\.hh|gui/lcdrange\.h)$};
+
+  # The comment type to use.
+  my $type = file_comment_type($file);
+  if (! defined $type)
+  {
+    verbose 1, "don't know how to issue comments for $file";
+    return;
+  }
+  # Historically, we have promoted the /* ... */ comment style for C++
+  # too.
+  $type = 'c'
+    if $type eq 'c++';
+
+  my $updated = 0;
+
+  if ($type eq 'c')
+  {
+    # Look for C-comments.
+    $$contents_ref =~ s{(/\*(.*?)\*/\s*)}
+    {
+      my $orig = $1;
+      my $str = $2;
+      my $done = relicense($type, $str);
+      $updated ||= $done;
+      $done ? $str : $orig;
+    }esmg;
+
+    # Look for C++ comments.
+    $$contents_ref =~ s{((?:^[\t\ ]*//.*\n)+\n*)}
+    {
+      my $orig = $1;
+      my $str = $orig;
+      $str =~ s{^[\t\ ]*//}{}gm;
+      my $done = relicense($type, $str);
+      $updated ||= $done;
+      $done ? $str : $orig;
+    }emg;
+  }
+  elsif ($type eq 'sh')
+  {
+    $$contents_ref =~ s{((?:^[\t\ ]*#+.*\n)+\n*)}
+    {
+      my $orig = $1;
+      my $str = $orig;
+      $str =~ s{^[\t\ ]*#+}{}gm;
+      my $done = relicense($type, $str);
+      $updated ||= $done;
+      $done ? $str : $orig;
+    }emg;
+  }
+  elsif ($type eq 'tex')
+  {
+    $$contents_ref =~ s{((?:^[\t\ ]*%.*\n+)+\n*)}
+    {
+      my $orig = $1;
+      my $str = $orig;
+      $str =~ s{^[\t\ ]*%+}{}gm;
+      my $done = relicense($type, $str);
+      $updated ||= $done;
+      $done ? $str : $orig;
+    }emg;
+  }
+
+  # If the license was not seen (the right license model is also in
+  # the set of recognized licenses), then add it.
+  if (!$updated)
+  {
+    my %group =
+      (
+       years => $year,
+      );
+    $$contents_ref = libport_license($type, %group) . $$contents_ref;
+  }
+}
+
+=item C<git_years($file)>
+
+Return the list of commit years for $file.  Costly computation.
+
+=cut
+
+sub git_years($)
+{
+  my ($file) = @_;
+  # Move to where the file is, this is the safest way to have git
+  # answer properly.
+  my $base = basename($file);
+  my $dir = dirname($file);
+  my $res = qx{cd $dir && git log --follow -M -C --pretty=format:%ci $base};
+  # $res is:
+  # 2010-03-22 15:08:27 +0100
+  # 2010-03-22 14:38:07 +0100
+  # 2010-03-19 17:44:44 +0100
+  # 2010-03-01 17:39:52 +0100
+
+  my @res = unique (map {s/-.*//; $_} (split (/\n/, $res)));
+  verbose 3, "git_years($file) = @res";
+  @res;
+}
+
+
+=item C<libport_copyright($file, \$contents)>
+
+Update the copyright years.
+
+=cut
+
+sub libport_copyright ($\$)
+{
+  my ($file, $contents_ref) = @_;
+  local $_ = $$contents_ref;
+
+  s{
+      (?<=Copyright\s\(C\)\s)
+      # A series of four-digit dates.  Possibly intervals.
+      (\d{4}(?:-\d{4})?(?:,\s*\d{4}(?:-\d{4})?)*)
+      # Don't change Copyright lines that are not about Gostai.
+      (?=,\ Gostai)
+   }
+   {
+     libport_range(($exact ? git_years($file) : $1), $year)
+   }gex;
+
+  $$contents_ref = $_;
+}
+
+
+## ----------- ##
+## transform.  ##
+## ----------- ##
+
+
+=item C<libportify ($file, $contents)>
+
+Apply the transformations on C<$contents> of C<$file>.
+
+=cut
+
+sub libportify ($$)
+{
+  my ($file, $contents) = @_;
+  my %step =
+    (
+     aver      => \&libport_aver,
+     spaces    => \&libport_spaces,
+     headers   => \&libport_headers,
+     debug     => \&libport_debug,
+     renamings => \&libport_renamings,
+     relicense => \&libport_relicense,
+     copyright => \&libport_copyright,
+    );
+
+  for my $step (@step)
+  {
+    die "$me: invalid step: $step\n"
+      unless exists $step{$step};
+    verbose 3, "Step: $step", split("\n", $contents);
+    $step{$step}->($file, \$contents);
+  }
+
+  $contents;
+}
+
+=item C<transform_file (&transform, $file)>
+
+Apply C<&transform> on the contents of C<$file>.  If there is no
+difference, do nothing.  Otherwise, back-up the original C<$file> into
+C<$file.bak>, save the new contents in C<$file>, and show the
+differences.  Preserve permissions.
+
+=cut
+
+sub transform_file (\&$)
+{
+  my ($transform_ref, $file) = @_;
+  my $contents = contents ($file);
+  file_update($file, $transform_ref->($file, $contents));
+}
+
+=item C<dir_content($name)>
+
+Return the contents of the directory C<$name>, skipping C<.> and
+C<..>.  Return qualified paths, i.e., with C<$name/> prefixed.
+
+=cut
+
+sub dir_content($)
+{
+  my ($name) = @_;
+
+  my @res;
+  if ($git)
+  {
+    my $files = qx{cd $name && git ls-files};
+    @res = split (/\n/, $files);
+  }
+  else
+  {
+    opendir (my $dir, $name) ||
+      die "cannot opendir $name: $!";
+    @res = grep { !/^\.\.?$/ } readdir($dir);
+    closedir $dir ||
+      die "cannot closedir $name: $!";
+  }
+  map { "$name/$_" } @res;
+}
+
+=item C<transform_things (&transform, @thing)>
+
+Work on file-system entities (files, directories etc.).  Call
+C<&transform> on file contents, and save them if changed.
+
+=cut
+
+my @ignore = qw(
+  .*\.bak
+  .*\.dsym
+  .*\.jpg
+  .*\.mp3
+  .*\.pdf
+  .*\.png
+  \.git
+  autom4te.cache
+  bison
+  config\.h(?:\.in)?
+  configure
+  jpeg
+  libcoroutine
+  libltdl
+  Makefile(?:\.in)?
+  tinyxml
+  );
+my $ignore =
+  '\A'
+  . '(?:.*/)?'
+  . ('(?:'
+     . join ('|', @ignore)
+     . ')')
+  . '(?:/.*)?'
+  . '\z';
+
+sub transform_things (\&@);
+sub transform_things (\&@)
+{
+  my ($transform_ref, @thing) = @_;
+
+  for my $thing (@thing)
+  {
+    my $basename = basename($thing);
+    if ($thing =~ m{$ignore}o)
+    {
+      # Skip silently these files.
+    }
+    elsif (-f $thing)
+    {
+      transform_file &$transform_ref, $thing;
+    }
+    elsif (-d $thing && $recurse)
+    {
+      transform_things (&$transform_ref, dir_content($thing));
+    }
+    else
+    {
+      verbose 1, (-e $thing
+                  ? "skipping $thing"
+                  : "ignoring $thing: does not exist");
+    }
+  }
+}
+
+=item C<getopt()>
+
+Process the command line options.
+
+=cut
+
+sub getopt ()
+{
+  use BuildAux::Getopt qw($message);
+  $message = "Fix libport usage";
+  BuildAux::Getopt::getopt
+    (
+     "e|exact"      => \$exact,
+     "f|foreign"    => \$foreign,
+     "g|git"        => \$git,
+     "n|no-recurse" => sub { $recurse = 0 },
+     "s|step=s"     => \@step,
+    );
+
+  unless (@step)
+  {
+    @step = qw(spaces relicense copyright);
+    push @step, qw(headers debug renamings aver)
+      unless $foreign;
+  }
+  verbose 2, "Steps: @step";
+
+  libport_license_setup;
+}
+
+
+## ------ ##
+## main.  ##
+## ------ ##
+
+getopt;
+transform_things &libportify, @ARGV;
+
+
+### Setup "Gostai" style for perl-mode and cperl-mode.
+## Local Variables:
+## perl-indent-level: 2
+## perl-continued-statement-offset: 2
+## perl-continued-brace-offset: -2
+## perl-brace-offset: 0
+## perl-brace-imaginary-offset: 0
+## perl-label-offset: -2
+## cperl-indent-level: 2
+## cperl-brace-offset: 0
+## cperl-continued-brace-offset: -2
+## cperl-label-offset: -2
+## cperl-extra-newline-before-brace: t
+## cperl-merge-trailing-else: nil
+## cperl-continued-statement-offset: 2
+## End:

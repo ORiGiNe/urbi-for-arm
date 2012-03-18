@@ -1,0 +1,351 @@
+/* include/config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* Define to enable Urbi debugging tools. */
+#undef COMPILATION_MODE_DEBUG
+
+/* Define to 1 to optimize for space. */
+#undef COMPILATION_MODE_SPACE
+
+/* Define to 1 to optimize for speed the kernel at the detriment of
+   compilation time. */
+#undef COMPILATION_MODE_SPEED
+
+/* Define to 1 if serialization is enabled. */
+#undef ENABLE_SERIALIZATION
+
+/* Define to 1 to enable SLL support. */
+#undef ENABLE_SSL
+
+/* Define to 1 if you have the `argz_add' function. */
+#undef HAVE_ARGZ_ADD
+
+/* Define to 1 if you have the `argz_append' function. */
+#undef HAVE_ARGZ_APPEND
+
+/* Define to 1 if you have the `argz_count' function. */
+#undef HAVE_ARGZ_COUNT
+
+/* Define to 1 if you have the `argz_create_sep' function. */
+#undef HAVE_ARGZ_CREATE_SEP
+
+/* Define to 1 if you have the <argz.h> header file. */
+#undef HAVE_ARGZ_H
+
+/* Define to 1 if you have the `argz_insert' function. */
+#undef HAVE_ARGZ_INSERT
+
+/* Define to 1 if you have the `argz_next' function. */
+#undef HAVE_ARGZ_NEXT
+
+/* Define to 1 if you have the `argz_stringify' function. */
+#undef HAVE_ARGZ_STRINGIFY
+
+/* Defined if the requested minimum BOOST version is satisfied */
+#undef HAVE_BOOST
+
+/* Define to 1 if you have <boost/archive/text_oarchive.hpp> */
+#undef HAVE_BOOST_ARCHIVE_TEXT_OARCHIVE_HPP
+
+/* Define to 1 if you have <boost/filesystem/path.hpp> */
+#undef HAVE_BOOST_FILESYSTEM_PATH_HPP
+
+/* Define to 1 if you have <boost/signal.hpp> */
+#undef HAVE_BOOST_SIGNAL_HPP
+
+/* Define to 1 if you have <boost/system/error_code.hpp> */
+#undef HAVE_BOOST_SYSTEM_ERROR_CODE_HPP
+
+/* Define to 1 if you have <boost/test/unit_test.hpp> */
+#undef HAVE_BOOST_TEST_UNIT_TEST_HPP
+
+/* Define to 1 if you have <boost/thread.hpp> */
+#undef HAVE_BOOST_THREAD_HPP
+
+/* Define to 1 if you have the `closedir' function. */
+#undef HAVE_CLOSEDIR
+
+/* Define to 1 if you have the declaration of `cygwin_conv_path', and to 0 if
+   you don't. */
+#undef HAVE_DECL_CYGWIN_CONV_PATH
+
+/* Define to 1 if you have the <direct.h> header file. */
+#undef HAVE_DIRECT_H
+
+/* Define to 1 if you have the <dirent.h> header file. */
+#undef HAVE_DIRENT_H
+
+/* Define if you have the GNU dld library. */
+#undef HAVE_DLD
+
+/* Define to 1 if you have the <dld.h> header file. */
+#undef HAVE_DLD_H
+
+/* Define to 1 if you have the `dlerror' function. */
+#undef HAVE_DLERROR
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
+/* Define to 1 if you have the <dl.h> header file. */
+#undef HAVE_DL_H
+
+/* Define if you have the _dyld_func_lookup function. */
+#undef HAVE_DYLD
+
+/* Define to 1 if the system has the type `error_t'. */
+#undef HAVE_ERROR_T
+
+/* Define to 1 if you have the <execinfo.h> header file. */
+#undef HAVE_EXECINFO_H
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define if you have the libdl library or equivalent. */
+#undef HAVE_LIBDL
+
+/* Define if libdlloader will be built on this platform */
+#undef HAVE_LIBDLLOADER
+
+/* Define this if a modern libltdl is already installed */
+#undef HAVE_LTDL
+
+/* Define to 1 if you have the <mach-o/dyld.h> header file. */
+#undef HAVE_MACH_O_DYLD_H
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the `mlockall' function. */
+#undef HAVE_MLOCKALL
+
+/* Define to 1 if you have the `opendir' function. */
+#undef HAVE_OPENDIR
+
+/* Define to 1 if the compiler supports `#pragma GCC diagnostic'. */
+#undef HAVE_PRAGMA_GCC_DIAGNOSTIC
+
+/* Define if libtool can extract symbol lists from object files. */
+#undef HAVE_PRELOADED_SYMBOLS
+
+/* Define to 1 if you have the <pthread.h> header file. */
+#undef HAVE_PTHREAD_H
+
+/* Define to 1 if you have pthread sources. */
+#undef HAVE_PTHREAD_SOURCES
+
+/* Define to 1 if you have the `readdir' function. */
+#undef HAVE_READDIR
+
+/* Define to 1 if you have the `round' function. */
+#undef HAVE_ROUND
+
+/* Define to 1 if you have the <sched.h> header file. */
+#undef HAVE_SCHED_H
+
+/* Define to 1 if you have the `sched_setscheduler' function. */
+#undef HAVE_SCHED_SETSCHEDULER
+
+/* Define to 1 if you have the `semget' function. */
+#undef HAVE_SEMGET
+
+/* Define to 1 if you have the `setpriority' function. */
+#undef HAVE_SETPRIORITY
+
+/* Define if you have the shl_load function. */
+#undef HAVE_SHL_LOAD
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the `strlcat' function. */
+#undef HAVE_STRLCAT
+
+/* Define to 1 if you have the `strlcpy' function. */
+#undef HAVE_STRLCPY
+
+/* Define to 1 if you have the <sys/dl.h> header file. */
+#undef HAVE_SYS_DL_H
+
+/* Define to 1 if you have the <sys/mman.h> header file. */
+#undef HAVE_SYS_MMAN_H
+
+/* Define to 1 if you have the <sys/param.h> header file. */
+#undef HAVE_SYS_PARAM_H
+
+/* Define to 1 if you have the <sys/prctl.h> header file. */
+#undef HAVE_SYS_PRCTL_H
+
+/* Define to 1 if you have the <sys/resource.h> header file. */
+#undef HAVE_SYS_RESOURCE_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/times.h> header file. */
+#undef HAVE_SYS_TIMES_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <sys/utsname.h> header file. */
+#undef HAVE_SYS_UTSNAME_H
+
+/* Define to 1 if you have the <sys/wait.h> header file. */
+#undef HAVE_SYS_WAIT_H
+
+/* Define to 1 if you have the `times' function. */
+#undef HAVE_TIMES
+
+/* Define to 1 if you have the `trunc' function. */
+#undef HAVE_TRUNC
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the <valgrind/valgrind.h> header file. */
+#undef HAVE_VALGRIND_VALGRIND_H
+
+/* Define to 1 if you have the <windows.h> header file. */
+#undef HAVE_WINDOWS_H
+
+/* This value is set to 1 to indicate that the system argz facility works */
+#undef HAVE_WORKING_ARGZ
+
+/* Defined to libdir's basename */
+#undef LIBDIRNAME
+
+/* Define to 1 to enable multithread support in libsched. */
+#undef LIBPORT_SCHED_MULTITHREAD
+
+/* Define to the library suffix. */
+#undef LIBSFX
+
+/* Define if the OS needs help to load dependent libraries for dlopen(). */
+#undef LTDL_DLOPEN_DEPLIBS
+
+/* Define to have libltdl support log messages. */
+#undef LT_DEBUG_LOADERS
+
+/* Define to the system default library search path. */
+#undef LT_DLSEARCH_PATH
+
+/* The archive extension */
+#undef LT_LIBEXT
+
+/* Define to the extension used for runtime loadable modules, say, ".so". */
+#undef LT_MODULE_EXT
+
+/* Define to the name of the environment variable that determines the run-time
+   module search path. */
+#undef LT_MODULE_PATH_VAR
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
+/* Define if dlsym() requires a leading underscore in symbol names. */
+#undef NEED_USCORE
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the copyright line of this package, including the period. */
+#undef PACKAGE_COPYRIGHT
+
+/* Define to the copyright holder of this package. */
+#undef PACKAGE_COPYRIGHT_HOLDER
+
+/* Define to the copyright years of this package. */
+#undef PACKAGE_COPYRIGHT_YEARS
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Define to necessary symbol if this constant uses a non-standard name on
+   your system. */
+#undef PTHREAD_CREATE_JOINABLE
+
+/* Define to use the OS-thread implementation of coroutines. */
+#undef SCHED_CORO_OSTHREAD
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Define if Urbi symbols should be precompiled. */
+#undef SYMBOLS_PRECOMPILED
+
+/* Define if compiling for Aibo. */
+#undef URBI_ENV_AIBO
+
+/* Define if compiling generic engine. */
+#undef URBI_ENV_ENGINE
+
+/* Define if compiling for Korebot-based robots. */
+#undef URBI_ENV_KOREBOT
+
+/* Define if compiling for Webots. */
+#undef URBI_ENV_WEBOTS
+
+/* Define as the Urbi host architecture name. */
+#undef URBI_HOST
+
+/* Define as the install prefix. */
+#undef URBI_ROOT
+
+/* Define if ufloats should be doubles. */
+#undef URBI_UFLOAT_DOUBLE
+
+/* Define if ufloats should be floats. */
+#undef URBI_UFLOAT_FLOAT
+
+/* Define if ufloats should be long mantissa, long exponent. */
+#undef URBI_UFLOAT_FLOATING
+
+/* Define if ufloats should be long. */
+#undef URBI_UFLOAT_LONG
+
+/* Define if ufloats should be long long. */
+#undef URBI_UFLOAT_LONG_LONG
+
+/* Define if ufloats should be tabulated. */
+#undef URBI_UFLOAT_TABULATED
+
+/* Version number of package */
+#undef VERSION
+
+/* Whether the host is Windows using VC++. */
+#undef WIN32
+
+/* Define to enable boost::serialization support. */
+#undef WITH_BOOST_SERIALIZATION
+
+/* Define so that glibc/gnulib argp.h does not typedef error_t. */
+#undef __error_t_defined
+
+/* Define to a type to use for `error_t' if it is not otherwise available. */
+#undef error_t

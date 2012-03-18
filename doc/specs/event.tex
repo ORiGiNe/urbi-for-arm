@@ -1,0 +1,122 @@
+%% Copyright (C) 2009-2010, 2012, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Event}
+
+An \dfn{event} can be ``emitted'' and ``caught'', or ``sent'' and
+``received''.  See also \autoref{sec:tut:events}.
+
+\subsection{Prototypes}
+\begin{refObjects}
+\item[Object]
+\end{refObjects}
+
+\subsection{Examples}
+
+There are several examples of uses of events in the documentation of
+event-based constructs.  See \lstinline{at} (\autoref{sec:lang:at}),
+\lstinline{waituntil} (\autoref{sec:lang:waituntil}),
+\lstinline{whenever} (\autoref{sec:lang:whenever}), and so forth.  The
+tutorial chapter about event-based programming contains other
+examples, see \autoref{sec:tut:event-prog}.
+
+\subsection{Construction}
+\label{sec:stdlib:event:ctor}
+
+An \lstinline{Event} is created like any other object, without
+arguments.
+
+\begin{urbiscript}[firstnumber=1]
+var e = Event.new;
+[00000001] Event_0x9ad8118
+\end{urbiscript}
+
+\subsection{Slots}
+\begin{urbiscriptapi}
+\item[asEvent]
+  Return \this.
+
+\item['emit']%
+  Throw an \lstinline|Event|. This function is called by the bang
+  operator.  It takes any number of arguments, passed to the receiver
+  when the event is caught. An event can also be emitted for a certain
+  duration using \lstinline|~|.  The execution of \lstinline|at|
+  clauses etc., is asynchronous: the control flow might be released by
+  the \lstinline|emit| call before all the watchers have finished
+  their execution.
+
+\item[onSubscribe]
+  This slot is not set by default. You can optionally assign an event
+  to it. In this case, onSubscribe is triggered each time some code
+  starts watching this event (by setting up an \lstinline|at| or
+  a \lstinline|waituntil| on it for instance).
+
+  Throw a synchronized event. This call awaits that all functions that
+  have to react to this event have returned.  This function can have
+  the same arguments as \lstinline|emit|.
+
+\item[trigger]
+  This function is used to launch an event during an unknown amount of
+  time. Calling this function launches and keeps the event triggered
+  and returns a handler object whose \lstinline|stop| method stops launching
+  the event. This method is asynchronous and the \lstinline|stop| call
+  will be asynchronous as well.
+
+\item[syncEmit]
+  This function does the same job as \refSlot{'emit'} but the call
+  will be synchronous.
+
+\item[syncTrigger]
+  This function does the same job as \refSlot{trigger} but the call
+  will be synchronous. The stop method of the handler object will be
+  synchronous as well.
+
+\item['||'](<other>)%
+  Logical or on events: a new Event that triggers whenever \var{this}
+  or \var{other} triggers.
+
+\begin{urbiscript}
+var e1 = Event.new|;
+var e2 = Event.new|;
+var either = e1.'||'(e2)|;
+at (either?)
+  echo("!");
+e1!;
+[00000004] *** !
+e2!;
+[00000005] *** !
+\end{urbiscript}
+
+\item['<<'](<other>)%
+  Watch an \var{other} event status and reproduce it on itself, return
+  \this.  This operator is similar to an optimized \lstinline,||=, operator.
+  Do not make events watch for themselves, directly or indirectly.
+
+\begin{urbiscript}
+var e3 = Event.new|;
+var e4 = Event.new|;
+var e_watch = Event.new << e3 << e4 |;
+at (e_watch?)
+  echo("!");
+e3!;
+[00000006] *** !
+e4!;
+[00000007] *** !
+\end{urbiscript}
+
+
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

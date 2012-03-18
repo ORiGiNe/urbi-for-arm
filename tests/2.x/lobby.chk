@@ -1,0 +1,69 @@
+Lobby.send("23");
+[00000001:error] !!! input.u:@.1-16: send: must be called on Lobby derivative
+
+Lobby.write("23");
+[00000002:error] !!! input.u:@.1-17: write: must be called on Lobby derivative
+
+// Make sure we do output the result here, not elsewhere.
+// See https://redmine.gostai.com/issues/3658.
+Lobby.inspect;
+[00000003] *** Inspecting Lobby
+[00000004] *** ** Prototypes:
+[00000005] ***   Channel_0xADDR
+[00000006] *** ** Local Slots:
+[00000007] ***   asLobby : const Primitive
+[00000008] ***   asString : Code
+[00000009] ***   authors : Code
+[00000010] ***   banner : Code
+[00000011] ***   binaryMode : const Primitive
+[00000011] ***   bytesReceived : const Primitive
+[00000012] ***   bytesSent : const Primitive
+[00000013] ***   clone : const Primitive
+[00000014] ***   connected : true
+[00000015] ***   copyright : Code
+[00000016] ***   create : const Primitive
+[00000017] ***   echo : Code
+[00000018] ***   echoEach : Code
+[00000019] ***   handleDisconnect : Code
+[00000020] ***   initialize : Code
+[00000021] ***   instances : const Primitive
+[00000022] ***   license : Code
+[00000023] ***   lobby : const Primitive
+[00000024] ***   onDisconnect : Event
+[00000025] ***   quit : const Primitive
+[00000026] ***   receive : const Primitive
+[00000027] ***   reverseConnect : Code
+[00000028] ***   send : const Primitive
+[00000029] ***   sigint_interrupt : Code
+[00000030] ***   sigint_shutdown : Code
+[00000031] ***   systemLobby : Lobby
+[00000032] ***   thanks : Code
+[00000033] ***   type : const String
+[00000034] ***   wall : Code
+[00000035] ***   write : const Primitive
+
+var l = Lobby.create|;
+l.inspect;
+[00000036] *** Inspecting Lobby_0xADDR
+[00000037] *** ** Prototypes:
+[00000038] ***   Lobby
+[00000039] *** ** Local Slots:
+[00000040] ***   connectionTag : Tag
+
+assert
+{
+  l.bytesReceived == 0;
+  l.bytesSent == 0;
+};
+
+// Check that lobbies are removed from the list of lobbies when destroyed.
+{
+  var s = lobbies.size;
+  assert(lobbies.size - s == 0);
+  var l = Lobby.create;
+  assert(lobbies.size - s == 1);
+  l.quit;
+  l = nil;
+  assert(lobbies.size - s == 0);
+};
+[00000041] *** disconnecting Lobby_0xADDR

@@ -1,0 +1,40 @@
+syncline << "doc/specs/hash.tex:25";
+[01234567:#] "doc/specs/hash.tex:25"
+//#line 25 "doc/specs/hash.tex"
+assert {
+Object.new.hash.isA(Hash);
+};
+
+syncline << "doc/specs/hash.tex:33";
+[01234567:#] "doc/specs/hash.tex:33"
+//#line 33 "doc/specs/hash.tex"
+var h1 = Object.new.hash|;
+var h2 = Object.new.hash|;
+assert
+{
+  h1.asFloat == h1.asFloat;
+  h1.asFloat != h2.asFloat;
+};
+
+syncline << "doc/specs/hash.tex:49";
+[01234567:#] "doc/specs/hash.tex:49"
+//#line 49 "doc/specs/hash.tex"
+class C
+{
+  function init(var a, var b)
+  {
+    var this.a = a;
+    var this.b = b;
+  };
+
+  function hash()
+  {
+    this.a.hash().combine(b)
+  };
+}|
+
+assert
+{
+  C.new(0, 0).hash == C.new(0, 0).hash;
+  C.new(0, 0).hash != C.new(0, 1).hash;
+};

@@ -1,0 +1,40 @@
+//#uobject test/all
+
+var inu = 0;
+[00000001] 0
+var remall.z = 0;
+[00000002] 0
+inu = remall.writeD("remall.z", 20);sleep(200ms);
+[00000003] 0
+remall.z;
+[00000004] 20
+
+//remall.b is created by remote uobject
+remall.b = "coin";
+[00000005] "coin"
+inu = remall.writeS("remall.b", "pan");sleep(200ms);
+[00000006] 0
+remall.b;
+[00000007] "pan"
+inu = remall.writeS("remall.b", "pan\n");sleep(200ms);
+[00000008] 0
+remall.b;
+[00000009] "pan\n"
+inu = remall.writeS("remall.b", "[00000:ts] 1\n");sleep(200ms);
+[00000010] 0
+remall.b;
+[00000011] "[00000:ts] 1\n"
+
+remall.c = [];
+[00000012] []
+inu = remall.writeL("remall.c", "coin");sleep(200ms);
+[00000013] 0
+remall.c;
+[00000014] ["coin", 42]
+
+remall.d = [=>] ;
+[00000015] [ => ]
+inu = remall.writeM("remall.d", "bar");sleep(200ms);
+[00000016] 0
+remall.d.asList.sort();
+[00000017] [("bar", 42), ("foo", [])]

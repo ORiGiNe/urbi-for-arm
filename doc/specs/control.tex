@@ -1,0 +1,109 @@
+%% Copyright (C) 2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Control}
+
+\lstinline|Control| is designed as a namespace for control sequences.
+Some of these entities are used by the \urbi engine to execute some
+\us features; in other words, users are not expected to you use it,
+much less change it.
+
+\subsection{Prototypes}
+
+\begin{refObjects}
+\item[Object]
+\end{refObjects}
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+\item[detach](<exp>)%
+  Detach the evaluation of the expression \var{exp} from the current
+  evaluation.  The \var{exp} is evaluated in parallel to the current code
+  and keep the current tag which are attached to it.  Return the spawned
+  \refObject{Job}.  Same as calling \refSlot[System]{spawn}:
+  \lstinline|System.spawn(closure () { \var{exp} }, true|.
+
+\begin{urbiscript}
+{
+  var jobs = [];
+  var res = [];
+  for (var i : [0, 1, 2])
+  {
+    jobs << detach({ res << i; res << i }) |
+    if (i == 2)
+      break
+  };
+  assert (res == [0, 1, 0]);
+  jobs
+};
+[00009120] [Job<shell_11>, Job<shell_12>, Job<shell_13>]
+\end{urbiscript}
+
+
+\item[disown](<exp>)%%
+  Same as \refSlot{detach} except that tags used to tag the
+  \lstinline|disown| call are not inherited inside the expression.  Return
+  the spawned \refObject{Job}.  Same as calling \refSlot[System]{spawn}:
+  \lstinline|System.spawn(closure () { \var{exp} }, true|.
+
+\begin{urbiscript}
+{
+  var jobs = [];
+  var res = [];
+  for (var i : [0, 1, 2])
+  {
+    jobs << disown({ res << i; res << i }) |
+    if (i == 2)
+      break
+  };
+  jobs.each (function (var j) { j.waitForTermination });
+  assert (res == [0, 1, 0, 2, 1, 2]);
+  jobs
+};
+[00009120] [Job<shell_14>, Job<shell_15>, Job<shell_16>]
+\end{urbiscript}
+
+
+\item[persist](<expression>, <delay>)%
+  Return an object whose \var{val} slot evaluates to true if the
+  \var{expression} has been continuously true for this \var{delay} and false
+  otherwise.
+
+  This function is used to implement
+
+\begin{urbiunchecked}
+at (condition ~ delay)
+  action
+\end{urbiunchecked}
+
+  \noindent
+  as
+
+\begin{urbiunchecked}
+var u = persist (condition, delay);
+at (u.val)
+  action
+\end{urbiunchecked}
+
+  The \lstinline|persist| action will be controlled by the same tags
+  as the initial \lstinline|at| block.
+
+
+
+\end{urbiscriptapi}
+
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

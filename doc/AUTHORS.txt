@@ -1,0 +1,7 @@
+Authors of Urbi:
+ - Jean-Christophe Baillie (original designer)
+
+Urbi 2 and subsequent versions:
+ - Akim Demaille
+ - Matthieu Nottale
+ - Quentin Hocquet

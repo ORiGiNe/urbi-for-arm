@@ -1,0 +1,44 @@
+syncline << "doc/specs/system/platform.tex:22";
+[01234567:#] "doc/specs/system/platform.tex:22"
+//#line 22 "doc/specs/system/platform.tex"
+assert {
+System.Platform.host ==
+  "%s-%s-%s" % [System.Platform.hostCpu,
+                System.Platform.hostVendor,
+                System.Platform.hostOs];
+};
+
+syncline << "doc/specs/system/platform.tex:32";
+[01234567:#] "doc/specs/system/platform.tex:32"
+//#line 32 "doc/specs/system/platform.tex"
+assert {
+System.Platform.hostAlias.isA(String);
+};
+
+syncline << "doc/specs/system/platform.tex:38";
+[01234567:#] "doc/specs/system/platform.tex:38"
+//#line 38 "doc/specs/system/platform.tex"
+assert {
+System.Platform.hostCpu in ["i386", "i686", "x86_64"];
+};
+
+syncline << "doc/specs/system/platform.tex:47";
+[01234567:#] "doc/specs/system/platform.tex:47"
+//#line 47 "doc/specs/system/platform.tex"
+assert {
+System.Platform.hostVendor in ["apple", "pc", "unknown"];
+};
+
+syncline << "doc/specs/system/platform.tex:52";
+[01234567:#] "doc/specs/system/platform.tex:52"
+//#line 52 "doc/specs/system/platform.tex"
+assert {
+System.Platform.isWindows in [true, false];
+};
+
+syncline << "doc/specs/system/platform.tex:57";
+[01234567:#] "doc/specs/system/platform.tex:57"
+//#line 57 "doc/specs/system/platform.tex"
+assert {
+System.Platform.kind in ["POSIX", "WIN32"];
+};

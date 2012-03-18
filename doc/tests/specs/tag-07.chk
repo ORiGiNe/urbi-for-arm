@@ -1,0 +1,132 @@
+syncline << "doc/specs/tag.tex:221";
+[01234567:#] "doc/specs/tag.tex:221"
+//#line 221 "doc/specs/tag.tex"
+var t = Tag.new("t");
+[00000000] Tag<t>
+
+at (t.enter?)
+  echo("enter");
+at (t.leave?)
+  echo("leave");
+
+t: {echo("inside"); 42};
+[00000000] *** enter
+[00000000] *** inside
+[00000000] *** leave
+[00000000] 42
+
+syncline << "doc/specs/tag.tex:246";
+[01234567:#] "doc/specs/tag.tex:246"
+//#line 246 "doc/specs/tag.tex"
+function enterTheKitchen() {}|
+function leaveTheKitchen() {}|
+function turnGasOn() {}|
+function turnGasOff() {}|
+
+var mealReady = false|
+var recipe = []|
+var ingredient = 0|;
+
+syncline << "doc/specs/tag.tex:256";
+[01234567:#] "doc/specs/tag.tex:256"
+//#line 256 "doc/specs/tag.tex"
+{
+  function cook()
+  {
+    turnGasOn();
+    // Cooking code ...
+    turnGasOff();
+  }|
+
+  enterTheKitchen();
+  cook();
+  leaveTheKitchen();
+};
+
+syncline << "doc/specs/tag.tex:275";
+[01234567:#] "doc/specs/tag.tex:275"
+//#line 275 "doc/specs/tag.tex"
+{
+  function cook()
+  {
+    turnGasOn();
+
+    if (mealReady)
+    {
+      echo("The meal is already there, nothing to do!");
+      // Oops ...
+      return;
+    };
+
+    for (var i in recipe)
+      if (i in kitchen)
+        putIngredient(i)
+      else
+        // Oops ...
+        throw Exception("missing ingredient: %s" % i);
+
+    // ...
+
+    turnGasOff();
+  }|
+};
+
+syncline << "doc/specs/tag.tex:308";
+[01234567:#] "doc/specs/tag.tex:308"
+//#line 308 "doc/specs/tag.tex"
+{
+  function cook()
+  {
+    var withGas = Tag.new("withGas");
+
+    at (withGas.enter?)
+      turnGasOn();
+    // Even if exceptions are thrown or return is called,
+    // the gas will be turned off.
+    at (withGas.leave?)
+      turnGasOff();
+
+    withGas: {
+      // Cooking code...
+    }
+  }|
+};
+
+syncline << "doc/specs/tag.tex:331";
+[01234567:#] "doc/specs/tag.tex:331"
+//#line 331 "doc/specs/tag.tex"
+{
+  function cook()
+  {
+    try
+    {
+      turnGasOn();
+      // Cooking code...
+    }
+    finally
+    {
+      // Even if exceptions are thrown or return is called,
+      // the gas will be turned off.
+      turnGasOff();
+    }
+  }|
+};
+
+syncline << "doc/specs/tag.tex:359";
+[01234567:#] "doc/specs/tag.tex:359"
+//#line 359 "doc/specs/tag.tex"
+var myTag = Tag.new("myTag");
+[00000000] Tag<myTag>
+
+myTag.begin: echo(1);
+[00000000] *** myTag: begin
+[00000000] *** 1
+
+myTag.end: echo(2);
+[00000000] *** 2
+[00000000] *** myTag: end
+
+myTag.begin.end: echo(3);
+[00000000] *** myTag: begin
+[00000000] *** 3
+[00000000] *** myTag: end

@@ -1,0 +1,156 @@
+%% Copyright (C) 2009-2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Regexp}
+
+A Regexp is an object which allow you to match strings with a regular
+expression.
+
+\subsection{Prototypes}
+\begin{itemize}
+\item \refObject{Container}
+\item \refObject{Object}
+\end{itemize}
+
+\subsection{Construction}
+\label{stdlib:regexp:ctor}
+
+A \lstinline{Regexp} is created with the regular expression once and
+for all, and it can be used many times to match with other strings.
+
+\begin{urbiscript}
+Regexp.new(".");
+[00000001] Regexp(".")
+\end{urbiscript}
+
+\us supports Perl regular expressions, see
+\href{http://perldoc.perl.org/perlre.html}{the perlre man page}.
+
+Expressions cannot be empty.
+
+\begin{urbiscript}
+Regexp.new("");
+[00000001:error] !!! new: invalid regular expression `': Empty expression
+\end{urbiscript}
+
+
+
+\subsection{Slots}
+\begin{urbiscriptapi}
+\item[asPrintable] A string that shows that \this is a Regexp, and its
+  value.
+\begin{urbiassert}
+           Regexp.new("abc").asPrintable == "Regexp(\"abc\")";
+Regexp.new("\\d+(\\.\\d+)?").asPrintable == "Regexp(\"\\\\d+(\\\\.\\\\d+)?\")";
+\end{urbiassert}
+
+\item[asString] The regular expression that was compiled.
+\begin{urbiassert}
+           Regexp.new("abc").asString == "abc";
+Regexp.new("\\d+(\\.\\d+)?").asString == "\\d+(\\.\\d+)?";
+\end{urbiassert}
+
+\item[has](<str>)%
+  An experimental alias to \refSlot{match}, so that the infix operators
+  \lstinline|in| and \lstinline|not in| can be used (see
+  \autoref{sec:lang:operators:containers}).
+\begin{urbiassert}
+"23.03"     in Regexp.new("^\\d+\\.\\d+$");
+"-3.14" not in Regexp.new("^\\d+\\.\\d+$");
+\end{urbiassert}
+
+\item[match](<str>)%
+  Whether \this matches \var{str}.
+\begin{urbiscript}
+// Ordinary characters
+var r = Regexp.new("oo")|
+assert
+{
+  r.match("oo");
+  r.match("foobar");
+  !r.match("bazquux");
+};
+
+// ^, anchoring at the beginning of line.
+r = Regexp.new("^oo")|
+assert
+{
+  r.match("oops");
+  !r.match("woot");
+};
+
+// $, anchoring at the end of line.
+r = Regexp.new("oo$")|
+assert
+{
+  r.match("foo");
+  !r.match("mooh");
+};
+
+// *, greedy repetition, 0 or more.
+r = Regexp.new("fo*bar")|
+assert
+{
+  r.match("fbar");
+  r.match("fooooobar");
+  !r.match("far");
+};
+
+// (), grouping.
+r = Regexp.new("f(oo)*bar")|
+assert
+{
+  r.match("foooobar");
+  !r.match("fooobar");
+};
+\end{urbiscript}
+
+\item[matches]%
+  If the latest \refSlot{match} was successful, the matched groups, as
+  delimited by parentheses in the regular expression; the first element
+  being the whole match.  Otherwise, the empty list.  See also
+  \refSlot{'[]'}.
+
+\begin{urbiscript}
+var re = Regexp.new("([a-zA-Z0-9._]+)@([a-zA-Z0-9._]+)")|;
+assert
+{
+  re.match("Someone <someone@somewhere.com>");
+  re.matches == ["someone@somewhere.com", "someone", "somewhere.com"];
+
+  "does not match" not in re;
+  re.matches == [];
+};
+\end{urbiscript}
+
+\item|'[]'|(<n>)%
+  Same as \lstinline|this.matches[\var{n}]|.
+\begin{urbiscript}
+var d = Regexp.new("(1+)(2+)(3+)")|;
+assert
+{
+  "01223334" in d;
+  d[0] == "122333";
+  d[1] == "1";
+  d[2] == "22";
+  d[3] == "333";
+};
+d[4];
+[00000009:error] !!! []: out of bound index: 4
+\end{urbiscript}
+
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

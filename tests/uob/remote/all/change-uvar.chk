@@ -1,0 +1,25 @@
+//#uobject test/all
+
+// Test notifychange by passing reference to uvar
+
+remall.setNotifyChangeByUVar(remall.&a)|;
+remall.a = 42;
+[00000001] 42
+sleep(200ms);
+remall.lastChange;
+[00000002] "remall.a"
+remall.lastChangeVal;
+[00000003] 42
+
+
+class t {}|;
+var t.all2 = remall.new(0)|;
+remall.setNotifyChangeByUVar(t.all2.&a)|;
+t.all2.a = 43;
+[00000004] 43
+sleep(200ms);
+remall.lastChange == t.all2.__uobjectName + ".a";
+[00000005] true
+remall.lastChangeVal;
+[00000006] 43
+sleep(200ms);

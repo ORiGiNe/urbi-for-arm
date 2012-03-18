@@ -1,0 +1,4 @@
+// Check that an exception is propagated outside the trajectory generator.
+// And also check we are not stuck after the throw (happened once).
+y = 20 sin:10s ampli:5;
+[00000001:error] !!! input.u:@.1: lookup failed: y

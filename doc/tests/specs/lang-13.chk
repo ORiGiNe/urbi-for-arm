@@ -1,0 +1,17 @@
+syncline << "doc/specs/lang.tex:4070";
+[01234567:#] "doc/specs/lang.tex:4070"
+//#line 4070 "doc/specs/lang.tex"
+var e = Event.new|;
+whenever (e?(var d))
+{
+  echo("e (%s) on begin" % d);
+  sleep(d);
+  echo("e (%s) on end" % d);
+};
+
+e!(0.3s) & e!(1s);
+sleep(3s);
+[00000202] *** e (1) on begin
+[00000202] *** e (0.3) on begin
+[00000508] *** e (0.3) on end
+[00001208] *** e (1) on end

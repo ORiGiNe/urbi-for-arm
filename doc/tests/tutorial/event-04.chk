@@ -1,0 +1,113 @@
+syncline << "doc/tutorial/event.tex:137";
+[01234567:#] "doc/tutorial/event.tex:137"
+//#line 137 "doc/tutorial/event.tex"
+var myEvent = Event.new;
+[00000000] Event_0xb5579008
+at (myEvent?)
+  echo("ping");
+myEvent!;
+[00000000] *** ping
+// events work well with parallelism
+myEvent! & myEvent!;
+[00000000] *** ping
+[00000000] *** ping
+
+syncline << "doc/tutorial/event.tex:186";
+[01234567:#] "doc/tutorial/event.tex:186"
+//#line 186 "doc/tutorial/event.tex"
+var event = Event.new;
+[00000000] Event_0x0
+
+at (event?(var payload))
+  echo("received: " + payload)
+onleave
+  echo("had received: " + payload);
+
+event!(1);
+[00000008] *** received: 1
+[00000009] *** had received: 1
+
+event!(["string", 124]);
+[00000010] *** received: ["string", 124]
+[00000011] *** had received: ["string", 124]
+
+syncline << "doc/tutorial/event.tex:209";
+[01234567:#] "doc/tutorial/event.tex:209"
+//#line 209 "doc/tutorial/event.tex"
+// Too many arguments.
+event!(1, 2);
+
+// Not enough arguments.
+event!;
+event!();
+
+syncline << "doc/tutorial/event.tex:221";
+[01234567:#] "doc/tutorial/event.tex:221"
+//#line 221 "doc/tutorial/event.tex"
+at (event?)
+  echo("received an event")
+onleave
+  echo("had received an event");
+
+event!;
+[00000014] *** received an event
+[00000015] *** had received an event
+
+event!(1);
+[00000016] *** received: 1
+[00000017] *** had received: 1
+[00000018] *** received an event
+[00000019] *** had received an event
+
+event!(1, 2);
+[00000020] *** received an event
+[00000021] *** had received an event
+
+syncline << "doc/tutorial/event.tex:245";
+[01234567:#] "doc/tutorial/event.tex:245"
+//#line 245 "doc/tutorial/event.tex"
+var e = Event.new|;
+
+at (e?)
+  echo("e");
+
+at (e?(var x))
+  echo("e(x)");
+
+at (e?(1))
+  echo("e(1)");
+
+at (e?(var x) if x.isA(Float) && x % 2)
+  echo("e(odd)");
+
+// Payload must be a list of three members, the first two being 1 and 2, and
+// the third one being greater than 2, when converted as a Float.
+at (e?([1, 2, var x]) if 2 < x.asFloat)
+  echo("e([1, 2, x = %s])" % x);
+
+e!;
+[00000845] *** e
+
+e!(0);
+[00011902] *** e
+[00011902] *** e(x)
+
+e!(1);
+[00023327] *** e
+[00023327] *** e(x)
+[00023327] *** e(1)
+[00023327] *** e(odd)
+
+e!([1, 2, 1]);
+[00024327] *** e
+[00024327] *** e(x)
+
+e!([1, 2, 3]);
+[00025327] *** e
+[00025327] *** e(x)
+[00025327] *** e([1, 2, x = 3])
+
+e!([1, 2, "4"]);
+[00026327] *** e
+[00026327] *** e(x)
+[00026327] *** e([1, 2, x = 4])

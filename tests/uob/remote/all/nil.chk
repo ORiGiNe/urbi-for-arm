@@ -1,0 +1,8 @@
+//#uobject test/all
+
+
+remall.transmitL([1,nil,2]);
+[00000001] [2, nil, 1]
+remall.writeByUVar(remall.&a, nil)|;
+remall.a === nil;
+[00000002] true

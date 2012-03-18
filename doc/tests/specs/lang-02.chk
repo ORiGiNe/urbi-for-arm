@@ -1,0 +1,765 @@
+syncline << "doc/specs/lang.tex:2152";
+[01234567:#] "doc/specs/lang.tex:2152"
+//#line 2152 "doc/specs/lang.tex"
+var a = Object.new|
+var b = Object.new|
+var c = Object.new|
+a.setSlot("x", "slot in a")|
+b.setSlot("x", "slot in b")|
+// c has no "x" slot
+c.getSlot("x");
+[00000000:error] !!! lookup failed: x
+// c can inherit the "x" slot from a.
+c.addProto(a)|
+c.getSlot("x");
+[00000000] "slot in a"
+// b is prepended to the prototype list, and has thus priority.
+c.addProto(b)|
+c.getSlot("x");
+[00000000] "slot in b"
+// A local slot in c has priority over prototypes.
+c.setSlot("x", "slot in c")|
+c.getSlot("x");
+[00000000] "slot in c"
+
+syncline << "doc/specs/lang.tex:2185";
+[01234567:#] "doc/specs/lang.tex:2185"
+//#line 2185 "doc/specs/lang.tex"
+var p = Object.new|
+var p.slot = 0|
+var d = Object.new|
+d.addProto(p)|
+d.slot;
+[00000000] 0
+d.slot = 1;
+[00000000] 1
+// p's slot was not altered
+p.slot;
+[00000000] 0
+// It was copied in d
+d.slot;
+[00000000] 1
+
+syncline << "doc/specs/lang.tex:2237";
+[01234567:#] "doc/specs/lang.tex:2237"
+//#line 2237 "doc/specs/lang.tex"
+var obj = Object.new|
+var obj.a = 42|
+var obj.b = function (x) { x + 1 }|
+obj.a;
+[00000000] 42
+obj.a();
+[00000000] 42
+obj.a(50);
+[00000000:error] !!! a: expected 0 argument, given 1
+obj.b;
+[00000000:error] !!! b: expected 1 argument, given 0
+obj.b();
+[00000000:error] !!! b: expected 1 argument, given 0
+obj.b(50);
+[00000000] 51
+
+syncline << "doc/specs/lang.tex:2261";
+[01234567:#] "doc/specs/lang.tex:2261"
+//#line 2261 "doc/specs/lang.tex"
+enum Suit
+{
+  hearts,
+  diamonds,
+  clubs,
+  spades, // Last comma is optional
+};
+[00000001] Suit
+
+syncline << "doc/specs/lang.tex:2275";
+[01234567:#] "doc/specs/lang.tex:2275"
+//#line 2275 "doc/specs/lang.tex"
+Suit;
+[00000001] Suit
+Suit.protos;
+[00000002] [Enumeration]
+
+syncline << "doc/specs/lang.tex:2285";
+[01234567:#] "doc/specs/lang.tex:2285"
+//#line 2285 "doc/specs/lang.tex"
+Suit.hearts;
+[00000001] hearts
+Suit.diamonds;
+[00000002] diamonds
+Suit.clubs.isA(Suit);
+[00000003] true
+42.isA(Suit);
+[00000003] false
+
+syncline << "doc/specs/lang.tex:2299";
+[01234567:#] "doc/specs/lang.tex:2299"
+//#line 2299 "doc/specs/lang.tex"
+function find_ace(var suit)
+{
+  switch (suit)
+  {
+    case Suit.spades: "The only card I need is";
+    default:          "I have";
+  }
+}|;
+
+for (var suit in Suit)
+  echo("%s the ace of %s." % [find_ace(suit), suit]);
+[00000001] *** I have the ace of hearts.
+[00000002] *** I have the ace of diamonds.
+[00000003] *** I have the ace of clubs.
+[00000004] *** The only card I need is the ace of spades.
+
+syncline << "doc/specs/lang.tex:2336";
+[01234567:#] "doc/specs/lang.tex:2336"
+//#line 2336 "doc/specs/lang.tex"
+switch ( ("foo", [1, 2]) )
+{
+  // The pattern does not match the values of the list.
+  case ("foo", [2, 1]):
+    echo("fail");
+
+  // The pattern does not match the tuple.
+  case ["foo", [1, 2]]:
+    echo("fail");
+
+  // The pattern matches and binds the variable "l"
+  // but the condition is not verified.
+  case ("foo", var l) if l.size == 0:
+    echo("fail");
+
+  // The pattern matches.
+  case ("foo", [var a, var b]):
+    echo("foo(%s, %s)" % [a, b]);
+};
+[00000000] *** foo(1, 2)
+
+syncline << "doc/specs/lang.tex:2366";
+[01234567:#] "doc/specs/lang.tex:2366"
+//#line 2366 "doc/specs/lang.tex"
+(1, "foo") = (1, "foo");
+[00000000] (1, "foo")
+[1, "foo"] = [1, "foo"];
+[00000000] [1, "foo"]
+["b" => "foo", "a" => 1] = ["a" => 1, "b" => "foo"];
+[00000000] ["a" => 1, "b" => "foo"]
+
+syncline << "doc/specs/lang.tex:2378";
+[01234567:#] "doc/specs/lang.tex:2378"
+//#line 2378 "doc/specs/lang.tex"
+try
+{
+  (1, 2) = (3, 4)
+}
+catch (var e if e.isA(Exception.MatchFailure))
+{
+  e.message
+};
+[00000000] "pattern did not match"
+
+syncline << "doc/specs/lang.tex:2395";
+[01234567:#] "doc/specs/lang.tex:2395"
+//#line 2395 "doc/specs/lang.tex"
+{
+  (var a, var b) = (1, 2);
+  echo("a = %d, b = %d" % [a, b]);
+};
+[00000000] *** a = 1, b = 2
+{
+  [var a, var b] = [1, 2];
+  echo("a = %d, b = %d" % [a, b]);
+};
+[00000000] *** a = 1, b = 2
+{
+  ["b" => var b, "a" => var a] = ["a" => 1, "b" => 2, "c" => 3];
+  echo("a = %d, b = %d" % [a, b]);
+};
+[00000000] *** a = 1, b = 2
+
+syncline << "doc/specs/lang.tex:2424";
+[01234567:#] "doc/specs/lang.tex:2424"
+//#line 2424 "doc/specs/lang.tex"
+switch (["speed" => 2, "time" => 6s])
+{
+  case ["speed" => var s] if s > 3:
+    echo("Too fast");
+  case ["speed" => var s, "time" => var t] if s * t > 10:
+    echo("Too far");
+};
+[00000000] *** Too far
+
+syncline << "doc/specs/lang.tex:2437";
+[01234567:#] "doc/specs/lang.tex:2437"
+//#line 2437 "doc/specs/lang.tex"
+try
+{
+  throw ("message", 0)
+}
+catch (var e if e.isA(Exception))
+{
+  echo(e.message)
+}
+catch ((var msg, var value) if value.isA(Float))
+{
+  echo("%s: %d" % [msg, value])
+};
+[00000000] *** message: 0
+
+syncline << "doc/specs/lang.tex:2457";
+[01234567:#] "doc/specs/lang.tex:2457"
+//#line 2457 "doc/specs/lang.tex"
+{
+  var e = Event.new;
+  at (e?(var msg, var value) if value % 2 == 0)
+    echo("%s: %d" % [msg, value]);
+
+  // Does not trigger the "at" because the guard is not verified.
+  e!("message", 1);
+
+  // Trigger the "at".
+  e!("message", 2);
+};
+[00000000] *** message: 2
+
+syncline << "doc/specs/lang.tex:2484";
+[01234567:#] "doc/specs/lang.tex:2484"
+//#line 2484 "doc/specs/lang.tex"
+var i = 5|
+for (; true; echo(i))
+{
+  if (i > 8)
+    break;
+  i++;
+};
+[00000000] *** 6
+[00000000] *** 7
+[00000000] *** 8
+[00000000] *** 9
+
+syncline << "doc/specs/lang.tex:2504";
+[01234567:#] "doc/specs/lang.tex:2504"
+//#line 2504 "doc/specs/lang.tex"
+for (var i = 0; i < 8; i++)
+{
+  if (i % 2 != 0)
+    continue;
+  echo(i);
+};
+[00000000] *** 0
+[00000000] *** 2
+[00000000] *** 4
+[00000000] *** 6
+
+syncline << "doc/specs/lang.tex:2534";
+[01234567:#] "doc/specs/lang.tex:2534"
+//#line 2534 "doc/specs/lang.tex"
+do (1024)
+{
+  assert(this == 1024);
+  assert(sqrt == 32);
+  setSlot("y", 23);
+}.y;
+[00000000] 23
+
+syncline << "doc/specs/lang.tex:2559";
+[01234567:#] "doc/specs/lang.tex:2559"
+//#line 2559 "doc/specs/lang.tex"
+if (true) assert(true) else assert(false);
+if (false) assert(false) else assert(true);
+if (true) assert(true);
+
+syncline << "doc/specs/lang.tex:2568";
+[01234567:#] "doc/specs/lang.tex:2568"
+//#line 2568 "doc/specs/lang.tex"
+if (true)
+  assert(true);
+else
+  assert(false);
+[00000002:error] !!! syntax error: unexpected else
+
+syncline << "doc/specs/lang.tex:2583";
+[01234567:#] "doc/specs/lang.tex:2583"
+//#line 2583 "doc/specs/lang.tex"
+assert(1 + if (true) 3 else 4 == 4);
+[00000003:error] !!! syntax error: unexpected if
+assert(1 + { if (true) 3 else 4 } == 4);
+
+syncline << "doc/specs/lang.tex:2593";
+[01234567:#] "doc/specs/lang.tex:2593"
+//#line 2593 "doc/specs/lang.tex"
+assert({if (false) 10 else 20} == 20);
+assert({if (true)  10 else 20} == 10);
+
+assert({if (true) 10         } == 10);
+
+assert({if (var x = 10) x + 2 else x - 2} == 12);
+assert({if (var x = 0)  x + 2 else x - 2} == -2);
+
+if (var xx = 123) xx | xx;
+[00000005:error] !!! lookup failed: xx
+
+syncline << "doc/specs/lang.tex:2649";
+[01234567:#] "doc/specs/lang.tex:2649"
+//#line 2649 "doc/specs/lang.tex"
+for (var x : [0, 1, 2, 3, 4])
+  echo(x.sqr);
+[00000000] *** 0
+[00000000] *** 1
+[00000000] *** 4
+[00000000] *** 9
+[00000000] *** 16
+
+syncline << "doc/specs/lang.tex:2665";
+[01234567:#] "doc/specs/lang.tex:2665"
+//#line 2665 "doc/specs/lang.tex"
+var Hobbits = Object.new|
+function Hobbits.each (action)
+{
+  action("Frodo");
+  action("Merry");
+  action("Pippin");
+  action("Sam");
+}|
+for (var name in Hobbits)
+  echo("%s is a hobbit." % [name]);
+[00000000] *** Frodo is a hobbit.
+[00000000] *** Merry is a hobbit.
+[00000000] *** Pippin is a hobbit.
+[00000000] *** Sam is a hobbit.
+// This for statement is equivalent to:
+Hobbits.each(function (name) { echo("%s is a hobbit." % [name]) });
+[00000000] *** Frodo is a hobbit.
+[00000000] *** Merry is a hobbit.
+[00000000] *** Pippin is a hobbit.
+[00000000] *** Sam is a hobbit.
+
+syncline << "doc/specs/lang.tex:2698";
+[01234567:#] "doc/specs/lang.tex:2698"
+//#line 2698 "doc/specs/lang.tex"
+assert {
+{ var res = []; for (3) { res << 1; res << 2 } ; res }
+        == [1, 2, 1, 2, 1, 2];
+
+{ var res = []; for|(3) { res << 1; res << 2 } ; res }
+        == [1, 2, 1, 2, 1, 2];
+
+{ var res = []; for&(3) { res << 1; res << 2 } ; res }
+        == [1, 1, 1, 2, 2, 2];
+};
+
+syncline << "doc/specs/lang.tex:2713";
+[01234567:#] "doc/specs/lang.tex:2713"
+//#line 2713 "doc/specs/lang.tex"
+assert {
+3 == { var r = 0; for ([1, 2, 3]) r += 1; r};
+3 == { var r = 0; for ("123")     r += 1; r};
+};
+
+syncline << "doc/specs/lang.tex:2747";
+[01234567:#] "doc/specs/lang.tex:2747"
+//#line 2747 "doc/specs/lang.tex"
+assert {
+{
+  var n = 10|;
+  var res = []|;
+  loop;
+  {
+    n--;
+    res << n;
+    if (n == 0)
+      break
+  };
+  res
+}
+==
+[9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+};
+
+syncline << "doc/specs/lang.tex:2764";
+[01234567:#] "doc/specs/lang.tex:2764"
+//#line 2764 "doc/specs/lang.tex"
+assert {
+{
+  var n = 10|;
+  var res = []|;
+  loop|
+  {
+    n--;
+    res << n;
+    if (n == 0)
+      break
+  };
+  res
+}
+==
+[9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+};
+
+syncline << "doc/specs/lang.tex:2815";
+[01234567:#] "doc/specs/lang.tex:2815"
+//#line 2815 "doc/specs/lang.tex"
+function sw(v)
+{
+  switch (v)
+  {
+    case "":
+      echo("Empty string");
+    case "foo":
+      "bar";
+    default:
+      v[0];
+  }
+}|;
+sw("");
+[00000000] *** Empty string
+sw("foo");
+[00000000] "bar"
+sw("foobar");
+[00000000] "f"
+
+syncline << "doc/specs/lang.tex:2850";
+[01234567:#] "doc/specs/lang.tex:2850"
+//#line 2850 "doc/specs/lang.tex"
+var j = 3|
+while (0 < j)
+{
+  echo(j);
+  j--;
+};
+[00000000] *** 3
+[00000000] *** 2
+[00000000] *** 1
+
+syncline << "doc/specs/lang.tex:2885";
+[01234567:#] "doc/specs/lang.tex:2885"
+//#line 2885 "doc/specs/lang.tex"
+{
+  var i = 4|
+  while (true)
+  {
+    i -= 1;
+    echo ("in: " + i);
+    if (i == 1)
+      break
+    else if (i == 2)
+      continue;
+    echo ("out: " + i);
+  };
+};
+[00000000] *** in: 3
+[00000000] *** out: 3
+[00000000] *** in: 2
+[00000000] *** in: 1
+
+syncline << "doc/specs/lang.tex:2925";
+[01234567:#] "doc/specs/lang.tex:2925"
+//#line 2925 "doc/specs/lang.tex"
+{
+  var i = 4|
+  while| (true)
+  {
+    i -= 1;
+    echo ("in: " + i);
+    if (i == 1)
+      break
+    else if (i == 2)
+      continue;
+    echo ("out: " + i);
+  };
+};
+[00000000] *** in: 3
+[00000000] *** out: 3
+[00000000] *** in: 2
+[00000000] *** in: 1
+
+syncline << "doc/specs/lang.tex:2957";
+[01234567:#] "doc/specs/lang.tex:2957"
+//#line 2957 "doc/specs/lang.tex"
+throw 42;
+[00000000:error] !!! 42
+function inner() { throw "exn" } |
+function outer() { inner() }|
+// Exceptions propagate to parent call up to the top-level
+outer();
+[00000000:error] !!! exn
+[00000000:error] !!!    called from: inner
+[00000000:error] !!!    called from: outer
+
+syncline << "doc/specs/lang.tex:3001";
+[01234567:#] "doc/specs/lang.tex:3001"
+//#line 3001 "doc/specs/lang.tex"
+try {} catch {} catch (var e) {};
+[00000701:error] !!! syntax error: catch: exception already caught by a previous clause
+
+syncline << "doc/specs/lang.tex:3009";
+[01234567:#] "doc/specs/lang.tex:3009"
+//#line 3009 "doc/specs/lang.tex"
+try {} catch (var e) {} catch {};
+
+syncline << "doc/specs/lang.tex:3018";
+[01234567:#] "doc/specs/lang.tex:3018"
+//#line 3018 "doc/specs/lang.tex"
+function test(e)
+{
+  try
+  { throw e;  }
+  catch (0)
+  { echo("zero") }
+  catch ([var x, var y])
+  { echo(x + y) }
+} | {};
+test(0);
+[00002126] *** zero
+test([22, 20]);
+[00002131] *** 42
+test(51);
+[00002143:error] !!! 51
+[00002143:error] !!!    called from: test
+
+syncline << "doc/specs/lang.tex:3040";
+[01234567:#] "doc/specs/lang.tex:3040"
+//#line 3040 "doc/specs/lang.tex"
+try   { echo("try") }
+catch { echo("catch")}
+else  { echo("else")};
+[00002855] *** try
+[00002855] *** else
+
+try   { echo("try"); echo("throw"); throw 0 }
+catch { echo("catch")}
+else  { echo("else")};
+[00002855] *** try
+[00002855] *** throw
+[00002855] *** catch
+
+syncline << "doc/specs/lang.tex:3063";
+[01234567:#] "doc/specs/lang.tex:3063"
+//#line 3063 "doc/specs/lang.tex"
+try { throw 0; "try" } catch (0) { "catch" } else { "else" };
+[00467080] "catch"
+
+syncline << "doc/specs/lang.tex:3071";
+[01234567:#] "doc/specs/lang.tex:3071"
+//#line 3071 "doc/specs/lang.tex"
+try { "try" } catch (0) { "catch" } else { "else" };
+[00467080] "else"
+
+syncline << "doc/specs/lang.tex:3076";
+[01234567:#] "doc/specs/lang.tex:3076"
+//#line 3076 "doc/specs/lang.tex"
+try { "try" } catch (0) { "catch" };
+[00467080] "try"
+
+syncline << "doc/specs/lang.tex:3089";
+[01234567:#] "doc/specs/lang.tex:3089"
+//#line 3089 "doc/specs/lang.tex"
+try
+{
+  Math.cos(3,1415);
+}
+catch (var e)
+{
+  echo ("Exception type: %s" % e.type);
+  if (e.isA(Exception.Arity))
+  {
+    echo("Routine: %s" % e.routine);
+    echo("Number of effective arguments: %s" % e.effective);
+  };
+};
+[00000132] *** Exception type: Arity
+[00000133] *** Routine: cos
+[00000134] *** Number of effective arguments: 2
+
+syncline << "doc/specs/lang.tex:3119";
+[01234567:#] "doc/specs/lang.tex:3119"
+//#line 3119 "doc/specs/lang.tex"
+try
+{
+  echo("inside");
+}
+finally
+{
+  echo("finally");
+};
+[00000001] *** inside
+[00000002] *** finally
+
+syncline << "doc/specs/lang.tex:3134";
+[01234567:#] "doc/specs/lang.tex:3134"
+//#line 3134 "doc/specs/lang.tex"
+try { 51 } finally { 42 };
+[00000001] 51
+
+syncline << "doc/specs/lang.tex:3144";
+[01234567:#] "doc/specs/lang.tex:3144"
+//#line 3144 "doc/specs/lang.tex"
+function with_return(var enable)
+{
+  try
+  {
+    echo("before return");
+    if (enable)
+      return;
+    echo("after return");
+  }
+  finally
+  {
+    echo("finally");
+  };
+  echo("after try-block")
+}|
+
+with_return(false);
+[00001983] *** before return
+[00001985] *** after return
+[00001985] *** finally
+[00001986] *** after try-block
+
+with_return(true);
+[00001991] *** before return
+[00001992] *** finally
+
+syncline << "doc/specs/lang.tex:3175";
+[01234567:#] "doc/specs/lang.tex:3175"
+//#line 3175 "doc/specs/lang.tex"
+for (var i : ["1", "continue", "2", "break", "3"])
+  try
+  {
+    echo("before:  " + i);
+    switch (i)
+    {
+      case "break":    break;
+      case "continue": continue;
+    };
+    echo("after:   " + i);
+  }
+  finally
+  {
+    echo("finally: " + i);
+  };
+[00000663] *** before:  1
+[00000671] *** after:   1
+[00000671] *** finally: 1
+[00000673] *** before:  continue
+[00000675] *** finally: continue
+[00000682] *** before:  2
+[00000703] *** after:   2
+[00000703] *** finally: 2
+[00000704] *** before:  break
+[00000705] *** finally: break
+
+syncline << "doc/specs/lang.tex:3210";
+[01234567:#] "doc/specs/lang.tex:3210"
+//#line 3210 "doc/specs/lang.tex"
+try           { echo("try");     "try" }
+catch (var e) { echo("catch");   "catch" }
+finally       { echo("finally"); "finally" };
+[00000614] *** try
+[00000615] *** finally
+[00000616] "try"
+
+try           { echo("try");     "try" }
+catch (var e) { echo("catch");   "catch" }
+else          { echo("else");    "else" }
+finally       { echo("finally"); "finally" };
+[00000614] *** try
+[00000615] *** else
+[00000615] *** finally
+[00000616] "else"
+
+try                      { echo("throw 42"); throw 42; "try" }
+catch (var e if e == 42) { echo("caught " + e);        "catch" }
+finally                  { echo("finally");            "finally" };
+[00000626] *** throw 42
+[00000626] *** caught 42
+[00000631] *** finally
+[00000631] "catch"
+
+syncline << "doc/specs/lang.tex:3240";
+[01234567:#] "doc/specs/lang.tex:3240"
+//#line 3240 "doc/specs/lang.tex"
+try                      { echo("throw"); throw 51; "try" }
+catch (var e if e == 42) { echo("caught " + e);     "catch" }
+finally                  { echo("finally");         "finally" };
+[00000616] *** throw
+[00000617] *** finally
+[00000625:error] !!! 51
+
+syncline << "doc/specs/lang.tex:3251";
+[01234567:#] "doc/specs/lang.tex:3251"
+//#line 3251 "doc/specs/lang.tex"
+try     { throw "throw" }
+catch   { throw "catch" }
+finally { throw "finally" };
+[00005200:error] !!! finally
+
+syncline << "doc/specs/lang.tex:3278";
+[01234567:#] "doc/specs/lang.tex:3278"
+//#line 3278 "doc/specs/lang.tex"
+assert(true);
+assert(42);
+
+syncline << "doc/specs/lang.tex:3287";
+[01234567:#] "doc/specs/lang.tex:3287"
+//#line 3287 "doc/specs/lang.tex"
+function fail () { false }|;
+assert (fail);
+[00010239:error] !!! failed assertion: fail (fail == false)
+
+function lazyFail { call.evalArgAt(0); false }|;
+assert (lazyFail(1+2, "+" * 2));
+[00010241:error] !!! failed assertion: lazyFail(1.'+'(2), "+".'*'(2)) (lazyFail(3, ?) == false)
+
+syncline << "doc/specs/lang.tex:3299";
+[01234567:#] "doc/specs/lang.tex:3299"
+//#line 3299 "doc/specs/lang.tex"
+function areEqual
+{
+  var res = true;
+  if (!call.args.empty)
+  {
+    var args = call.evalArgs;
+    var a = args[0];
+    for (var b : args.tail)
+      if (a != b)
+      {
+        res = false;
+        break;
+      }
+  };
+  res
+}|;
+assert (areEqual);
+assert (areEqual(1));
+assert (areEqual(1, 0 + 1));
+assert (areEqual(1, 1, 1+1));
+[00001388:error] !!! failed assertion: areEqual(1, 1, 1.'+'(1)) (areEqual(1, 1, 2) == false)
+assert (areEqual(1+2, 3+3, 4*6));
+[00001393:error] !!! failed assertion: areEqual(1.'+'(2), 3.'+'(3), 4.'*'(6)) (areEqual(3, 6, 24) == false)
+
+syncline << "doc/specs/lang.tex:3326";
+[01234567:#] "doc/specs/lang.tex:3326"
+//#line 3326 "doc/specs/lang.tex"
+assert(1 == 1 + 1);
+[00000002:error] !!! failed assertion: 1 == 1.'+'(1) (1 != 2)
+
+syncline << "doc/specs/lang.tex:3341";
+[01234567:#] "doc/specs/lang.tex:3341"
+//#line 3341 "doc/specs/lang.tex"
+assert
+{
+  true;
+  42;
+  1 == 1 + 1;
+};
+[00000002:error] !!! failed assertion: 1 == 1.'+'(1) (1 != 2)
+
+syncline << "doc/specs/lang.tex:3354";
+[01234567:#] "doc/specs/lang.tex:3354"
+//#line 3354 "doc/specs/lang.tex"
+assert {
+true;
+42;
+1 == 1 + 1;
+[00000002:error] !!! failed assertion: 1 == 1.'+'(1) (1 != 2)
+};

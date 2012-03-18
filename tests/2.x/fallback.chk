@@ -1,0 +1,27 @@
+class C
+{
+  function foo
+  {
+    echo("foo");
+  };
+
+  function fallback
+  {
+    echo("Fallback " + call.message);
+  };
+};
+[00000001] C
+var c = C.new;
+[00000002] C_0xADDR
+
+// Check we do not intercept local method
+c.foo;
+[00000003] *** foo
+// Check we do not intercept inherited method
+var Object.blurg = "blurg";
+[00000004] "blurg"
+c.blurg;
+[00000005] "blurg"
+// Check we intercept unfound method
+c.bar;
+[00000006] *** Fallback bar

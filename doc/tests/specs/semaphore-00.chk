@@ -1,0 +1,73 @@
+syncline << "doc/specs/semaphore.tex:26";
+[01234567:#] "doc/specs/semaphore.tex:26"
+//#line 26 "doc/specs/semaphore.tex"
+Semaphore.new(1);
+[00000000] Semaphore_0x8c1e80
+
+syncline << "doc/specs/semaphore.tex:42";
+[01234567:#] "doc/specs/semaphore.tex:42"
+//#line 42 "doc/specs/semaphore.tex"
+{
+  var s = Semaphore.new(1);
+  for& (var i : [0, 1, 2, 3])
+  {
+    s.criticalSection(function () {
+      echo("start " + i);
+      echo("end " + i);
+    })
+  }
+};
+[00000000] *** start 0
+[00000000] *** end 0
+[00000000] *** start 1
+[00000000] *** end 1
+[00000000] *** start 2
+[00000000] *** end 2
+[00000000] *** start 3
+[00000000] *** end 3
+
+
+{
+  var s = Semaphore.new(2);
+  for& (var i : [0, 1, 2, 3])
+  {
+    s.criticalSection(function () {
+      echo("start " + i);
+
+      // Illustrate that processes can be intertwined
+      sleep(i * 100ms);
+
+      echo("end " + i);
+    })
+  }
+};
+[00000000] *** start 0
+[00000000] *** start 1
+[00000000] *** end 0
+[00000000] *** start 2
+[00000000] *** end 1
+[00000000] *** start 3
+[00000000] *** end 2
+[00000000] *** end 3
+
+syncline << "doc/specs/semaphore.tex:97";
+[01234567:#] "doc/specs/semaphore.tex:97"
+//#line 97 "doc/specs/semaphore.tex"
+{
+  var s = Semaphore.new(1);
+  for& (var i : [0, 1, 2, 3])
+  {
+    s.acquire;
+    echo("start " + i);
+    echo("end " + i);
+    s.release;
+  }
+};
+[00000000] *** start 0
+[00000000] *** end 0
+[00000000] *** start 1
+[00000000] *** end 1
+[00000000] *** start 2
+[00000000] *** end 2
+[00000000] *** start 3
+[00000000] *** end 3

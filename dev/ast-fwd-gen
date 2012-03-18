@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+
+import sys
+import ast, tools
+
+if len (sys.argv) != 2:
+  tools.error("Usage: .. SRCDIR")
+srcdir = sys.argv[1]
+
+## Abstract syntax tree C++ forward declarations ------------------------------
+loader = ast.Loader ()
+nodes, ast_params = loader.load (sys.stdin)
+
+fwd_hh = file ("fwd.hh.tmp", "w")
+print >>fwd_hh, tools.banner(ast_params,
+                             "ast/fwd.hh",
+			     """Forward declarations of all AST classes
+ ** (needed by the visitors).""")
+
+print >>fwd_hh, ast_params['fwd_hh_prologue']
+
+print >>fwd_hh, """
+# include <boost/preprocessor/array.hpp>
+# include <boost/preprocessor/repeat.hpp>
+# include <boost/preprocessor/seq/for_each.hpp>
+
+# include <libport/intrusive-ptr.hh>
+# include <libport/typelist.hh>
+
+namespace ast
+{
+"""
+
+arr = nodes.values ()
+arr.sort (lambda x, y: cmp (x.name, y.name))
+for node in arr:
+  print >>fwd_hh, "  class " + node.name + ";"
+  print >>fwd_hh, "  typedef libport::intrusive_ptr<%s> r%s;" %(node.name, node.name)
+  print >>fwd_hh, "  typedef libport::intrusive_ptr<const %s> rConst%s;" %(node.name, node.name)
+
+nodes = []
+size = 0
+
+for node in [node for node in arr if node.concrete]:
+  size += 1
+  nodes.append(node.name)
+
+print >>fwd_hh, "  typedef TYPELIST_%s(%s) Nodes;" % (size, ', '.join(nodes))
+
+
+print >>fwd_hh, """
+
+  // From visitor.hh
+  template <template <typename> class Const>
+  class GenVisitor;
+  typedef GenVisitor<%(auxlib)s::constify_traits> ConstVisitor;
+  typedef GenVisitor<%(auxlib)s::id_traits> Visitor;
+""" % ast_params
+
+print >>fwd_hh, ast_params['fwd_hh_epilogue']
+
+print >>fwd_hh, """
+
+#define AST_NODES_SEQ\\
+""",
+
+for node in arr:
+  print >>fwd_hh, "  (%s)\\" % node.name
+
+
+print >>fwd_hh, """
+#define AST_FOR_EACH_NODE(Macro)\\
+    BOOST_PP_SEQ_FOR_EACH(Macro, , AST_NODES_SEQ)
+
+} // namespace ast
+
+#endif // !AST_FWD_HH"""
+
+fwd_hh.close ()
+tools.lazy_install (srcdir, "fwd.hh");

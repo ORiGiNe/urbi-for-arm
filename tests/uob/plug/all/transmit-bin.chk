@@ -1,0 +1,61 @@
+//#uobject test/all
+
+sleep(1s);
+var bn = BIN 15;[00000000:ts] 1
+[00000001] BIN 15
+[00000002:ts] 1
+all.transmitL([1,"coin",bn,[]]);
+[00000003] [[], BIN 15
+[00000004:ts] 1, "coin", 1]
+var c = all.transmitL([1,"coin",bn,[]]);c;
+[00000005] [[], BIN 15
+[00000006:ts] 1, "coin", 1]
+[00000007] [[], BIN 15
+[00000008:ts] 1, "coin", 1]
+
+//the transmitbin function increments by one bin content but keeps last \n
+var bin2 = BIN 13 some header;\11111111^!1a
+[00000009] BIN 13 some header
+[:]\11111111^!1a
+all.transmitB(bin2);
+[00000010] BIN 13 some header
+[00000011] 0
+[:]
+var d = all.transmitB(bin2);d;
+[00000012] BIN 13 some header
+[00000013] 0
+[:]
+[00000014] BIN 13 some header
+[00000015] 0
+[:]
+
+
+var bini = BIN 13 jpeg 10 10;\11111111^!1a
+[00000016] BIN 13 jpeg 10 10
+[:]\11111111^!1a
+all.transmitB(bini);
+[00000017] BIN 13 jpeg 10 10
+[00000018] 0
+[:]
+var e = all.transmitB(bini);e;
+[00000019] BIN 13 jpeg 10 10
+[00000020] 0
+[:]
+[00000021] BIN 13 jpeg 10 10
+[00000022] 0
+[:]
+
+var bins = BIN 13 raw 1 8000 8 1;\11111111^!1a
+[00000023] BIN 13 raw 1 8000 8 1
+[:]\11111111^!1a
+all.transmitB(bins);
+[00000024] BIN 13 raw 1 8000 8 1
+[00000025] 0
+[:]
+var f = all.transmitB(bins);f;
+[00000026] BIN 13 raw 1 8000 8 1
+[00000027] 0
+[:]
+[00000028] BIN 13 raw 1 8000 8 1
+[00000029] 0
+[:]

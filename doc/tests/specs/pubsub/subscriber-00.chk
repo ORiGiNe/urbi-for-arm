@@ -1,0 +1,21 @@
+syncline << "doc/specs/pubsub/subscriber.tex:29";
+[01234567:#] "doc/specs/pubsub/subscriber.tex:29"
+//#line 29 "doc/specs/pubsub/subscriber.tex"
+var ps = PubSub.new |;
+var sub = ps.subscribe;
+[00000000] Subscriber_0x28607c0
+
+syncline << "doc/specs/pubsub/subscriber.tex:49";
+[01234567:#] "doc/specs/pubsub/subscriber.tex:49"
+//#line 49 "doc/specs/pubsub/subscriber.tex"
+echo(sub.getOne) &
+ps.publish(3);
+[00000000] *** 3
+
+syncline << "doc/specs/pubsub/subscriber.tex:60";
+[01234567:#] "doc/specs/pubsub/subscriber.tex:60"
+//#line 60 "doc/specs/pubsub/subscriber.tex"
+ps.publish(4) |
+ps.publish(5) |
+echo(sub.getAll);
+[00000000] *** [4, 5]

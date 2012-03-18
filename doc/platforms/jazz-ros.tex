@@ -1,0 +1,166 @@
+%% Copyright (C) 2011, 2012, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\chapter{ROS support}
+
+\section{About ROS}
+
+\href{http://www.ros.org}{ROS} (Robot  Operating System) is a set of tools and
+libraries designed to provide a common framework for robotic application
+developers. There are already thousands of compatible applications available in
+various domains such as computer vision, navigation, visualization tools...
+
+\section{ROS support in Jazz}
+
+Jazz comes with complete ROS compatibility.
+The currently used ROS version is 'electric'. A subset of the ROS distribution
+is installed in the \lstinline|/opt/ros| directory of the Jazz hard drive.
+
+
+\section{Enabling and configuring ROS service}
+
+ROS support in Jazz is implemented as a Jazz service and is disabled
+by default.  Refer to section \autoref{sec:jazz:profile} for
+instructions on how to enable and disable services.
+
+By default, a ROS master is started on the robot when the service is enabled.
+You can specify a different ROS master by setting the
+\lstinline|config.ros.master_uri| configuration variable:
+
+\begin{urbiunchecked}
+  config.ros.master_uri = "http://my_computer:11311";
+  // Call _save to make the change persistent.
+  config.ros._save;
+\end{urbiunchecked}
+
+\section{Predefined topics}
+
+The Jazz ROS service maps each device of the robot to a ROS Topic with
+similar name.  The following table lists the most important topics:
+
+\begin{tabular}{llll}
+  \hline
+  Urbi name & ROS topic & Dir & ROS message type \\
+  \hline
+  \refObject{jazz.body.irs} & /robot/body/irs & Pub & sensor\_msgs/LaserScan \\
+  \refObject{jazz.body.sonars} & /robot/body/sonars & Pub & sensor\_msgs/LaserScan \\
+  \refObject{jazz.body.laser} & /robot/body/laser & Pub & sensor\_msgs/LaserScan \\
+  \refObject{jazz.camera} & /robot/body/head/camera & Pub & sensor\_msgs/Image \\
+  \multirow{2}{*}{\refSlot[jazz.body.head]{pitch}} & /robot/body/head/pitch\_out & Pub  & std\_msgs/Float32 \\
+  &  /robot/body/head/pitch\_in & Sub & std\_msgs/Float32 \\
+  \multirow{2}{*}{\refSlot[jazz.body.head]{yaw} } & /robot/body/head/yaw\_out & Pub & std\_msgs/Float32 \\
+  &  /robot/body/head/yaw\_in & Sub & std\_msgs/Float32 \\
+  \multirow{3}{*}{\refObject{jazz} } & /robot\_in & Sub & geometry\_msgs/Twist \\
+    & /robot\_out & Pub &  nav\_msgs/Odometry \\
+    & /tf & Pub & tf/tfMessage \\
+  \hline
+\end{tabular}
+
+
+The sonar array and the laser if present are accessible as standard LaserScan
+data. Robot odometry is available as either nav\_msgs/Odometry messages in the
+/robot\_out topic or standard \href{http://www.ros.org/wiki/tf}{tf transforms}
+on the /tf topic.
+
+All sensor messages with a header are given in the \lstinline|base_footprint|
+frame. tf messages from the odometry are published on the standard /tf topic,
+performing the \lstinline|/base_footprint -> /odom| transform.
+
+Head yaw and pitch are mapped to two different topics, since they have a
+sensor part and an actuator part.
+
+\section{Using the navigation stack with ROS}
+
+If your Jazz is equipped with a laser scanner, Jazz is compatible with the
+ROS \href{http://www.ros.org/wiki/navigation}{navigation stack}.
+
+Navigation components can run on the Jazz CPU, or as remote components.
+
+It is recommended to run them remotely, especially if you plan to use the
+web control interface at the same time to avoid overloading the Jazz CPU.
+
+\subsection{Creating a map of your environment}
+
+The \href{http://www.ros.org/wiki/gmapping}{gmapping} module can be used to
+create a map of your environment.
+
+Make sure you are using the same ros-master as your Jazz. If you type
+\lstinline|rostopic list| you should see all the topics advertised by the robot.
+
+Then run:
+
+\begin{shell}
+rosrun gmapping slam_gmapping scan:=/robot/body/laser
+\end{shell}
+
+This will start gmapping. gmapping then processes odometry and laser scan data
+to create a map of the environment as the robot moves.
+
+Using the joystick (preferred) or the web interface, navigate the robot around
+your environment. You should avoid fast rotations as it puts too much stress
+on the SLAM process.
+
+When you are done, extract the map using:
+
+\begin{shell}
+rosrun map_server map_saver
+\end{shell}
+
+This will create the file \lstinline|map.pgm| containing your map data.
+
+You should then open the map in an image editor and crop it to remove the
+empty space. This will reduce CPU requirements for the localization task.
+
+\subsection{Autonomous navigation}
+
+You will find on the robot a ROS package named \lstinline|jazz_navigation| under
+\lstinline|JAZZ_ROOT/share/vigilant/ros| that
+contains a reasonable default configuration for the navigation.
+
+You can copy the whole directory to an external computer (recommended) or run
+it on the robot:
+
+\begin{shell}
+# Copy the parameter files (replace myJazzName with the host name of your Jazz)
+scp -r myJazzName:/usr/local/stow/vigilant/share/vigilant/ros jazz-ros
+# Make the package visible to ros
+export ROS_PACKAGE_PACK=$PWD/jazz-ros:$ROS_PACKAGE_PATH
+# Run the navigation package
+roslaunch jazz_navigation move_base.launch
+\end{shell}
+
+See the ROS
+\href{http://www.ros.org/wiki/navigation/Tutorials/RobotSetup}{navigation tutorial}
+for information about the various configuration files.
+
+You can visualize sensor data and set navigation goals using the ROS
+\href{http://www.ros.org/wiki/navigation/Tutorials/Using%20rviz%20with%20the%20Navigation%20Stack}{rviz}
+tool:
+
+\begin{shell}
+rosrun rviz rviz
+\end{shell}
+
+Then load the \lstinline|jazz_navigation/nav.vcg| layout file in rviz, which
+contains the proper rviz configuration for Jazz.
+
+\subsection{Troubleshooting}
+
+\subsubsection{Jazz does not move when setting a navigation Goal}
+
+If Jazz is docked on its charging station, move commands are disabled. You must
+remove Jazz from its charging station manually.
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: t
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

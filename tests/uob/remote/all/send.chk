@@ -1,0 +1,26 @@
+//#uobject test/all
+uobjectsAll;
+
+all.a = 1;
+[00000001] 1
+all.b = 1;
+[00000002] 1
+all.sendString("all.a  = 12;");
+[00000003] 0
+sleep(500ms);
+all.a;
+[00000004] 12
+all.sendBuf("all.a = 13;all.b = 13;", 14);
+[00000005] 0
+sleep(500ms);
+all.a;
+[00000006] 13
+all.b;
+[00000007] 1
+var Object.a = 1;
+[00000008] 1
+all.sendPar();
+[00000009] 0
+sleep(500ms);
+Object.a;
+[00000010] 123

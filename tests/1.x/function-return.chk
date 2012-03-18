@@ -1,0 +1,17 @@
+function f() { return 1; } | {};
+
+f();
+[00000001] 1
+
+function g(x) { return x; } | {};
+
+g(45);
+[00000002] 45
+
+g([1,2,3,"hello"]);
+[00000003] [1, 2, 3, "hello"]
+
+function h(z) { echo (z); return; 1; } | {};
+
+h(111);
+[00000004] *** 111

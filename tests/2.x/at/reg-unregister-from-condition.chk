@@ -1,0 +1,10 @@
+var e = Event.new;
+[00000001] Event_0xADDR
+
+tag1: at (e? if {tag2.stop; true}) echo("in 1") onleave echo("out 1");
+tag2: at (e?) echo("in 2") onleave echo("out 2");
+
+e.trigger;
+[00000002] EventHandler_0xADDR
+[00000003] *** in 1
+[00000004] *** in 2

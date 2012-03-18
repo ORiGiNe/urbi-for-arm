@@ -1,0 +1,309 @@
+/*
+ * Copyright (C) 2012, Gostai S.A.S.
+ *
+ * This software is provided "as is" without warranty of any kind,
+ * either expressed or implied, including but not limited to the
+ * implied warranties of fitness for a particular purpose.
+ *
+ * See the LICENSE file for more information.
+ */
+
+/** Automagick GSRAPI-ros bridging.
+ *
+ * usage:
+ *    Ros.rosify(rootGSRAPInode);
+ *
+ * Architecture:
+ *
+ * Each interface class has a _ros object which describes how to ros-bind it.
+ *
+ * The binder creates ros topics _rossource and _rossink, using the device
+ * full name, replacing . by / (example: /robot/body/head/yaw).
+ *
+ *
+*/
+
+/** Force all timestamps to 0
+ * Useful in case multiple computers have desynchronised clocks, which can
+ * cause tf errors ("100% of messages ignored"), but will degrade performances
+ * of algorithm needing synchronized data (such as SLAM).
+ */
+var Ros.zeroTimestamp = false;
+
+
+// Default: unhandled
+var Interface._ros = do (Object.new)
+{
+  var mapedType = nil;
+  var mapedSinkType = nil;
+  var mapedSourceType = nil;
+  var isSource = false;
+  var isSink = false;
+  /// Reference frame for the data
+  var frame = "base_link";
+  function prepare() {};
+};
+
+class Interface.Sensor._ros: Interface._ros
+{
+  var mapedType = "std_msgs/Float32";
+  var isSource = true;
+  var isSink = false;
+  // called on device
+  function linkSource()
+  {
+    at (watch(this.val)?)
+    {
+      _rossource.structure["data"] = this.val|
+      _rossource << _rossource.structure
+    }
+  };
+};
+
+var Interface.Laser._ros =  Interface.Sensor._ros.new;
+do (Interface.Laser._ros)
+{
+  var isSource = true;
+  var isSink = false;
+  var mapedType = "sensor_msgs/LaserScan";
+  function linkSource()
+  {
+    var sz = { if (val.isA(List)) val.size else val.data.size / 8}|
+    _rossource.structure["header"]["seq"] = 0;
+    _rossource.structure["header"]["frame_id"] = _ros.frame;
+    _rossource.structure["angle_min"] = angleMin;
+    _rossource.structure["angle_max"] = angleMax;
+    _rossource.structure["angle_increment"] = (angleMax - angleMin) / (sz-1);
+    _rossource.structure["time_increment"] = 0;
+    _rossource.structure["scan_time"] = 0.1;
+    _rossource.structure["range_min"] = distanceMin;
+    _rossource.structure["range_max"] = distanceMax;
+    _rossource.structure["intensities"] = [];
+    at (watch(this.val)?)
+    {
+      var ts = this.val->timestamp + System.timeReference.asFloat|
+      if (Ros.zeroTimestamp)
+        ts = 0|
+      _rossource.structure["header"]["stamp"] =
+        [ ts.floor, ((ts-ts.floor)*1e9).floor]|
+      _rossource.structure["header"]["seq"]++|
+      _rossource.structure["ranges"] = this.val|
+      _rossource << _rossource.structure
+    };
+  };
+};
+
+class Interface.Mobile._ros: Interface._ros
+{
+  var isSource = true;
+  var isSink = true;
+  var mapedType = true;
+  var mapedSinkType = "geometry_msgs/Twist";
+  var mapedSourceType = "nav_msgs/Odometry";
+  function linkSource()
+  {
+    for (var s in ["xSpeed", "ySpeed", "zSpeed",
+                   "yawSpeed", "pitchSpeed", "rollSpeed"])
+      if (!hasLocalSlot(s))
+        setSlot(s, 0);
+    // identity
+    var mat = [0] * 36;
+    for|(var i: 6)
+      mat[i*7] = 1;
+    // Also create a tf node for the navigation stack
+    var this._rostf = Ros.Topic.new("/tf");
+    _rostf.advertise("tf/tfMessage");
+    var _rostf.seq = 1;
+    at (watch(this.position)?)
+    {
+       var ts = this.position->timestamp + System.timeReference.asFloat|
+       if (Ros.zeroTimestamp)
+         ts = 0|
+       var stamp = [ ts.floor, ((ts-ts.floor)*1e9).floor]|
+       _rostf.seq++|
+       var header = ["seq"=> _rostf.seq, "frame_id" => "odom", "stamp"=>stamp]|
+       var a = position[2]|
+       _rossource << [
+         "header" => header,
+         "child_frame_id" => _ros.frame,
+         "pose" => [
+           "pose" => [
+             "position" => ["x"=>position[0], "y"=>position[1], "z"=>0],
+             "orientation" => ["x"=> 0, "y"=>0, "z"=>sin(a/2), "w"=>cos(a/2)]
+             ],
+           "covariance" => mat
+         ],
+         "twist" => [
+           "twist" => [
+             "linear" => ["x"=> xSpeed, "y"=>ySpeed, "z"=>zSpeed],
+             "angular" => ["x"=>yawSpeed, "y"=>pitchSpeed, "z"=>rollSpeed]
+           ],
+           "covariance" => mat
+         ]
+       ]|
+
+
+       _rostf.structure["transforms"] =
+       [
+       [
+       "header" => header,
+       "child_frame_id" => _ros.frame,
+       "transform" => [
+          "translation" => ["x"=>position[0], "y"=>position[1], "z"=>0],
+          "rotation" => ["x"=> 0, "y"=>0, "z"=>sin(a/2), "w"=>cos(a/2)]
+          ]
+       ]]|
+       _rostf << _rostf.structure
+    }
+  };
+  function linkSink()
+  {
+    at (this._rossink.onMessage?(var m))
+    {
+      var lin = m["linear"]|
+      var ang = m["angular"]|
+      this.xSpeed = lin["x"]|
+      if (hasLocalSlot("ySpeed"))
+        this.ySpeed = lin["y"]|
+      if (hasLocalSlot("zSpeed"))
+        this.zSpeed = lin["z"]|
+      this.yawSpeed = ang["z"]|
+      if (hasLocalSlot("pitchSpeed"))
+        this.pitchSpeed = ang["y"]|
+      if (hasLocalSlot("rollSpeed"))
+        this.rollSpeed = ang["x"]
+    }
+  };
+};
+
+var Interface.Motor._ros = Interface.Sensor._ros.new;
+do (Interface.Motor._ros)
+{
+  var mapedType = "std_msgs/Float32";
+  var isSink = true;
+  var isSource = true;
+  function linkSink()
+  {
+    at (this._rossink.onMessage?(var m))
+    {
+      this.val = m["data"]
+    }
+  };
+  function linkSource()
+  {
+    at (watch(this.val)?)
+    {
+      _rossource.structure["data"] = this.val|
+      _rossource << _rossource.structure
+    }
+  };
+};
+
+class Interface.VideoIn._ros: Interface._ros
+{
+  var isSource = true;
+  var isSink = false;
+  var mapedType = "sensor_msgs/Image";
+  function prepare()
+  {
+    // FIXME: handle compressed formats
+  };
+  function linkSource()
+  {
+    var f = this.val.keywords.split()[0];
+    if (f != "rgb")
+    {
+      if (hasSlot("ImageConvert"))
+      {
+        Logger.warn("Instanciating an image converter for ROS");
+        var c = ImageConvert.new;
+        var this._rossource.converter = c;
+        c.format = 1;
+        var this._rossource.convLink = this.&val >> c.&imageIn;
+        this._rossource.convLink.enabled = false;
+        var this._rossource.sendImage = Interface.VideoIn._ros.&send;
+        at (c.val->changed?)
+          this._rossource.sendImage(c.val, this.width, this.height,
+            c.val->timestamp + System.timeReference.asFloat);
+        at (this._rossource.onConnect?)
+          this._rossource.convLink.enabled = true;
+      }
+      else
+        Logger.warn("Image format cannot be converted to a ROS format");
+    }
+    else
+    at (watch(this.val)?)
+      this._rossource.sendImage(this.val, this.width, this.height,
+        this.val->timestamp + System.timeReference.asFloat)
+  };
+
+  function send(img, w, h, ts)
+  {
+    // this is the rossource
+    structure["width"] = w|
+    structure["height"] = h|
+    var f = img.keywords.split()[0]|
+    if (f == "YUV422")
+      f = "yuv422"
+    else if (f == "rgb")
+      f = "rgb8"|
+    structure["format"] = f|
+    structure["encoding"] = f|
+    structure["data"] = img|
+    if (Ros.zeroTimestamp)
+      ts = 0|
+    structure["header"]["stamp"] = [ ts.floor,
+      ((ts-ts.floor)*1e9).floor]|
+    this << structure
+  }
+};
+
+/** Bridge a GSRAPI-compilant component tree to ros topics.
+ * @param node the root node to consider
+ * @param prefix string prefix used for all ROS topics.
+ *
+ */
+function Ros.rosify (node, prefix="/")
+{
+  var devices = node.allMembers;
+  for (var d: devices)
+  {
+    var n = d.fullname.replace(".", "/").replace("[", "_").replace("]", "");
+    n = prefix + n;
+    try
+    {
+      if (!d._ros.mapedType)
+      {
+        echo("Interface for " + d.fullname +" unknown");
+        continue;
+      };
+      if (d.hasLocalSlot("_rossink") || d.hasLocalSlot("_rossource"))
+      {
+        echo("ros topic already present for " + d.fullname);
+        continue;
+      };
+      d._ros.prepare();
+      var dual = d._ros.isSink && d._ros.isSource;
+      var sfxin =  { if (dual) "_in"  else ""};
+      var sfxout = { if (dual) "_out" else ""};
+      if (d._ros.isSource)
+      {
+        var d._rossource = Ros.Topic.new(n + sfxout);
+        d._rossource.advertise(d._ros.mapedSourceType || d._ros.mapedType);
+        d._ros.&linkSource.apply([d]);
+      };
+      if (d._ros.isSink)
+      {
+        var d._rossinkadv = Ros.Topic.new(n+sfxin);
+        d._rossinkadv.advertise(d._ros.mapedSinkType || d._ros.mapedType);
+        var d._rossink = Ros.Topic.new(n+sfxin);
+        d._rossink.subscribe();
+        d._ros.&linkSink.apply([d]);
+      }
+    }
+    catch (var e)
+    {
+      Logger.warn("Exception binding " + n + " : " + e)
+    }
+  }
+};

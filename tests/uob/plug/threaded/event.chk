@@ -1,0 +1,17 @@
+//#uobject test/threaded
+//#no-fast
+
+for(10)
+  Threaded.startThread;
+
+var Global.e = Event.new|;
+var counter = 0;
+[00000001] 0
+at(e?(var x, var y, var z) if z == "canard") counter++;
+
+for(1000)
+Threaded.queueOp(random(10), Threaded.EMIT, ["Global.e"]);
+sleep(1s);
+timeout(10s) waituntil(counter == 1000);
+counter;
+[00000002] 1000

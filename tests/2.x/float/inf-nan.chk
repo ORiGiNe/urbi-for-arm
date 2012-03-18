@@ -1,0 +1,21 @@
+// Check infinity and not-a-number properties
+(1.0e10)**2**2**2**2;
+[00000001] inf
+inf == inf;
+[00000002] true
+inf == - -inf;
+[00000003] true
+inf/inf;
+[00000004] nan
+inf/-inf;
+[00000005] nan
+inf*inf;
+[00000006] inf
+inf*-inf;
+[00000007] -inf
+nan == nan;
+[00000008] false
+nan*2;
+[00000009] nan
+inf*-2;
+[00000010] -inf

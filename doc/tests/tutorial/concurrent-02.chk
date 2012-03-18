@@ -1,0 +1,16 @@
+syncline << "doc/tutorial/concurrent.tex:123";
+[01234567:#] "doc/tutorial/concurrent.tex:123"
+//#line 123 "doc/tutorial/concurrent.tex"
+function test()
+{
+  // Wait for one second, and echo "foo".
+  detach({sleep(1s); echo("foo")});
+}|;
+test();
+echo("Not blocked");
+[00000000] Job<shell_4>
+[00000000] *** Not blocked
+sleep(2s);
+echo("End of sleep");
+[00001000] *** foo
+[00002000] *** End of sleep

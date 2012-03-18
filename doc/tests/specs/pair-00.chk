@@ -1,0 +1,27 @@
+syncline << "doc/specs/pair.tex:24";
+[01234567:#] "doc/specs/pair.tex:24"
+//#line 24 "doc/specs/pair.tex"
+Pair.new(1, 2);
+[00000001] (1, 2)
+
+Pair.new;
+[00000003:error] !!! new: expected 2 arguments, given 0
+
+Pair.new(1, 2, 3, 4);
+[00000003:error] !!! new: expected 2 arguments, given 4
+
+syncline << "doc/specs/pair.tex:39";
+[01234567:#] "doc/specs/pair.tex:39"
+//#line 39 "doc/specs/pair.tex"
+assert {
+Pair.new(1, 2).first == 1;
+Pair[0] === Pair.first;
+};
+
+syncline << "doc/specs/pair.tex:46";
+[01234567:#] "doc/specs/pair.tex:46"
+//#line 46 "doc/specs/pair.tex"
+assert {
+Pair.new(1, 2).second == 2;
+Pair[1] === Pair.second;
+};

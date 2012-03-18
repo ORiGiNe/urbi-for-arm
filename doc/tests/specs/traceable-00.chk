@@ -1,0 +1,31 @@
+syncline << "doc/specs/traceable.tex:24";
+[01234567:#] "doc/specs/traceable.tex:24"
+//#line 24 "doc/specs/traceable.tex"
+try
+{
+  [1].map(closure (v) { throw Exception.new("Ouch") })
+}
+catch (var e)
+{
+  for| (var sf: e.backtrace)
+    echo(sf.name)
+};
+[00000001] *** map
+
+syncline << "doc/specs/traceable.tex:39";
+[01234567:#] "doc/specs/traceable.tex:39"
+//#line 39 "doc/specs/traceable.tex"
+Traceable.hideSystemFiles = false |
+
+try
+{
+  [1].map(closure (v) { throw Exception.new("Ouch") })
+}
+catch (var e)
+{
+  for| (var sf: e.backtrace)
+    echo(sf.name)
+};
+[00000002] *** f
+[00000003] *** each|
+[00000004] *** map

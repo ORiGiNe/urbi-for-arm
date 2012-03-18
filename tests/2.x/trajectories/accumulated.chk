@@ -1,0 +1,7 @@
+{
+  var x = 0;
+  x = 1 speed: 1 speed: 1;
+  x;
+};
+[00000001:warning] !!! input.u:3.18-25: modifier redefined: speed
+[00000002] 1

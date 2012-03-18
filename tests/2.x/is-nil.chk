@@ -1,0 +1,7 @@
+nil.isNil;
+[00000001] true
+42.isNil;
+[00000002] false
+// Check isNil doesn't evaluate this
+function () { nil }.isNil;
+[00000003] false

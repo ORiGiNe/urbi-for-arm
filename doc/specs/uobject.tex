@@ -1,0 +1,45 @@
+%% Copyright (C) 2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{UObject}
+
+UObject is used by the \lstinline|UObject| API (see
+\autoref{part:uobject}) to represent a bound \Cxx instance.
+
+All the UObjects are copied under a unique name as slots of
+\refSlot[Global]{uobjects}.
+
+\subsection{Prototypes}
+\begin{refObjects}
+\item[Object]
+\end{refObjects}
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+\item[__uobjectName]%
+  Unique name assigned to this object. This is also the slot name of
+  \refSlot[Global]{uobjects} containing this \lstinline|UObject|.
+
+\item[searchPath] The search-path for UObjects files (see
+  \autoref{sec:tools:envvars}) as a \refObject{List} of \refObject[Path]{Paths}.
+  See also \refSlot[System]{loadLibrary} and \refSlot[System]{loadModule}.
+\begin{urbiassert}
+UObject.searchPath.isA(List);
+UObject.searchPath[0].isA(Path);
+\end{urbiassert}
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

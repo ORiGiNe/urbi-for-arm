@@ -1,0 +1,138 @@
+%% Copyright (C) 2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Job}
+
+Jobs are independent threads of executions.  Jobs can run concurrently.
+They can also be managed using \refObject[Tag]{Tags}.
+
+\subsection{Prototypes}
+
+\begin{refObjects}
+\item[Object]
+\item[Traceable]
+\end{refObjects}
+
+\subsection{Construction}
+
+A Job is typically constructed via \refSlot[Control]{detach},
+\refSlot[Control]{disown}, or \refSlot[System]{spawn}.
+
+\begin{urbiscript}
+detach(sleep(10));
+[00202654] Job<shell_4>
+
+disown(sleep(10));
+[00204195] Job<shell_5>
+
+spawn (function () { sleep(10) }, false);
+[00274160] Job<shell_6>
+\end{urbiscript}
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+\item[asJob]
+  Return \lstinline|this|.
+
+\item[asString] The string \lstinline|Job<\var{name}>| where \var{name} is
+  the name of the job.
+
+\item[backtrace] The current backtrace of the job as a list of
+  \refObject[StackFrame]{StackFrames}.  Uses \refSlot[Traceable]{backtrace}.
+
+\begin{urbiscript}
+//#push 1 "file.u"
+var s = detach(sleep(10))|;
+// Leave some time for s to be started.
+sleep(1);
+assert
+{
+  s.backtrace[0].asString == "file.u:1.16-24: sleep";
+  s.backtrace[1].asString == "file.u:1.16-24: detach";
+};
+//#pop
+\end{urbiscript}
+
+\item[clone]
+  Cloning a job is impossible since Job is considered as being an atom.
+
+\item[dumpState]
+  Pretty-print the state of the job.
+
+\begin{urbiscript}
+//#push 1 "file.u"
+var t = detach(sleep(10))|;
+// Leave some time for s to be started.
+sleep(1);
+t.dumpState;
+[00004295] *** Job: shell_10
+[00004295] ***   State: sleeping
+[00004295] ***   Tags:
+[00004295] ***     Tag<Lobby_1>
+[00004297] ***   Backtrace:
+[00004297] ***     file.u:1.16-24: sleep
+[00004297] ***     file.u:1.16-24: detach
+//#pop
+\end{urbiscript}
+
+\item[name]  The name of the job.
+\begin{urbiscript}
+detach(sleep(10)).name;
+[00004297] "shell_5"
+\end{urbiscript}
+
+\item[setSideEffectFree](<value>)
+  If value is true, mark the current job as side-effect free. It indicates
+  whether the current state may influence other parts of the system. This is
+  used by the scheduler to choose whether other jobs need scheduling or not.
+  The default value is false.
+
+\item[status]
+  The current status of the job (starting, running, \ldots), and its
+  properties (frozen, \ldots).
+
+\item[tags] The list of \refObject[Tag]{Tags} that manage this job.
+
+\item[terminate]  Kill this job.
+\begin{urbiscript}
+var r = detach({ sleep(1s); echo("done") })|;
+assert (r in jobs);
+r.terminate;
+assert (r not in jobs);
+sleep(2s);
+\end{urbiscript}
+
+\item[timeShift]
+  Get the total amount of time during which we were frozen.
+\begin{urbiscript}
+tag: r = detach({ sleep(3); echo("done") })|;
+tag.freeze();
+sleep(2);
+tag.unfreeze();
+Math.round(r.timeShift);
+[00000001] 2
+\end{urbiscript}
+
+\item[waitForChanges] Resume the scheduler, putting the current Job in a
+  waiting status.  The scheduler may reschedule the job immediately.
+
+\item[waitForTermination] Wait for the job to terminate before resuming
+  execution of the current one.  If the job has already terminated, return
+  immediately.
+\end{urbiscriptapi}
+
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

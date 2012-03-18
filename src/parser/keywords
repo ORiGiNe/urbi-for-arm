@@ -1,0 +1,75 @@
+#! /usr/bin/perl -w
+
+use strict;
+use Text::Wrap;
+
+my @keyword;
+while (<>)
+{
+  if (/^"(\w+)"(\{FLAVOR\})?/)
+    {
+      my ($k, $flav) = ($1, $2);
+      # Skip obsolete keywords.
+      next
+        if $k eq 'new';
+      push @keyword, $k;
+      push @keyword, "$k;", "$k|", "$k,", "$k&"
+        if $flav;
+    }
+}
+
+@keyword = sort @keyword;
+
+my $mode = $ENV{'KEYWORDS_MODE'};
+
+sub latex ($@)
+{
+  my ($title, @keyword) = @_;
+  map { s/\W/\\$&/g; $_ } @keyword;
+  print "  $title={\n";
+  print wrap (" " x 4, " " x 4, join (", ", @keyword)), "\n";
+  print "  },\n";
+
+}
+
+if ($mode eq "c++")
+{
+  print wrap (" " x 4, " " x 4,
+              join (", ", (map { "\"$_\"" } @keyword), '0')), "\n";
+}
+elsif ($mode eq "emacs")
+{
+  print wrap (" " x 12, " " x 12,
+              join (" ", map { "\"$_\"" } @keyword)), "\n";
+}
+elsif ($mode eq "listings")
+{
+  latex "morekeywords", grep { /^\w+$/ } @keyword;
+  # We used to make these (at| and the like) "otherkeywords", but
+  # it results in LaTeX seeing "at|" in "\lstinline|Float|", and it
+  # dies later.  It is simpler to declare that [;,|&] are "digits", so
+  # "at|" and the like are just "morekeywords".
+  latex "morekeywords", grep { /\W/ } @keyword;
+}
+else
+{
+  die "invalid KEYWORDS_MODE: $mode";
+}
+
+
+### Setup "GNU" style for perl-mode and cperl-mode.
+## Local Variables:
+## perl-indent-level: 2
+## perl-continued-statement-offset: 2
+## perl-continued-brace-offset: 0
+## perl-brace-offset: 0
+## perl-brace-imaginary-offset: 0
+## perl-label-offset: -2
+## cperl-indent-level: 2
+## cperl-brace-offset: 0
+## cperl-continued-brace-offset: 0
+## cperl-label-offset: -2
+## cperl-extra-newline-before-brace: t
+## cperl-merge-trailing-else: nil
+## cperl-continued-statement-offset: 2
+## End:

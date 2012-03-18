@@ -1,0 +1,15 @@
+var p;
+
+p = Pattern.new(0);
+[00000001] Pattern_0xADDR
+p.match(0);
+[00000002] true
+p.match(1);
+[00000003] false
+
+p = Pattern.new(Pattern.Binding.new("x"));
+[00000004] Pattern_0xADDR
+p.match(42);
+[00000005] true
+p.bindings;
+[00000006] ["x" => 42]

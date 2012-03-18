@@ -1,0 +1,1168 @@
+%% Copyright (C) 2009-2012, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\chapter{Frequently Asked Questions}
+\label{sec:faq}
+\setHtmlFileName{faq}
+
+\ifx\ifHtml\undefined\else
+  \let\subsubsectionSave\subsubsection
+  \let\subsubsection\faqsection
+\fi
+
+\section{Build Issues}
+\label{sec:faq:build}
+
+\subsection{Complaints about \samp{+=}}
+Although we tried to avoid it, there might still be shell scripts where we
+use \samp{+=}, which Ash (aka, \command{dash} and \command{sash}) does not
+support.  Please, use \command{bash} or \command{zsh} instead of Ash as
+\command{/bin/sh}.
+
+\subsection{error: `\textless{}anonymous\textgreater{}' is used uninitialized in this function}
+\label{sec:faq:build:uninitialized}
+
+If you encounter this error:
+
+\begin{verbatim}
+cc1plus: warnings being treated as errors
+parser/ugrammar.hh: In member function \
+  `void yy::parser::yypush_(const char*, int, yy::parser::symbol_type&)':
+parser/ugrammar.hh:1240: error: `<anonymous>' is used uninitialized \
+  in this function
+parser/ugrammar.cc:1305: note: `<anonymous>' was declared here
+parser/ugrammar.hh: In member function \
+  `void yy::parser::yypush_(const char*, yy::parser::stack_symbol_type&)':
+parser/ugrammar.hh:1240: error: `<anonymous>' is used uninitialized \
+  in this function
+parser/ugrammar.cc:1475: note: `<anonymous>' was declared here
+\end{verbatim}
+
+\noindent
+then you found a problem that we don't know how to resolved currently.
+Downgrade from GCC-4.4 to GCC-4.3.
+
+\subsection{AM\_LANGINFO\_CODESET}
+
+If at bootstrap you have something like:
+
+\begin{verbatim}
+configure:12176: error: possibly undefined macro: AM_LANGINFO_CODESET
+ If this token and others are legitimate, please use m4_pattern_allow.
+ See the Autoconf documentation.
+configure:12246: error: possibly undefined macro: gl_GLIBC21
+\end{verbatim}
+
+\noindent
+it probably means your Automake installation is incomplete.  See the
+Automake item in \autoref{sec:build:req}.
+
+%% \subsection{git: fatal: Needed a single revision}
+%% You may experience something like this:
+%%
+%% \begin{shell}
+%% $ git submodule update --init
+%% fatal: Needed a single revision
+%% Unable to find current revision in submodule path 'gnulib'
+%% \end{shell}
+%%
+%% \noindent
+%% this is the sign that the initial checkout of \file{gnulib} went
+%% completely wrong (I don't know what makes this happen).  Chances are
+%% that the directory exists, but is empty.  Git does not seem to be able
+%% to overcome this situation, so:
+%%
+%% \begin{shell}
+%% $ rm -rf gnulib
+%% $ git submodule update --init
+%% \end{shell}
+%%
+%% \noindent
+%% et voila.
+
+\subsection{configure: error: The Java VM java failed}
+\label{sec:faq:jvm}
+
+If you experience the following failure:
+
+\begin{verbatim}
+checking if java works...
+configure: error: The Java VM java failed
+                 (see config.log, check the CLASSPATH?)
+\end{verbatim}
+
+\noindent
+and if you looked at \file{config.log}, you should find something like:
+
+\begin{verbatim}
+Exception in thread "main" java.lang.NoClassDefFoundError: Test
+Caused by: java.lang.ClassNotFoundException: Test
+         at java.net.URLClassLoader$1.run(URLClassLoader.java:202)
+         at java.security.AccessController.doPrivileged(Native Method)
+         at java.net.URLClassLoader.findClass(URLClassLoader.java:190)
+         at java.lang.ClassLoader.loadClass(ClassLoader.java:306)
+         at sun.misc.Launcher$AppClassLoader.loadClass(Launcher.java:301)
+         at java.lang.ClassLoader.loadClass(ClassLoader.java:247)
+ Could not find the main class: Test.  Program will exit.
+\end{verbatim}
+
+You might be trying to compile \usdk from a directory with non-ASCII
+characters in its full name (for instance
+\file{/home/jessy/Téléchargements/Sources}).  In that case the JVM fails to
+decode properly the path, and \command{configure} fails with the above
+message.
+
+Move you sources elsewhere, with only plain ASCII characters, such as
+\file{/home/jessy/Sources}.
+
+\subsection{\samp{make check} fails}
+
+Be sure to read \autoref{sec:build:check}.  In particular, run \samp{make
+  check} several times (see \autoref{sec:build:check} to know why).  If the
+failures remain, please submit the \file{test-suite.log} file(s) (see
+\autoref{sec:bug}).
+
+\subsection{check: error: Unable to load native library: libjava.jnilib}
+\label{sec:faq:jnilib}
+
+If you experience the following failure on Mac OS X:
+
+\begin{verbatim}
+$ urbi-launch-java --port-file server.port tests/all/All.jar
+Error occurred during initialization of VM
+Unable to load native library: libjava.jnilib
+\end{verbatim}
+
+\noindent
+then you have something in the \env{DYLD\_LIBRARY\_PATH} that annoys the
+Java VM.  Although we have not pinpointed it exactly, it seems to be a
+problem in our libjpeg: first run \samp{make -C sdk-remote/jpeg clean} then
+\samp{make -S sdk-remote/jpeg}.
+
+
+\section{Troubleshooting}
+
+\subsection{error while loading shared libraries: libport.so}
+
+If on GNU/Linux you get an error such as:
+
+\begin{shell}
+urbi-sdk/2.7.1 $ ./bin/urbi
+./bin/urbi: error while loading shared libraries: libport.so: \
+      cannot open shared object file: No such file or directory
+\end{shell}
+
+\noindent
+then check that \file{/proc} is properly mounted.  To make \usdk
+relocatable, executables and libraries use a relative path to their peers.
+To resolve these paths into absolute paths, the loader needs to know where
+the program is located, a feature provided by \file{/proc}.  If for instance
+you run \usdk in a chrooted environment, then it is possible that you forgot
+to mount \file{/proc}.  The traditional \command{ps} utility also needs
+\file{/proc} to be mounted, so running it would also help checking if the
+setup is complete.
+
+
+\subsection{Error 1723: ``A DLL required for this install to complete could
+  not be run.''}
+
+This error is raised when you try to install a program like
+\command{vcredist-x86.exe}.  This program use the ``Windows Installer''
+which is probably outdated on your system.
+
+To fix this problem, update the ``Windows Installer'' and re-start the
+installation of vcredist which should no longer fail.
+
+\subsection{When executing a program, the message ``The system cannot
+  execute the specified program.'' is raised.}
+\label{faq:vcredist:inst}
+
+This library is necessary to start running any application.  Run
+\file{vcredist-x86.exe} to install the missing libraries.
+
+If you have used the \usdk installer, it is \file{vcredist-x86.exe} in
+your install directory.  Otherwise download it from the Microsoft web site.
+Be sure to get the one corresponding to the right Visual \Cxx version.
+
+\subsection{When executing a program, the message ``This application has
+  failed to start'' is raised.}
+
+Same answer as \autoref{faq:vcredist:inst}.
+
+\subsection{The server dies with ``stack exhaustion''}
+Your program might be deeply recursive, or use large temporary
+objects.  Use \option{--stack-size} to augment the stack size, see
+\autoref{sec:tools:urbi}.
+
+Note that one stack is allocated per ``light thread''.  This can
+explain why programs that heavily rely on concurrency might succeed
+where sequential programs can fail.  For instance the following
+program is very likely to quickly exhaust the (single) stack.
+
+\begin{urbiunchecked}
+function consume (var num)
+{
+  if (num)
+    consume(num - 1) | consume(num - 1)
+}|;
+consume (512);
+\end{urbiunchecked}
+
+But if you use \lstinline{&} instead of \lstinline{|}, then each recursive
+call to \lstinline{consume} will be spawn with a fresh stack, and therefore
+none will run out of stack space:
+
+\begin{urbiunchecked}
+function consume (var num)
+{
+  if (num)
+    consume(num - 1) & consume(num - 1)
+}|;
+consume (512);
+\end{urbiunchecked}
+
+However your machine will run out of resources: this heavily
+concurrent program aims at creating no less than $2^{513}$ threads,
+about $2.68 \times 10^{156}$ (a 156-digit long number, by far larger
+than the number of atoms in the observable universe, estimated to
+$10^{80}$).
+
+\subsection{'myuobject: file not found'. What can I do?}
+If \command{urbi-launch} (or \command{urbi}) fails to load an UObject (a
+shared library or \acro{DLL}) although the file exists, then the most
+probable cause is an undefined symbol in your shared library.
+
+\subsubsection{Getting a better diagnostic}
+First, set the \env{GD\_LEVEL} environment variable (see
+\autoref{sec:tools:env}) to some high level, say \code{DUMP}, to log
+messages from \command{urbi-launch}.  You might notice that your library is
+not exactly where you thought \command{urbi-launch} was looking at.
+
+\subsubsection{GNU/Linux}
+A libltdl quirk prevents us from displaying a more accurate error message.
+You can use a tool named \command{ltrace} to obtain the exact error message.
+Ltrace is a standard package on most Linux distributions.  Run it with
+\samp{ltrace -C -s 1024 urbi-launch ...}, and look for lines containing
+\samp{dlerror} in the output. One will contain the exact message that
+occurred while trying to load your shared library.
+
+It is also useful to use \command{ldd} to check that the dependencies of
+your object are correct.  See the documentation of \command{ldd} on your
+machine (\samp{man ldd}).  The following run is successful: every request
+(left-hand side of \lstinline{=>}) is satisfied (by the file shown on the
+right-hand side).
+
+\begin{shell}
+$ all.so
+	linux-gate.so.1 =>  (0xb7fe8000)
+	libstdc++.so.6 => \
+          /usr/lib/gcc/i686-pc-linux-gnu/4.4.1/libstdc++.so.6 (0xb7eba000)
+	libm.so.6 => /lib/libm.so.6 (0xb7e94000)
+	libc.so.6 => /lib/libc.so.6 (0xb7d51000)
+	libgcc_s.so.1 => \
+          /usr/lib/gcc/i686-pc-linux-gnu/4.4.1/libgcc_s.so.1 (0xb7d35000)
+	/lib/ld-linux.so.2 (0xb7fe9000)
+\end{shell}
+
+The following run shows a broken dependency.
+
+\begin{shell}
+# A simple C++ program.
+$ echo 'int main() {}' >foo.cc
+
+# Compile it, and depend on the libport shared library.
+$ g++ foo.cc -L\var{urbi-root}/gostai/lib -lport -o foo
+
+# Run it.
+$ ./foo
+./foo: error while loading shared libraries: \
+  libport.so: cannot open shared object file: No such file or directory
+
+# See that ldd is unhappy.
+$ ldd foo
+	linux-gate.so.1 =>  (0xb7fa4000)
+	libport.so => not found
+	libstdc++.so.6 => \
+          /usr/lib/gcc/i686-pc-linux-gnu/4.4.1/libstdc++.so.6 (0xb7eae000)
+	libm.so.6 => /lib/libm.so.6 (0xb7e88000)
+	libgcc_s.so.1 => \
+          /usr/lib/gcc/i686-pc-linux-gnu/4.4.1/libgcc_s.so.1 (0xb7e6c000)
+	libc.so.6 => /lib/libc.so.6 (0xb7d29000)
+	/lib/ld-linux.so.2 (0xb7fa5000)
+\end{shell}
+
+Notice the \samp{not found} message.  The shared object could not be loaded
+because it is not found in the \dfn{runtime path}, which is the list of
+directories where the system looks for shared objects to be loaded when
+running a program.
+
+You may extend your \env{LD\_LIBRARY\_PATH} to include the missing
+directory.
+
+\begin{shell}
+$ export LD_LIBRARY_PATH=\var{urbi-root}/gostai/lib:$LD_LIBRARY_PATH
+# Run it.
+$ ./foo
+\end{shell}
+
+\subsubsection{Mac OS X}
+Set the \env{DYLD\_PRINT\_LIBRARIES} environment variable to 1 to make the
+shared library loader report the libraries it loads on the standard error
+stream.
+
+Use \command{otool} to check whether a shared object ``finds'' all its
+dependencies.
+
+\begin{shell}
+$ otool -L all.so
+all.so:
+	/usr/lib/libstdc++.6.dylib \
+          (compatibility version 7.0.0, current version 7.4.0)
+	/usr/lib/libgcc_s.1.dylib \
+          (compatibility version 1.0.0, current version 1.0.0)
+	/usr/lib/libSystem.B.dylib \
+          (compatibility version 1.0.0, current version 111.1.4)
+\end{shell}
+
+The following run shows a broken dependency.
+
+\begin{shell}
+# A simple C++ program.
+$ echo 'int main() {}' >foo.cc
+
+# Compile it, and depend on the libport shared library.
+$ g++ foo.cc -L\var{urbi-root}/gostai/lib -lport -o foo
+
+# Run it.
+$ ./foo
+dyld: Library not loaded: @loader_path/libport.dylib
+  Referenced from: /private/tmp/./foo
+  Reason: image not found
+
+# See that otool is unhappy.
+$ otool -L ./foo
+./foo:
+	@loader_path/libport.dylib \
+          (compatibility version 0.0.0, current version 0.0.0)
+	/usr/lib/libstdc++.6.dylib \
+          (compatibility version 7.0.0, current version 7.4.0)
+	/usr/lib/libgcc_s.1.dylib \
+          (compatibility version 1.0.0, current version 1.0.0)
+	/usr/lib/libSystem.B.dylib \
+          (compatibility version 1.0.0, current version 111.1.5)
+\end{shell}
+
+The fact that the \file{libport.dylib} was not found shows by the unresolved
+relative runtime-path: \samp{@loader\_path} still shows.  Use
+\env{DYLD\_LIBRARY\_PATH} to specify additional directories where the system
+should look for runtime dependencies.
+
+\begin{shell}
+$ DYLD_PRINT_LIBRARIES=1 \
+  DYLD_LIBRARY_PATH=\var{urbi-root}/lib:$DYLD_LIBRARY_PATH \
+  ./foo
+dyld: loaded: /private/tmp/./foo
+dyld: loaded: \var{urbi-root}/lib/libport.dylib
+dyld: loaded: /usr/lib/libstdc++.6.dylib
+dyld: loaded: /usr/lib/libgcc_s.1.dylib
+dyld: loaded: /usr/lib/libSystem.B.dylib
+dyld: loaded: \var{urbi-root}/lib/libboost_filesystem-mt.dylib
+dyld: loaded: \var{urbi-root}/lib/libboost_signals-mt.dylib
+dyld: loaded: \var{urbi-root}/lib/libboost_system-mt.dylib
+dyld: loaded: \var{urbi-root}/lib/libboost_thread-mt.dylib
+dyld: loaded: /usr/lib/system/libmathCommon.A.dylib
+$
+\end{shell}
+
+\subsubsection{Windows}
+
+If you are running Cygwin, then have a look at the following section, which
+uses some of its tools.
+
+A specific constraint, for which currently we do not have nice solutions, is
+that when Windows loads a \acro{DLL}, it looks for all its dependencies
+(i.e., other \acro{DLL} that are needed) in the directory from which the
+program was run, or in the \env{PATH}.  There is no way, that we are aware
+of, to embed in a \acro{DLL} the information about where the dependencies
+are.  When trying to load a \acro{DLL} with missing dependencies, say
+\file{foo.dll}, the error message will be something like ``can't open the
+module'', and worse yet, if you read the detailed log messages (by setting
+\env{GD\_LEVEL} to \code{DUMP} for instance) it will report ``failed with
+error 126: The specified module could not be found'' although the file
+\emph{is} there.
+
+So first try to understand what are the missing dependencies.  Under
+Windows, use \command{DependencyWalker} (see
+\url{http://dependencywalker.com}) to check that a given \acro{DLL} finds
+all its dependencies.  If some dependencies are not found either:
+\begin{itemize}
+\item change your \env{PATH} so that it goes via the directories that
+  contain the dependencies of your \acro{DLL}s;
+\item or copy these dependencies in the \file{bin/} directory of \usdk,
+  since that's the directory of the program, \file{urbi-launch}.
+\end{itemize}
+
+The first approach is more tractable.  Beware that dependencies may also
+have dependencies\ldots
+
+\paragraph{Cygwin}
+
+Use the \command{cygcheck.exe} program to check dependencies.  Beware that
+you must provide a qualified path to the file.  Chances are that if
+
+\begin{shell}
+$ cygcheck foo.dll
+\end{shell}
+
+\noindent
+does not work and will pretend that \file{foo.dll} does not exist (although
+it's \emph{right there}), then this will work:
+
+\begin{shell}
+$ cygcheck ./foo.dll
+\end{shell}
+
+In this output, look for lines like these:
+
+\begin{shell}
+cygcheck: track_down: could not find OgreMain.dll
+cygcheck: track_down: could not find OIS.dll
+cygcheck: track_down: could not find libuobject-vc90.dll
+\end{shell}
+
+\noindent
+and make sure that \file{OgreMain.dll}, \file{OIS.dll} and so forth are
+visible in the \env{PATH} (don't be worry about \file{libuobject-vc90.dll},
+\command{urbi-launch} will take care of it).  Note that when they are
+finally visible from the \env{PATH}, then you can run
+
+\begin{shell}
+$ cygcheck OgreMain.dll
+\end{shell}
+
+\noindent
+without having to specify the path.
+
+\section{\us}
+\subsection{Objects lifetime}
+
+\subsubsection{How do I create a new Object derivative?}
+Urbi is based on prototypes. To create a new Object derivative (which
+will inherit all the Object methods), you can do:
+
+\begin{urbiscript}
+var myObject = Object.new;
+[00000001] Object_0x76543210
+\end{urbiscript}
+
+\subsubsection{How do I destroy an Object?}
+There is no \lstindex{delete} in Urbi, for a number of reasons (see
+\autoref{sec:k1:delete}).  Objects are deleted when they are no longer
+used/referenced to.
+
+In practice, users who want to ``delete an object'' actually want to remove
+a slot --- see \autoref{sec:tut:objects}.  Users who want to clear an object
+can empty it --- see \autoref{sec:k1:delete}.
+
+Note that \lstinline{myObject = nil} does not explicitly destroy the
+object bound to the name \lstinline{myObject}, yet it may do
+so provided that \lstinline{myObject} was the last and only reference
+to this object.
+
+\subsection{Slots and variables}
+
+\subsubsection{Is the lobby a scope?}
+
+One frequently asked question is what visibility do variables have in
+\us, especially when they are declared at the top-level interactive
+loop.  In this section, we will see the mechanisms behind slots, local
+variables and scoping to fully explain this behavior and determine how
+to proceed to give the right visibility to variables.
+
+For instance, this code might seem confusing at first:
+
+\begin{urbiscript}
+var mind = 42;
+[00000002] 42
+function get()
+{
+  echo(mind);
+}|;
+get();
+[00000003] *** 42
+function Object.get()
+{
+  echo(mind)
+}|;
+// Where is my mind?
+Object.get;
+[00000004:error] !!! lookup failed: mind
+[00000004:error] !!!    called from: get
+\end{urbiscript}
+
+\paragraph{Local variables, slots and targets}
+The first point is to understand the difference between local variables and
+slots. Slots are simply object fields: a name in an object referring to
+another object, like members in \Cxx. They can be defined with the
+\refObject[Object]{setSlot} method, or with the \lstinline|var| keyword.
+
+\begin{urbiscript}
+// Add an `x' slot in Object, with value 51.
+Object.setSlot("x", 51);
+[00000000] 51
+// This is an equivalent version, for the `y' slot.
+var Object.y = 51;
+[00000000] 51
+
+// We can access these slots with the dot operator.
+Object.x + Object.y;
+[00000000] 102
+\end{urbiscript}
+
+On the other hand, local variables are not stored in an object, but in
+the execution stack: their lifetime spans from their declaration point
+to the end of the current scope. They are declared with the `var'
+keyword.
+
+\begin{urbiscript}
+function foo()
+{
+  // Declare an `x' local variable, with value 51.
+  var x = 51;
+  // `x' isn't stored in any object. It's simply
+  // available until the end of the scope.
+  echo(x);
+}|;
+\end{urbiscript}
+
+You probably noticed that in the last two code snippets, we used the
+\lstinline|var| keyword to declare both a slot in Object and a local
+variable. The rule is simple: \lstinline|var| declares a slot if an owning
+object is specified with the dot notation, as in %
+\lstinline|var owner.slot|, and a local variable if only an unqualified name
+is given, as in \lstinline|var name|.
+
+\begin{urbiscript}
+{
+  // Store a `kyle' slot in Object.
+  var Object.kyle = 42;
+  // Declare a local variable, limited to this scope.
+  var kenny = 42;
+}; // End of scope.
+[00000000] 42
+
+// Kyle survived.
+echo(Object.kyle);
+[00000000] *** 42
+
+// Oh my God, they killed Kenny.
+echo(kenny);
+[00000000:error] !!! lookup failed: kenny
+\end{urbiscript}
+
+There is however an exception to this rule: \lstinline|do| and
+\lstinline|class| scopes are designed to define a target where to
+store slots. Thus, in \lstinline|do| and \lstinline|class| scopes,
+even unqualified \lstinline|var| uses declare slots in the target.
+
+\begin{urbiscript}
+// Classical scope.
+{
+  var arm = 64; // Local to the scope.
+};
+[00000000] 64
+
+// Do scope, with target Object
+do (Object)
+{
+  var chocolate = 64; // Stored as a slot in Object.
+};
+[00000000] Object
+
+// No arm...
+echo(arm);
+[00000000:error] !!! lookup failed: arm
+// ... but still chocolate!
+echo(chocolate);
+[00000000] *** 64
+\end{urbiscript}
+
+Last tricky rule you must keep in mind: the top level of your connection ---
+your interactive session --- is a %
+\lstinline|do (lobby)| scope. That is, when you type \lstinline|var x|
+directly in your connection, it stores an \lstinline|x| slot in the
+\lstinline|lobby| object. So, what is this \dfn{lobby}? It's precisely the
+object designed to store your top-level variables. Every \urbi server has an
+unique \refObject{Lobby} (note the capital), and every connection has its
+\lstinline|lobby| that inherits the \lstinline|Lobby|. Thus, variables
+stored in \lstinline|Lobby| are accessible from any connection, while
+variables stored in a connection's \lstinline|lobby| are local to this
+connection.
+
+To fully understand how lobbies and the top-level work, we must
+understand how calls --- message passing --- work in \us.  In \us,
+every call has a target. For instance, in \lstinline|Object.x|,
+\refObject{Object} is the target of the \lstinline|x| call. If no
+target is specified, as in \lstinline|x| alone, the target defaults to
+\this, yielding \lstinline|this.x|. Knowing this rules,
+plus the fact that at the top-level \this is
+\lstinline|lobby|, we can understand better what happens when defining
+and accessing variables at the top-level:
+
+\begin{urbiscript}
+// Since we are at the top-level, this stores x in the lobby.
+// It is equivalent to `var lobby.x'.
+var x = "hello";
+[00000000] "hello"
+
+// This is an unqualified call, and is thus
+// equivalent to `this.x'.
+// That is, `lobby.x' would be equivalent.
+x;
+[00000000] "hello"
+\end{urbiscript}
+
+\paragraph{Solving the tricky example}
+We now know all the scoping rules required to explain the behavior of
+the first code snippet. First, let's determine why the first access to
+\lstinline|mind| works:
+
+\begin{urbiscript}
+// This is equivalent to `var lobby.myMind = 42'.
+var myMind = 42;
+[00000001] 42
+// This is equivalent to `function lobby.getMine...'
+function getMine()
+{
+  // This is equivalent to `echo(this.myMind)'
+  echo(myMind);
+}|;
+// This is equivalent to `this.getMine()', i.e. `lobby.getMine()'.
+getMine();
+[00000000] *** 42
+\end{urbiscript}
+
+Step by step:
+\begin{itemize}
+\item We create a \lstinline|myMind| slot in \lstinline|lobby|, with
+  value 42.
+\item We create a \lstinline|getMine| function in \lstinline|lobby|.
+\item We call the lobby's \lstinline|getMine| method.
+\item We access \lstinline|this.myMind| from within the method. Since
+  the method was called with \lstinline|lobby| as targetMine,
+  \this is \lstinline|lobby|, and \lstinline|lobby.x|
+  resolves to the previously defined 42.
+\end{itemize}
+
+We can also explain why the second test fails:
+
+\begin{urbiscript}
+// Create the `hisMind' slot in the lobby.
+var hisMind = 42;
+[00000000] 42
+// Define a `getHis' method in `Object'.
+function Object.getHis()
+{
+  // Equivalent to echo(this.hisMind).
+  echo(hisMind)
+}|;
+// Call Object's getHis method.
+Object.getHis;
+[00000000:error] !!! lookup failed: hisMind
+[00000000:error] !!!    called from: getHis
+\end{urbiscript}
+
+Step by step:
+\begin{itemize}
+\item We create a \lstinline|hisMind| slot in \lstinline|lobby|, with
+  value 42, like before.
+\item We create a \lstinline|getHis| function in \refObject{Object}.
+\item We call Object's \lstinline|getHis| method.
+\end{itemize}
+
+In the method, \this is \refObject{Object}. Thus \lstinline|hisMind|, which
+is \lstinline|this.hisMind|, fails because Object has no such slot.
+
+The key to understanding this behavior is that any unqualified call
+--- unless it refers to a local variable --- is destined to
+\this. Thus, variables stored in the lobby are only
+accessible from the top-level, or from functions that are targeted on
+the lobby.
+
+\paragraph{So, where to store global variables?}
+From these rules, we can deduce a simple statement: since unqualified slots
+are searched in \this, for a slot to be global, it must always be accessible
+through \this. One way to achieve this is to store the slot in
+\refObject{Object}, the ancestor of any object:
+
+\begin{urbiscript}
+var Object.global = 1664;
+[00000000] 1664
+
+function any_object()
+{
+  // This is equivalent to echo(this.global)
+  echo(global);
+}|;
+\end{urbiscript}
+
+In the previous example, typing \lstinline|global| will look for the
+\lstinline|global| slot in \this. Since \this necessarily inherits
+\refObject{Object}, it will necessarily be found.
+
+This solution would work; however, storing all global variables in
+\refObject{Object} wouldn't be very clean. \refObject{Object} is rather
+designed to hold methods shared by all objects. Instead, a
+\lstinline|Global| object exists. This object is a prototype of Object, so
+all his slots are accessible from Object, and thus from anywhere. So,
+creating a genuine global variable is as simple as storing it in
+\lstinline|Global|:
+
+\begin{urbiscript}
+var Global.g = "I'm global!";
+[00000000] "I'm global!"
+\end{urbiscript}
+
+Note that you might want to reproduce the \refObject{Global} system and
+create your own object to store your related variables in a more tidy
+fashion. This is for instance what is done for mathematical constants:
+
+\begin{urbiscript}
+// Store all constants here
+class Constants
+{
+  var Pi = 3.14;
+  var Euler = 2.17;
+  var One = 1;
+  // ...
+}|;
+// Make them global by making them accessible from Global.
+Global.addProto(Constants);
+[00000000] Global
+
+// Test it.
+Global.Pi;
+[00000000] 3.14
+Pi;
+[00000000] 3.14
+function Object.testPi() { echo(Pi) }|;
+42.testPi;
+[00000000] *** 3.14
+\end{urbiscript}
+
+\subsubsection{How do I add a new slot in an object?}
+To add a slot to an object \lstinline{O}, you have to use the
+\lstinline{var} keyword, which is syntactic sugar for the
+\lstinline{setSlot} method:
+
+\begin{urbiscript}
+var O2 = Object.new |
+// Syntax...
+var O2.mySlot1 = 42;
+[00000001] 42
+
+// and semantics.
+O2.setSlot("mySlot2", 23);
+[00000001] 23
+\end{urbiscript}
+
+Note that in a method, \lstinline{this} designates the current
+object.  It is needed to distinguish the name of a slot in the current
+object, versus a local variable name:
+
+\begin{urbiscript}
+{
+  // Create a new slot in the current object.
+  var this.bar = 42;
+
+  // Create a local variable, which will not be known anymore
+  // after we exit the current scope.
+  var qux = 23;
+}|
+qux;
+[00000001:error] !!! lookup failed: qux
+bar;
+[00000001] 42
+\end{urbiscript}
+
+
+\subsubsection{How do I modify a slot of my object?}
+Use the \lstinline|=| operator, which is syntactic sugar for the
+\refSlot[Object]{updateSlot} method.
+
+\begin{urbiscript}
+class O
+{
+  var mySlot = 42;
+}|
+// Sugarful.
+O.mySlot = 51;
+[00000001] 51
+
+// Sugar-free.
+O.updateSlot("mySlot", 23);
+[00000001] 23
+\end{urbiscript}
+
+\subsubsection{How do I create or modify a local variable?}
+Use \lstinline|var| and \lstinline|=|.
+
+\begin{urbiscript}
+// In two steps: definition, and initial assignment.
+var myLocalVariable;
+myLocalVariable = "foo";
+[00000001] "foo"
+// In a single step: definition with an initial value.
+var myOtherLocalVariable = "bar";
+[00000001] "bar"
+\end{urbiscript}
+
+
+\subsubsection{How do I make a constructor?}
+\index{constructor}
+You can define a method called \lstinline{init} which will be called
+automatically by \lstinline{new}. For example:
+
+\begin{urbiunchecked}
+class myObject
+{
+  function init(x, y)
+  {
+    var this.x = x;
+    var this.y = y;
+  };
+};
+myInstance = myObject.new(10, 20);
+\end{urbiunchecked}
+
+
+\subsubsection{How can I manipulate the list of prototypes of my objects?}
+The \lstindex{protos} method returns a list (which can be manipulated)
+containing the list of your object prototype.
+
+\begin{urbiunchecked}
+var myObject = Object.new;
+myObject.protos;
+[00000001] [Object]
+\end{urbiunchecked}
+
+\subsubsection{How can I know the slots available for a given object?}
+The \refSlot[Object]{localSlotNames} and \refSlot[Object]{allSlotNames}
+methods return respectively the local slot names and the local+inherited
+slot names.
+
+\subsubsection{How do I create a new function?}
+Functions are first class objects. That means that you can add them as
+any other slot in an object:
+
+\begin{urbiunchecked}
+var myObject = Object.new;
+var myObject.myFunction = function (x, y)
+  { echo ("myFunction called with " + x + " and " + y) };
+\end{urbiunchecked}
+
+You can also use the following notation to add a function to your
+object:
+
+\begin{urbiunchecked}
+var myObject = Object.new;
+function myObject.myFunction (x, y) { /* ... */ };
+\end{urbiunchecked}
+
+\noindent
+or even group definitions within a \lstinline{do} scope, which will
+automatically define new slots instead of local variables and
+functions:
+
+\begin{urbiunchecked}
+var myObject = Object.new;
+do (myObject)
+{
+  function myFunction (x, y) { /* ... */ };
+};
+\end{urbiunchecked}
+
+\noindent
+or group those two statements by using a convenient \lstinline{class}
+scope:
+
+\begin{urbiunchecked}
+class myObject
+{
+  function myFunction (x, y) { /* ... */ };
+};
+\end{urbiunchecked}
+
+
+\subsection{Tags}
+\index{tag}
+
+See \autoref{sec:tut:tags}, in the \us User Manual, for an
+introduction about Tags.  Then for a definition of the Tag objects
+(construction, use, slots, etc.), see \refObject{Tag}.
+
+\subsubsection{How do I create a tag?}
+See \autoref{stdlib:tag:ctor}.
+
+\subsubsection{How do I stop a tag?}
+Use the \lstinline|stop| method (see \autoref{sec:specs:tag:stop}).
+\begin{urbiunchecked}
+myTag.stop;
+\end{urbiunchecked}
+
+\subsubsection{Can tagged statements return a value?}
+Yes, by giving it as a parameter to \lstinline{stop}.  See
+\autoref{sec:specs:tag:stop}.
+
+
+\subsection{Events}
+\index{event}
+
+See \autoref{sec:tut:event-prog}, in the \us User Manual, for an
+introduction about event-based programming.  Then for a definition of
+the Event objects (construction, use, slots, etc.), see
+\refObject{Event}.
+
+\subsubsection{How do I create an event?}
+Events are objects, and must be created as any object by using
+\lstinline{new} to create derivatives of the \lstinline{Event} object.
+
+\begin{urbiunchecked}
+var ev = Event.new;
+\end{urbiunchecked}
+
+See \autoref{sec:stdlib:event:ctor}.
+
+\subsubsection{How do I emit an event?}
+Use the \lstinline|!| operator.
+
+\begin{urbiunchecked}
+ev!(1, "foo");
+\end{urbiunchecked}
+
+\subsubsection{How do I catch an event?}
+Use the \lstinline|at(\var{event}?\var{args})| construct (see
+\autoref{sec:lang:at}).
+
+\begin{urbiunchecked}
+at(ev?(1, var msg))
+  echo ("Received event with 1 and message " + msg);
+\end{urbiunchecked}
+
+The \lstinline{?} marker indicates that we are looking for an event instead
+of a Boolean condition. The construct \lstinline{var msg} indicates that the
+\lstinline{msg} variable will be bound (as a local variable) in the body
+part of the \lstinline{at} construct, with whatever value is present in the
+event that triggered the \lstinline{at}.
+
+\subsection{Standard Library}
+
+\subsubsection{How can I iterate over a list?}
+\index{list}
+
+Use the \lstinline{for} construct (\autoref{sec:lang:foreach}), or the
+\refSlot[List]{each} method:
+
+\begin{urbiscript}
+for (var i: [10, 11, 12]) echo (i);
+[00000001] *** 10
+[00000002] *** 11
+[00000003] *** 12
+\end{urbiscript}
+
+\section{UObjects}
+\index{UObject}
+\subsection{Is the UObject API Thread-Safe?}
+\index{thread-safety} We are receiving a lot of questions on thread-safety
+issues in UObject code. So here comes a quick explanation on how things work
+in plugin and remote mode, with a focus on those questions.
+
+\subsubsection{Plugin mode}
+
+In \dfn{plugin mode}, all the UObject callbacks (timer, bound functions,
+notifyChange and notifyAccess targets) are called synchronously in the same
+thread that executes \us code. All reads and writes to \urbi variables,
+through \dfn{UVar}, are done synchronously. Access to the UObject API
+(reading/writing UVars, using \lstinline|call()|...) is possible from other
+threads, though those operations are currently using one serialization lock
+with the main thread: each UObject API call from an other thread will wait
+until the main thread is ready to process it.
+
+
+\subsubsection{Remote mode}
+
+\paragraph{Execution model}
+
+In \dfn{remote mode}, a single thread is also used to handle all
+UObject callbacks, for all the UObjects in the same executable. It
+means that two bound functions registered from the same executable
+will never execute in parallel. Consider this sample \Cxx function:
+
+\begin{cxx}
+int MyObject::test(int delay)
+{
+  static const int callNumber = 0;
+  int call = ++callNumber;
+  std::cerr << "in "  << call << ": " << time() << std::endl;
+  sleep(delay);
+  std::cerr << "out " << call << ": " << time() << std::endl;
+  return 0;
+}
+\end{cxx}
+
+If this function is bound in a remote uobject, the following code:
+
+\begin{cxx}
+MyObject.test(1), MyObject.test(1)
+\end{cxx}
+
+\noindent
+will produce the following output (assuming the first call to
+\lstinline|time| returns 1000).
+
+\begin{verbatim}
+in 1: 1000
+out 1: 1001
+in 2: 1001
+out 2: 1002
+\end{verbatim}
+
+However, the execution of the \urbi kernel is not ``stuck'' while the
+remote function executes, as the following code demonstrates:
+
+\begin{urbiunchecked}
+var t = Tag.new;
+test(1) | t.stop,
+t:every(300ms)
+  cerr << "running";
+\end{urbiunchecked}
+
+The corresponding output is (mixing the kernel and the remote outputs):
+
+\begin{verbatim}
+[0] running
+in 1: 1000
+[300] running
+[600] running
+[900] running
+out 1: 1001
+\end{verbatim}
+
+As you can see, \urbi semantics is respected (the execution flow is
+stuck until the return value from the function is returned), but the
+kernel is not stuck: other pieces of code are still running.
+
+\paragraph{Thread-safety}
+
+The liburbi and the UObject API in remote mode are thread safe. All
+operations can be performed in any thread. As always, care must be
+taken for all non-atomic operations. For example, the following
+function is not thread safe:
+
+\begin{cxx}
+void
+writeToVar(UClient* cl, std::string varName, std::string value)
+{
+  (*cl) << varName << " = " << value << ";";
+}
+\end{cxx}
+
+Two simultaneous calls to this function from different threads can
+result in the two messages being mixed.  The following implementation
+of the same function is thread-safe however:
+
+\begin{cxx}
+void
+writeToVar(UClient* cl, std::string varName, std::string value)
+{
+  std::stringstream s;
+  s << varName << " = " << value << ";";
+  (*cl) << s.str();
+}
+\end{cxx}
+
+\noindent
+since a single call to UClient's \lstinline[language=C++]|operator <<|
+is thread-safe.
+
+
+\section{Miscellaneous}
+\subsection{What has changed since the latest release?}
+See \autoref{sec:news}.
+
+\subsection{How can I contribute to the code?}
+\label{sec:faq:contribute}
+You are encouraged to submit patches to \email{kernel@lists.gostai.com},
+where they will be reviewed by the \urbi team.  If they fit the project and
+satisfy the quality requirements, they will be accepted.  As of today there
+is no public repository for \usdk (there will be, eventually), patches
+should be made against the latest source tarballs (see
+\url{\downloadUrl/urbi/2.x/}).
+
+Even though \usdk is free software (GNU Affero General Public License 3+,
+see the \file{LICENSE.txt} file), licensing patches under GNU AGPL3+ does
+not suffice to support our dual licensed products.  This situation is
+common, see for instance the case of Oracle VM Virtual Box,
+\url{http://www.virtualbox.org/wiki/Contributor_information}.
+
+There are different means to ensure that your contributions to \usdk can be
+accepted.  None require that you ``give away your copyright''.  What is
+needed, is the right to use contributions, which can be achieved in two
+ways:
+\begin{itemize}
+\item Sign the Urbi Open Source Contributor Agreement, see
+  \autoref{sec:license:uosca}.  This may take some time initially, but it
+  will cover all your future contributions.
+\item Submit your contribution under the Expat license (also known as the
+  ``MIT license'', see \autoref{sec:license:expat}), or under the modified
+  BSD license (see \autoref{sec:license:bsd}).
+\end{itemize}
+
+
+
+\subsection{How do I report a bug?}
+\label{sec:bug}
+Bug reports should be sent to \email{kernel-bugs@lists.gostai.com}, it will
+be addressed as fast as possible.  Please, be sure to read the FAQ (possibly
+updated on our web site), and to have checked that no more recent release
+fixed your issue.
+
+Each bug report should contain a self-contained example, which can be tested
+by our team. Using self-contained code, i.e., code that does not depend on
+other code, helps ensuring that we will be able to duplicate the problem and
+analyze it promptly. It will also help us integrating the code snippet into
+our non-regression test suite so that the bug does not reappear in the
+future.
+
+If your report identifies a bug in the \urbi kernel or its dependencies, we
+will prepare a fix to be integrated in a later release. If the bug takes
+some time to fix, we may provide you with a workaround so that your
+developments are not delayed.
+
+In your bug report, specify the \urbi version you are using (run \samp{urbi
+  --version}) and whether this bug is blocking you or not.  Please keep
+\email{kernel-bugs@lists.gostai.com} in copy of all your correspondence: do
+not reply individually to a member of our team, as this may slow down the
+handling of the report.
+
+If your bug report is about a failing \samp{make check}, first be sure to
+read \autoref{sec:build:check}.
+
+\ifx\ifHtml\undefined\else
+  \let\subsubsection\subsubsectionSave
+\fi
+
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

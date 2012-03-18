@@ -1,0 +1,170 @@
+%% Copyright (C) 2010, 2011, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Finalizable}
+
+Objects that derive from this object will execute their \refSlot{finalize}
+routine right before being destroyed (reclaimed) by the system.  It is
+comparable to a \dfn{destructor}.
+
+\subsection{Example}
+
+The following object is set up to die verbosely.
+
+\begin{urbiscript}
+var obj =
+  do (Finalizable.new)
+  {
+    function finalize ()
+    {
+      echo ("Ouch");
+    }
+  }|;
+\end{urbiscript}
+
+\noindent
+It is reclaimed by the system when it is no longer referenced by any
+other object.
+
+\begin{urbiscript}
+var alias = obj|;
+obj = nil|;
+\end{urbiscript}
+
+\noindent
+Here, the object is still alive, since \lstinline|alias| references
+it.   Once it no longer does, the object dies.
+
+\begin{urbiscript}
+alias = nil|;
+[00000004] *** Ouch
+\end{urbiscript}
+
+\subsection{Prototypes}
+
+\begin{refObjects}
+\item[Object]
+\end{refObjects}
+
+\subsection{Construction}
+
+The constructor takes no argument.
+
+\begin{urbiscript}
+Finalizable.new;
+[00000527] Finalizable_0x135360
+\end{urbiscript}
+
+\bigskip
+
+Because of specific constraints of Finalizable, you cannot change the
+prototype of an object to make it ``finalizable'': it \emph{must} be an
+instance of Finalizable from its inception.
+
+There, instead of these two invalid constructs,
+
+\begin{urbiscript}
+class o1 : Finalizable.new
+{
+  function finalize()
+  {
+    echo("Ouch");
+  }
+}|;
+[00000008:error] !!! apply: cannot inherit from a Finalizable without being one
+
+class o2
+{
+  protos = [Finalizable];
+  function finalize()
+  {
+    echo("Ouch");
+  }
+}|;
+[00000010:error] !!! updateSlot: cannot inherit from a Finalizable without being one
+\end{urbiscript}
+
+write:
+
+\begin{urbiscript}
+var o3 =
+  do (Finalizable.new)
+  {
+    function finalize()
+    {
+      echo("Ouch");
+    }
+  }|;
+\end{urbiscript}
+
+\bigskip
+
+If you need multiple prototypes, do as follows.
+
+\begin{urbiscript}
+class Global.Foo
+{
+  function init()
+  {
+    echo("1");
+  };
+}|;
+
+class Global.FinalizableFoo
+{
+  addProto(Foo.new);
+
+  function 'new'()
+  {
+    var r = clone |
+    r.init |
+    Finalizable.new.addProto(r);
+  };
+
+  function init()
+  {
+    echo("2");
+  };
+
+  function finalize()
+  {
+    echo("3");
+  };
+
+}|;
+
+var i = FinalizableFoo.new|;
+[00000117] *** 1
+[00000117] *** 2
+
+i = nil;
+[00000117] *** 3
+\end{urbiscript}
+
+
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+\item[finalize] a simple function that takes no argument that will be
+  evaluated when the object is reclaimed.  Its return value is
+  ignored.
+\begin{urbiscript}
+Finalizable.new.setSlot("finalize", function() { echo("Ouch") })|;
+[00033240] *** Ouch
+\end{urbiscript}
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

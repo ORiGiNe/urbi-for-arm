@@ -1,0 +1,239 @@
+syncline << "doc/specs/exception.tex:35";
+[01234567:#] "doc/specs/exception.tex:35"
+//#line 35 "doc/specs/exception.tex"
+Exception.new("something bad has happened!");
+[00000001] Exception `something bad has happened!'
+Exception.Arity.new("myRoutine", 1, 10, 23);
+[00000002] Exception.Arity `myRoutine: expected between 10 and 23 arguments, given 1'
+
+syncline << "doc/specs/exception.tex:52";
+[01234567:#] "doc/specs/exception.tex:52"
+//#line 52 "doc/specs/exception.tex"
+//#push 1 "file.u"
+try
+{
+  function innermost () { throw Exception.new("Ouch") };
+  function inner     () { innermost() };
+  function outer     () { inner() };
+  function outermost () { outer() };
+
+  outermost();
+}
+catch (var e)
+{
+  assert
+  {
+    e.backtrace[0].location.asString == "file.u:4.27-37";
+    e.backtrace[0].name == "innermost";
+
+    e.backtrace[1].location.asString == "file.u:5.27-33";
+    e.backtrace[1].name == "inner";
+
+    e.backtrace[2].location.asString == "file.u:6.27-33";
+    e.backtrace[2].name == "outer";
+
+    e.backtrace[3].location.asString == "file.u:8.3-13";
+    e.backtrace[3].name == "outermost";
+  };
+};
+//#pop
+
+syncline << "doc/specs/exception.tex:85";
+[01234567:#] "doc/specs/exception.tex:85"
+//#line 85 "doc/specs/exception.tex"
+eval("1/0");
+[00090441:error] !!! 1.1-3: /: division by 0
+[00090441:error] !!!    called from: eval
+try
+{
+  eval("1/0");
+}
+catch (var e)
+{
+  assert (e.location.asString == "1.1-3");
+};
+
+syncline << "doc/specs/exception.tex:100";
+[01234567:#] "doc/specs/exception.tex:100"
+//#line 100 "doc/specs/exception.tex"
+assert {
+Exception.new("Ouch").message == "Ouch";
+};
+
+syncline << "doc/specs/exception.tex:115";
+[01234567:#] "doc/specs/exception.tex:115"
+//#line 115 "doc/specs/exception.tex"
+assert {
+Exception.Argument
+  .new("myRoutine", 3, Exception.Type.new("19/11/2010", Date))
+  .asString
+== "myRoutine: argument 3: unexpected \"19/11/2010\", expected a Date";
+};
+
+syncline << "doc/specs/exception.tex:126";
+[01234567:#] "doc/specs/exception.tex:126"
+//#line 126 "doc/specs/exception.tex"
+assert {
+Exception.ArgumentType
+  .new("myRoutine", 1, "hisResult", "Expectation")
+  .asString
+== "myRoutine: argument 1: unexpected \"hisResult\", expected a String";
+[00000003:warning] !!! `Exception.ArgumentType' is deprecated
+};
+
+syncline << "doc/specs/exception.tex:138";
+[01234567:#] "doc/specs/exception.tex:138"
+//#line 138 "doc/specs/exception.tex"
+assert {
+Exception.Arity.new("myRoutine", 1, 10, 23).asString
+  == "myRoutine: expected between 10 and 23 arguments, given 1";
+};
+
+syncline << "doc/specs/exception.tex:156";
+[01234567:#] "doc/specs/exception.tex:156"
+//#line 156 "doc/specs/exception.tex"
+assert {
+Exception.BadInteger.new("myRoutine", "bad integer: %s", 12).asString
+  == "myRoutine: bad integer: 12";
+};
+
+syncline << "doc/specs/exception.tex:165";
+[01234567:#] "doc/specs/exception.tex:165"
+//#line 165 "doc/specs/exception.tex"
+assert {
+Exception.BadNumber.new("myRoutine", "bad number: %s", 12.34).asString
+  == "myRoutine: bad number: 12.34";
+};
+
+syncline << "doc/specs/exception.tex:172";
+[01234567:#] "doc/specs/exception.tex:172"
+//#line 172 "doc/specs/exception.tex"
+assert {
+Exception.Constness.new.asString
+  == "cannot modify const slot";
+};
+
+syncline << "doc/specs/exception.tex:179";
+[01234567:#] "doc/specs/exception.tex:179"
+//#line 179 "doc/specs/exception.tex"
+assert {
+Exception.FileNotFound.new("foo").asString
+  == "file not found: foo";
+};
+
+syncline << "doc/specs/exception.tex:187";
+[01234567:#] "doc/specs/exception.tex:187"
+//#line 187 "doc/specs/exception.tex"
+assert {
+Exception.ImplicitTagComponent.new.asString
+  == "invalid component in implicit tag";
+};
+
+syncline << "doc/specs/exception.tex:196";
+[01234567:#] "doc/specs/exception.tex:196"
+//#line 196 "doc/specs/exception.tex"
+assert {
+Exception.Lookup.new(Object, "GetSlot").asString
+  == "lookup failed: Object";
+};
+
+syncline << "doc/specs/exception.tex:203";
+[01234567:#] "doc/specs/exception.tex:203"
+//#line 203 "doc/specs/exception.tex"
+assert {
+Exception.MatchFailure.new.asString
+  == "pattern did not match";
+};
+
+syncline << "doc/specs/exception.tex:211";
+[01234567:#] "doc/specs/exception.tex:211"
+//#line 211 "doc/specs/exception.tex"
+assert {
+Exception.NegativeNumber.new("myRoutine", -12).asString
+== "myRoutine: unexpected -12, expected non-negative number";
+};
+
+syncline << "doc/specs/exception.tex:219";
+[01234567:#] "doc/specs/exception.tex:219"
+//#line 219 "doc/specs/exception.tex"
+assert {
+Exception.NonPositiveNumber.new("myRoutine", -12).asString
+== "myRoutine: unexpected -12, expected positive number";
+};
+
+syncline << "doc/specs/exception.tex:227";
+[01234567:#] "doc/specs/exception.tex:227"
+//#line 227 "doc/specs/exception.tex"
+assert {
+Exception.Primitive.new("myRoutine", "cannot do that").asString
+  == "myRoutine: cannot do that";
+};
+
+syncline << "doc/specs/exception.tex:234";
+[01234567:#] "doc/specs/exception.tex:234"
+//#line 234 "doc/specs/exception.tex"
+assert {
+Exception.Redefinition.new("foo").asString
+  == "slot redefinition: foo";
+};
+
+syncline << "doc/specs/exception.tex:241";
+[01234567:#] "doc/specs/exception.tex:241"
+//#line 241 "doc/specs/exception.tex"
+assert {
+Exception.Scheduling.new("cannot schedule").asString
+  == "cannot schedule";
+};
+
+syncline << "doc/specs/exception.tex:255";
+[01234567:#] "doc/specs/exception.tex:255"
+//#line 255 "doc/specs/exception.tex"
+assert {
+Exception.Syntax
+  .new(Location.new(Position.new("file.u", 14, 25)),
+       "unexpected pouCharque", "file.u")
+  .asString
+== "file.u:14.25: syntax error: unexpected pouCharque";
+};
+
+syncline << "doc/specs/exception.tex:263";
+[01234567:#] "doc/specs/exception.tex:263"
+//#line 263 "doc/specs/exception.tex"
+try
+{
+  eval("1 / / 0");
+}
+catch (var e)
+{
+  assert
+  {
+    e.isA(Exception.Syntax);
+    e.loc.asString == "1.5";
+    e.input == "1 / / 0";
+    e.message == "unexpected /";
+  }
+};
+
+syncline << "doc/specs/exception.tex:283";
+[01234567:#] "doc/specs/exception.tex:283"
+//#line 283 "doc/specs/exception.tex"
+assert {
+Exception.Type.new("hisResult", "Expectation").asString
+  == "unexpected \"hisResult\", expected a String";
+};
+
+syncline << "doc/specs/exception.tex:290";
+[01234567:#] "doc/specs/exception.tex:290"
+//#line 290 "doc/specs/exception.tex"
+assert {
+Exception.UnexpectedVoid.new.asString
+  == "unexpected void";
+};
+
+syncline << "doc/specs/exception.tex:294";
+[01234567:#] "doc/specs/exception.tex:294"
+//#line 294 "doc/specs/exception.tex"
+var a = void;
+a;
+[00000016:error] !!! unexpected void
+[00000017:error] !!! lookup failed: a

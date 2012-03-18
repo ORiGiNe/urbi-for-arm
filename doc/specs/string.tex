@@ -1,0 +1,400 @@
+%% Copyright (C) 2009-2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{String}
+
+A \dfn{string} is a sequence of characters.
+
+\subsection{Prototypes}
+\begin{refObjects}
+\item[Comparable]
+\item[Orderable]
+\item[RangeIterable]
+\end{refObjects}
+
+\subsection{Construction}
+Fresh Strings can easily be built using the literal syntax.  Several
+escaping sequences (the traditional ones and \us specific ones) allow
+to insert special characters.  Consecutive string literals are merged
+together.  See \autoref{sec:us-syn-lit-string} for details and
+examples.
+
+A null String can also be obtained with \lstinline|String|'s
+\lstinline|new| method.
+
+\begin{urbiassert}
+String.new == "";
+String == "";
+"123".new == "123";
+\end{urbiassert}
+
+\subsection{Slots}
+\begin{urbiscriptapi}
+\item[asFloat] If the whole content of \this is an number, return it as a
+  \refObject{Float}, otherwise raise an error.
+\begin{urbiscript}
+assert
+{
+     "23".asFloat == 23;
+  "23.03".asFloat == 23.03;
+};
+
+"123abc".asFloat;
+[00000001:error] !!! asFloat: cannot convert to float: "123abc"
+\end{urbiscript}
+
+\item[asList]
+  Return a List of one-letter Strings that, concatenated, equal
+  \this.  This allows to use \lstinline|for| to iterate
+  over the string.
+\begin{urbiscript}
+assert("123".asList == ["1", "2", "3"]);
+for (var v : "123")
+  echo(v);
+[00000001] *** 1
+[00000001] *** 2
+[00000001] *** 3
+\end{urbiscript}
+
+\item[asPrintable]
+  Return \this as a literal (escaped) string.
+\begin{urbiassert}
+"foo".asPrintable == "\"foo\"";
+"foo".asPrintable.asPrintable == "\"\\\"foo\\\"\"";
+\end{urbiassert}
+
+\item[asString]
+  Return \this.
+\begin{urbiassert}
+"\"foo\"".asString == "\"foo\"";
+\end{urbiassert}
+
+\item[closest](<set>)%
+  Return the string in \var{set} that is the closest (in the sense of
+  \refSlot{distance}) to \this.  If there is no convincing match,
+  return \lstinline|nil|.
+\begin{urbiassert}
+"foo".closest(["foo", "baz", "qux", "quux"]) == "foo";
+"bar".closest(["foo", "baz", "qux", "quux"]) == "baz";
+"FOO".closest(["foo", "bar", "baz"])         == "foo";
+"qux".closest(["foo", "bar", "baz"])         == nil;
+\end{urbiassert}
+
+\item[distance](<other>)%
+  Return the
+  \href{http://en.wikipedia.org/wiki/Damerau-Levenshtein_distance}
+  {Damerau-Levenshtein distance} between \this and
+  \var{other}.  The more alike the strings are, the smaller the
+  distance is.
+\begin{urbiassert}
+"foo".distance("foo") == 0;
+"bar".distance("baz") == 1;
+"foo".distance("bar") == 3;
+\end{urbiassert}
+
+
+\item[empty] Whether this is the empty string.
+\begin{urbiassert}
+  "".empty;
+!"x".empty;
+\end{urbiassert}
+
+\item[fresh] Return a String that has never been used as an identifier,
+  prefixed by \this.  It can safely be used with
+  \refSlot[Object]{setSlot} and so forth.
+\begin{urbiassert}
+String.fresh == "_5";
+"foo".fresh == "foo_6";
+\end{urbiassert}
+
+\item[fromAscii](<v>) The character corresponding to the integer \var{v}
+  according to the \acro{ASCII} coding.  See also \refSlot{toAscii}.
+\begin{urbiassert}
+String.fromAscii(  97) == "a";
+String.fromAscii(  98) == "b";
+String.fromAscii(0xFF) == "\xff";
+[0, 1, 2, 254, 255]
+  .map(function (var v) { String.fromAscii(v) })
+  .map(function (var v) { v.toAscii })
+  == [0, 1, 2, 254, 255];
+\end{urbiassert}
+
+\item[hash]%
+  A \refObject{Hash} object corresponding to this string value. Two string
+  hashes are equal if the string are equal. See \refSlot[Object]{hash}.
+
+\begin{urbiassert}
+"".hash.isA(Hash);
+"foo".hash == "foo".hash;
+"foo".hash != "bar".hash;
+\end{urbiassert}
+
+\item Character handling functions\\
+  Here is a map of how the original 127-character ASCII set is
+  considered by each function (a \textbullet{} indicates that the function
+  returns true if all characters of \this are on the
+  row).
+
+\begin{tabular}{|l||l||c|c|c|c|c|c|c|c|c|c|c|}
+  \hline
+  &&&&&&&&&&&&\\
+  ASCII values & Characters & \begin{sideways}iscntrl\end{sideways}
+    & \begin{sideways}isspace\end{sideways}
+    & \begin{sideways}isupper\end{sideways}
+    & \begin{sideways}islower\end{sideways}
+    & \begin{sideways}isalpha\end{sideways}
+    & \begin{sideways}isdigit\end{sideways}
+    & \begin{sideways}isxdigit\end{sideways}
+    & \begin{sideways}isalnum\end{sideways}
+    & \begin{sideways}ispunct\end{sideways}
+    & \begin{sideways}isgraph\end{sideways}
+    & \begin{sideways}print \end{sideways}\\ \hline \hline
+  0x00 .. 0x08 & & \textbullet & & & & & & & & & &\\ \hline
+  0x09 .. 0x0D & \textbackslash{}t, \textbackslash{}f,
+  \textbackslash{}v, \textbackslash{}n, \textbackslash{}r &
+  \textbullet & \textbullet & & & & & & & & &\\ \hline
+  0x0E .. 0x1F & & \textbullet & & & & & & & & & &\\ \hline
+  0x20 & space (' ') & & \textbullet & & & & & & & & & \textbullet\\ \hline
+  0x21 .. 0x2F & \verb|!"#$%&'()*+,-./| & & & & & & & & & \textbullet & \textbullet & \textbullet\\ \hline
+  0x30 .. 0x39 & \verb|0-9| & & & & & & \textbullet & \textbullet & \textbullet & & \textbullet & \textbullet\\ \hline
+  0x3a .. 0x40 & \verb|:;<=>?@| & & & & & & & & & \textbullet & \textbullet & \textbullet\\ \hline
+  0x41 .. 0x46 & \verb|A-F| & & & \textbullet & & \textbullet & & \textbullet & \textbullet & & \textbullet & \textbullet\\ \hline
+  0x47 .. 0x5A & \verb|G-Z| & & & \textbullet & & \textbullet & & & \textbullet & & \textbullet & \textbullet\\ \hline
+  0x5B .. 0x60 & \verb|[\]^{}_`| & & & & & & & & & \textbullet & \textbullet & \textbullet\\ \hline
+  0x61 .. 0x66 & \verb|a-f| & & & & \textbullet & \textbullet & & \textbullet & \textbullet & & \textbullet & \textbullet\\ \hline
+  0x67 .. 0x7A & \verb|g-z| & & & & \textbullet & \textbullet & & & \textbullet & & \textbullet & \textbullet\\ \hline
+  0x7B .. 0x7E & \verb-{|}~- & & & & & & & & & \textbullet & \textbullet & \textbullet\\ \hline
+  0x7F & (DEL) &  \textbullet & & & & & & & & & &\\
+  \hline
+\end{tabular}
+
+\begin{urbiassert}
+"".isDigit;
+"0123456789".isDigit;
+!"a".isDigit;
+
+"".isLower;
+"lower".isLower;
+! "Not Lower".isLower;
+
+"".isUpper;
+"UPPER".isUpper;
+! "Not Upper".isUpper;
+\end{urbiassert}
+
+%%% FIXME: Optional arguments.
+\item[join](<list>, <prefix>, <suffix>)%
+  Glue the result of \refSlot{asString} applied to the members of
+  \var{list}, separated by \this, and embedded in a pair
+  \var{prefix}/\var{suffix}.
+\begin{urbiassert}
+"|".join([1, 2, 3], "(", ")")      == "(1|2|3)";
+", ".join([1, [2], "3"], "[", "]") == "[1, [2], 3]";
+\end{urbiassert}
+
+
+\item[length] The number of characters in the string.  Currently, this is a
+  synonym of \refSlot{size}.
+\begin{urbiassert}
+"foo".length == 3;
+   "".length == 0;
+\end{urbiassert}
+
+
+\item[replace](<from>, <to>)%
+  Replace every occurrence of the string \var{from} in
+  \this by \var{to}, and return the result.
+  \this is not modified.
+\begin{urbiassert}
+"Hello, World!".replace("Hello", "Bonjour")
+                      .replace("World!", "Monde !") ==
+       "Bonjour, Monde !";
+\end{urbiassert}
+
+\item[size]
+  The size of the string.
+\begin{urbiassert}
+"foo".size == 3;
+   "".size == 0;
+\end{urbiassert}
+
+%%% FIXME: incorrect rendering: we lose the backslashes from the
+%%% separators.
+%\item[split](<sep> = [" ", "\t", "\n", "\r"], <lim> = -1, <keepSep> = false, <keepEmpty> = true)%
+\item \labelSlot{split}%
+  \lstinline|(\var{sep} = [" ", "\t", "\n", "\r"], \var{lim} = -1, \var{keepSep} = false, \var{keepEmpty} = true)|\\
+  Split \this on the separator \var{sep}, in at most \var{lim}
+  components, which include the separator if \var{keepSep}, and the
+  empty components of \var{keepEmpty}.  Return a list of strings.
+
+  The separator, \var{sep}, can be a string.
+
+\begin{urbiassert}
+       "a,b;c".split(",") == ["a", "b;c"];
+       "a,b;c".split(";") == ["a,b", "c"];
+      "foobar".split("x") == ["foobar"];
+     "foobar".split("ob") == ["fo", "ar"];
+\end{urbiassert}
+
+\noindent
+It can also be a list of strings.
+
+\begin{urbiassert}
+"a,b;c".split([",", ";"]) == ["a", "b", "c"];
+\end{urbiassert}
+
+\noindent
+By default splitting is performed on white-spaces:
+
+\begin{urbiassert}
+"  abc  def\tghi\n".split == ["abc", "def", "ghi"];
+\end{urbiassert}
+
+\noindent
+Splitting on the empty string stands for splitting between each character:
+
+\begin{urbiassert}
+"foobar".split("") == ["f", "o", "o", "b", "a", "r"];
+\end{urbiassert}
+
+The limit \var{lim} indicates a maximum number of splits that can occur. A
+negative number corresponds to no limit:
+
+\begin{urbiassert}
+"a:b:c".split(":",  1) == ["a", "b:c"];
+"a:b:c".split(":", -1) == ["a", "b", "c"];
+\end{urbiassert}
+
+\var{keepSep} indicates whether to keep delimiters in the result:
+
+\begin{urbiassert}
+"aaa:bbb;ccc".split([":", ";"], -1, false) == ["aaa",      "bbb",      "ccc"];
+"aaa:bbb;ccc".split([":", ";"], -1, true)  == ["aaa", ":", "bbb", ";", "ccc"];
+\end{urbiassert}
+
+\var{keepEmpty} indicates whether to keep empty elements:
+
+\begin{urbiassert}
+"foobar".split("o")                   == ["f", "", "bar"];
+"foobar".split("o", -1, false, true)  == ["f", "", "bar"];
+"foobar".split("o", -1, false, false) == ["f",     "bar"];
+\end{urbiassert}
+
+
+\item[toAscii] Convert the first character of \this to its integer value in
+  the \acro{ASCII} coding.  See also \refSlot{fromAscii}.
+\begin{urbiassert}
+   "a".toAscii == 97;
+   "b".toAscii == 98;
+"\xff".toAscii == 0xff;
+"Hello, World!\n"
+  .asList
+  .map(function (var v) { v.toAscii })
+  .map(function (var v) { String.fromAscii(v) })
+  .join
+  == "Hello, World!\n";
+\end{urbiassert}
+
+\item[toLower]
+  Make lower case every upper case character in \this and
+  return the result.  \this is not modified.
+\begin{urbiassert}
+"Hello, World!".toLower == "hello, world!";
+\end{urbiassert}
+
+\item[toUpper]
+  Make upper case every lower case character in \this and
+  return the result.  \this is not modified.
+\begin{urbiassert}
+"Hello, World!".toUpper == "HELLO, WORLD!";
+\end{urbiassert}
+
+\item['=='](<that>)%
+  Whether \this and \var{that} are the same string.
+\begin{urbiassert}
+  "" == "";        !("" != "");
+!("" == "\0");       "" != "\0";
+
+  "0" == "0";      !("0" != "0");
+!("0" == "1");       "0" != "1";
+!("1" == "0");       "1" != "0";
+\end{urbiassert}
+
+\item \lstinline|'%'(\var{args})|\\
+  It is an equivalent of \lstinline|Formatter.new(this) % \var{args}|.
+  See \refObject{Formatter}.
+%  This construct is actually more
+%  powerful than this, since it relies on
+%  \href{http://www.boost.org/doc/libs/1_39_0/libs/format/doc/format.html,
+%    Boost.Format}.  For instance:
+\begin{urbiassert}
+"%s + %s = %s" % [1, 2, 3] == "1 + 2 = 3";
+\end{urbiassert}
+
+\item['*'](<n>)%
+  Concatenate \this \var{n} times.
+\begin{urbiassert}
+"foo" * 0 == "";
+"foo" * 1 == "foo";
+"foo" * 3 == "foofoofoo";
+\end{urbiassert}
+
+\item['+'](<other>)%
+  Concatenate \this and \lstinline|\var{other}.asString|.
+\begin{urbiassert}
+"foo" + "bar" == "foobar";
+"foo" + "" == "foo";
+"foo" + 3 == "foo3";
+"foo" + [1, 2, 3] == "foo[1, 2, 3]";
+\end{urbiassert}
+
+\item['<'](<other>)%
+  Whether \this is lexicographically before \var{other},
+  which must be a String.
+\begin{urbiassert}
+"" < "a";
+!("a" < "");
+"a" < "b";
+!("a" < "a");
+\end{urbiassert}
+
+\item|'[]'|(<from>)%
+  \lstinline|'[]'(\var{from}, \var{to})|\\
+  Return the sub-string starting at \var{from}, up to and not including
+  \var{to} (which defaults to \var{to} + 1).
+\begin{urbiassert}
+"foobar"[0, 3] == "foo";
+"foobar"[0] == "f";
+\end{urbiassert}
+
+\item|'[]='|(<from>, <other>)%
+  \lstinline|'[]='(\var{from}, \var{to}, \var{other})|\\
+  Replace the sub-string starting at \var{from}, up to and not including
+  \var{to} (which defaults to \var{to} + 1), by \var{other}.  Return
+  \var{other}.
+
+  Beware that this routine is imperative: it changes the value of
+  \this.
+\begin{urbiscript}
+var s1 = "foobar" | var s2 = s1 |
+assert((s1[0, 3] = "quux") == "quux");
+assert(s1 == "quuxbar");
+assert(s2 == "quuxbar");
+assert((s1[4, 7] = "") == "");
+assert(s2 == "quux");
+\end{urbiscript}
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

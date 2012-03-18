@@ -1,0 +1,5 @@
+syncline << "doc/specs/location.tex:25";
+[01234567:#] "doc/specs/location.tex:25"
+//#line 25 "doc/specs/location.tex"
+Location.new;
+[00000001] 1.1

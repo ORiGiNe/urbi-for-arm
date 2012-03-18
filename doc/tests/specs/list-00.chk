@@ -1,0 +1,667 @@
+syncline << "doc/specs/list.tex:28";
+[01234567:#] "doc/specs/list.tex:28"
+//#line 28 "doc/specs/list.tex"
+assert {
+// Are all elements positive?
+! [-2, 0, 2, 4].all(function (e) { 0 < e });
+// Are all elements even?
+  [-2, 0, 2, 4].all(function (e) { e % 2 == 0 });
+
+// Is there any even element?
+! [-3, 1, -1].any(function (e) { e % 2 == 0 });
+// Is there any positive element?
+  [-3, 1, -1].any(function (e) { 0 < e });
+};
+
+syncline << "doc/specs/list.tex:47";
+[01234567:#] "doc/specs/list.tex:47"
+//#line 47 "doc/specs/list.tex"
+[]; // The empty list
+[00000000] []
+[1, "2", [3,],];
+[00000000] [1, "2", [3]]
+
+syncline << "doc/specs/list.tex:56";
+[01234567:#] "doc/specs/list.tex:56"
+//#line 56 "doc/specs/list.tex"
+List.new;
+[00000001] []
+[1, 2, 3].new;
+[00000002] [1, 2, 3]
+
+syncline << "doc/specs/list.tex:69";
+[01234567:#] "doc/specs/list.tex:69"
+//#line 69 "doc/specs/list.tex"
+var one = [1]|;
+one.append(["one", [1]]);
+[00000005:warning] !!! `list.append(that)' is deprecated, use `list += that'
+[00000005] [1, "one", [1]]
+
+syncline << "doc/specs/list.tex:79";
+[01234567:#] "doc/specs/list.tex:79"
+//#line 79 "doc/specs/list.tex"
+assert {
+           [1].argMax == 0;
+        [1, 2].argMax == 1;
+     [1, 2, 2].argMax == 1;
+        [2, 1].argMax == 0;
+[2, -1, 3, -4].argMax == 2;
+
+[2, -1, 3, -4].argMax (function (a, b) { a.abs < b.abs }) == 3;
+};
+
+syncline << "doc/specs/list.tex:91";
+[01234567:#] "doc/specs/list.tex:91"
+//#line 91 "doc/specs/list.tex"
+[].argMax;
+[00000007:error] !!! argMax: list cannot be empty
+
+syncline << "doc/specs/list.tex:100";
+[01234567:#] "doc/specs/list.tex:100"
+//#line 100 "doc/specs/list.tex"
+assert {
+           [1].argMin == 0;
+        [1, 2].argMin == 0;
+     [1, 2, 1].argMin == 0;
+        [2, 1].argMin == 1;
+[2, -1, 3, -4].argMin == 3;
+
+[2, -1, 3, -4].argMin (function (a, b) { a.abs < b.abs }) == 1;
+};
+
+syncline << "doc/specs/list.tex:112";
+[01234567:#] "doc/specs/list.tex:112"
+//#line 112 "doc/specs/list.tex"
+[].argMin;
+[00000011:error] !!! argMin: list cannot be empty
+
+syncline << "doc/specs/list.tex:119";
+[01234567:#] "doc/specs/list.tex:119"
+//#line 119 "doc/specs/list.tex"
+assert {
+[].asBool == false;
+[1].asBool == true;
+};
+
+syncline << "doc/specs/list.tex:127";
+[01234567:#] "doc/specs/list.tex:127"
+//#line 127 "doc/specs/list.tex"
+{
+  var l = [0, 1, 2];
+  assert (l.asList === l);
+};
+
+syncline << "doc/specs/list.tex:138";
+[01234567:#] "doc/specs/list.tex:138"
+//#line 138 "doc/specs/list.tex"
+assert {
+[0, [1], "2"].asString == "[0, [1], \"2\"]";
+};
+
+syncline << "doc/specs/list.tex:145";
+[01234567:#] "doc/specs/list.tex:145"
+//#line 145 "doc/specs/list.tex"
+assert([0, 1, 2].back == 2);
+[].back;
+[00000017:error] !!! back: cannot be applied onto empty list
+
+syncline << "doc/specs/list.tex:154";
+[01234567:#] "doc/specs/list.tex:154"
+//#line 154 "doc/specs/list.tex"
+var x = [0, 1, 2];
+[00000000] [0, 1, 2]
+assert(x.clear == []);
+
+syncline << "doc/specs/list.tex:164";
+[01234567:#] "doc/specs/list.tex:164"
+//#line 164 "doc/specs/list.tex"
+[0, 1, 2].each(function (v) {echo (v * v); echo (v * v)});
+[00000000] *** 0
+[00000000] *** 0
+[00000000] *** 1
+[00000000] *** 1
+[00000000] *** 4
+[00000000] *** 4
+
+syncline << "doc/specs/list.tex:178";
+[01234567:#] "doc/specs/list.tex:178"
+//#line 178 "doc/specs/list.tex"
+["a", "b", "c"].eachi(function (v, i) {echo ("%s: %s" % [i, v])});
+[00000000] *** 0: a
+[00000000] *** 1: b
+[00000000] *** 2: c
+
+syncline << "doc/specs/list.tex:188";
+[01234567:#] "doc/specs/list.tex:188"
+//#line 188 "doc/specs/list.tex"
+[0, 1, 2].'each&'(function (v) {echo (v * v); echo (v * v)});
+[00000000] *** 0
+[00000000] *** 1
+[00000000] *** 4
+[00000000] *** 0
+[00000000] *** 1
+[00000000] *** 4
+
+syncline << "doc/specs/list.tex:201";
+[01234567:#] "doc/specs/list.tex:201"
+//#line 201 "doc/specs/list.tex"
+assert {
+   [].empty;
+! [1].empty;
+};
+
+syncline << "doc/specs/list.tex:210";
+[01234567:#] "doc/specs/list.tex:210"
+//#line 210 "doc/specs/list.tex"
+do ([0, 1, 2, 3, 4, 5])
+{
+  assert
+  {
+    // Keep only odd numbers.
+    filter(function (v) {v % 2 == 1}) == [1, 3, 5];
+    // Keep all.
+    filter(function (v) { true })     == this;
+    // Keep none.
+    filter(function (v) { false })    == [];
+  };
+}|;
+
+syncline << "doc/specs/list.tex:235";
+[01234567:#] "doc/specs/list.tex:235"
+//#line 235 "doc/specs/list.tex"
+assert {
+       [].foldl(function (a, b) { a + b }, 0) == 0;
+[1, 2, 3].foldl(function (a, b) { a + b }, 0) == 6;
+[1, 2, 3].foldl(function (a, b) { a - b }, 0) == -6;
+};
+
+syncline << "doc/specs/list.tex:244";
+[01234567:#] "doc/specs/list.tex:244"
+//#line 244 "doc/specs/list.tex"
+assert([0, 1, 2].front == 0);
+[].front;
+[00000000:error] !!! front: cannot be applied onto empty list
+
+syncline << "doc/specs/list.tex:253";
+[01234567:#] "doc/specs/list.tex:253"
+//#line 253 "doc/specs/list.tex"
+assert {
+[0, 1, 2].has(1);
+! [0, 1, 2].has(5);
+};
+
+syncline << "doc/specs/list.tex:261";
+[01234567:#] "doc/specs/list.tex:261"
+//#line 261 "doc/specs/list.tex"
+assert {
+  1 in     [0, 1];
+  2 not in [0, 1];
+!(2 in     [0, 1]);
+!(1 not in [0, 1]);
+};
+
+syncline << "doc/specs/list.tex:272";
+[01234567:#] "doc/specs/list.tex:272"
+//#line 272 "doc/specs/list.tex"
+assert {
+[].hash.isA(Hash);
+[].hash == [].hash;
+[1, "foo"].hash == [1, "foo"].hash;
+[0, 1].hash != [1, 0].hash;
+};
+
+syncline << "doc/specs/list.tex:282";
+[01234567:#] "doc/specs/list.tex:282"
+//#line 282 "doc/specs/list.tex"
+var y = 1|;
+assert
+{
+   [0, y, 2].hasSame(y);
+  ![0, y, 2].hasSame(1);
+};
+
+syncline << "doc/specs/list.tex:293";
+[01234567:#] "doc/specs/list.tex:293"
+//#line 293 "doc/specs/list.tex"
+assert([0, 1, 2].head == 0);
+[].head;
+[00000000:error] !!! head: cannot be applied onto empty list
+
+syncline << "doc/specs/list.tex:302";
+[01234567:#] "doc/specs/list.tex:302"
+//#line 302 "doc/specs/list.tex"
+{
+  var l = [0, 1];
+  assert
+  {
+    l.insert(0, 10) === l;
+    l == [10, 0, 1];
+    l.insert(2, 20) === l;
+    l == [10, 0, 20, 1];
+  };
+}|;
+
+syncline << "doc/specs/list.tex:316";
+[01234567:#] "doc/specs/list.tex:316"
+//#line 316 "doc/specs/list.tex"
+[].insert(0, "foo");
+[00044239:error] !!! insert: invalid index: 0
+[1, 2, 3].insert(4, 30);
+[00044339:error] !!! insert: invalid index: 4
+
+syncline << "doc/specs/list.tex:327";
+[01234567:#] "doc/specs/list.tex:327"
+//#line 327 "doc/specs/list.tex"
+{
+  var l = [0, 1];
+  assert
+  {
+    l.insertBack(2) === l;
+    l == [0, 1, 2];
+  };
+}|;
+
+syncline << "doc/specs/list.tex:341";
+[01234567:#] "doc/specs/list.tex:341"
+//#line 341 "doc/specs/list.tex"
+{
+  var l = [0, 1];
+  assert
+  {
+    l.insertFront(0) === l;
+    l == [0, 0, 1];
+  };
+}|;
+
+syncline << "doc/specs/list.tex:355";
+[01234567:#] "doc/specs/list.tex:355"
+//#line 355 "doc/specs/list.tex"
+{
+  var l = [0, 1];
+  assert
+  {
+    l.insertUnique(0) === l;
+    l == [0, 1];
+    l.insertUnique(2) === l;
+    l == [0, 1, 2];
+  };
+};
+
+syncline << "doc/specs/list.tex:371";
+[01234567:#] "doc/specs/list.tex:371"
+//#line 371 "doc/specs/list.tex"
+assert {
+["", "ob", ""].join                == "ob";
+["", "ob", ""].join("a")           == "aoba";
+["", "ob", ""].join("a", "B", "b") == "Baobab";
+};
+
+syncline << "doc/specs/list.tex:381";
+[01234567:#] "doc/specs/list.tex:381"
+//#line 381 "doc/specs/list.tex"
+{
+  var l = ["a", "b", "c"];
+  assert
+  {
+    l.keys == [0, 1, 2];
+    {
+      var res = [];
+      for (var k: l.keys)
+        res << l[k];
+      res
+    }
+    == l;
+  };
+};
+
+syncline << "doc/specs/list.tex:402";
+[01234567:#] "doc/specs/list.tex:402"
+//#line 402 "doc/specs/list.tex"
+assert {
+[0, 1, 2, 3].map(function (v) { v % 2 == 0})
+        == [true, false, true, false];
+};
+
+syncline << "doc/specs/list.tex:411";
+[01234567:#] "doc/specs/list.tex:411"
+//#line 411 "doc/specs/list.tex"
+assert
+{
+  ([1, 2] = [1, 2]) == [1, 2];
+
+  ([1, var a] = [1, 2]) == [1, 2];
+  a == 2;
+
+  ([var u, var v, var w] = [1, 2, 3]) == [1, 2, 3];
+  [u, v, w] == [1, 2, 3];
+};
+
+[1, 2] = [2, 1];
+[00005863:error] !!! pattern did not match
+
+[1, var a] = [2, 1];
+[00005864:error] !!! pattern did not match
+[1, var a] = [1];
+[00005865:error] !!! pattern did not match
+[1, var a] = [1, 2, 3];
+[00005865:error] !!! pattern did not match
+
+syncline << "doc/specs/list.tex:436";
+[01234567:#] "doc/specs/list.tex:436"
+//#line 436 "doc/specs/list.tex"
+assert {
+           [1].max == 1;
+        [1, 2].max == 2;
+        [2, 1].max == 2;
+[2, -1, 3, -4].max == 3;
+
+[2, -1, 3, -4].max (function (a, b) { a.abs < b.abs }) == -4;
+};
+
+syncline << "doc/specs/list.tex:447";
+[01234567:#] "doc/specs/list.tex:447"
+//#line 447 "doc/specs/list.tex"
+[].max;
+[00000001:error] !!! max: list cannot be empty
+
+syncline << "doc/specs/list.tex:453";
+[01234567:#] "doc/specs/list.tex:453"
+//#line 453 "doc/specs/list.tex"
+[0, 2, "a", 1].max;
+[00000002:error] !!! max: argument 2: unexpected "a", expected a Float
+
+syncline << "doc/specs/list.tex:460";
+[01234567:#] "doc/specs/list.tex:460"
+//#line 460 "doc/specs/list.tex"
+assert {
+           [1].min == 1;
+        [1, 2].min == 1;
+        [2, 1].min == 1;
+[2, -1, 3, -4].min == -4;
+
+[2, -1, 3, -4].min (function (a, b) { a.abs < b.abs }) == -1;
+};
+
+syncline << "doc/specs/list.tex:471";
+[01234567:#] "doc/specs/list.tex:471"
+//#line 471 "doc/specs/list.tex"
+[].min;
+[00000001:error] !!! min: list cannot be empty
+
+syncline << "doc/specs/list.tex:484";
+[01234567:#] "doc/specs/list.tex:484"
+//#line 484 "doc/specs/list.tex"
+do ([0, 1, 2, 3])
+{
+  assert
+  {
+    range(0, 0)   == [];
+    range(0, 1)   == [0];
+    range(1)      == [0];
+    range(1, 3)   == [1, 2];
+
+    range(-3, -2) == [1];
+    range(-3, -1) == [1, 2];
+    range(-3, 0)  == [1, 2, 3];
+    range(-3, 1)  == [1, 2, 3, 0];
+    range(-4, 4)  == [0, 1, 2, 3, 0, 1, 2, 3];
+  };
+}|;
+[].range(1, 3);
+[00428697:error] !!! range: invalid index: 1
+
+syncline << "doc/specs/list.tex:509";
+[01234567:#] "doc/specs/list.tex:509"
+//#line 509 "doc/specs/list.tex"
+var c = [0, 1, 0, 2, 0, 3]|;
+assert
+{
+  c.remove(0) === c;   c ==  [1, 2, 3];
+  c.remove(42) === c;  c ==  [1, 2, 3];
+};
+
+syncline << "doc/specs/list.tex:522";
+[01234567:#] "doc/specs/list.tex:522"
+//#line 522 "doc/specs/list.tex"
+var t = [0, 1, 2];
+[00000000] [0, 1, 2]
+assert(t.removeBack == 2);
+assert(t == [0, 1]);
+[].removeBack;
+[00000000:error] !!! removeBack: cannot be applied onto empty list
+
+syncline << "doc/specs/list.tex:535";
+[01234567:#] "doc/specs/list.tex:535"
+//#line 535 "doc/specs/list.tex"
+var d = 1|;
+var e = [0, 1, d, 1, 2]|;
+assert
+{
+  e.removeById(d) == [0, 1, 1, 2];
+  e == [0, 1, 1, 2];
+};
+
+syncline << "doc/specs/list.tex:549";
+[01234567:#] "doc/specs/list.tex:549"
+//#line 549 "doc/specs/list.tex"
+var g = [0, 1, 2]|;
+assert
+{
+  g.removeFront == 0;
+  g == [1, 2];
+};
+[].removeFront;
+[00000000:error] !!! removeFront: cannot be applied onto empty list
+
+syncline << "doc/specs/list.tex:563";
+[01234567:#] "doc/specs/list.tex:563"
+//#line 563 "doc/specs/list.tex"
+assert {
+[0, 1, 2].reverse == [2, 1, 0];
+};
+
+syncline << "doc/specs/list.tex:570";
+[01234567:#] "doc/specs/list.tex:570"
+//#line 570 "doc/specs/list.tex"
+assert {
+[0, 1, 2].size == 3;
+[].size == 0;
+};
+
+syncline << "doc/specs/list.tex:579";
+[01234567:#] "doc/specs/list.tex:579"
+//#line 579 "doc/specs/list.tex"
+{
+  var l = [3, 0, -2, 1];
+  assert
+  {
+    l.sort == [-2, 0, 1, 3];
+    l      == [3, 0, -2, 1];
+
+    l.sort(function(a, b) {a.abs < b.abs})
+           == [0, 1, -2, 3];
+  };
+};
+
+syncline << "doc/specs/list.tex:596";
+[01234567:#] "doc/specs/list.tex:596"
+//#line 596 "doc/specs/list.tex"
+assert {
+        [].subset([]);
+        [].subset([1, 2, 3]);
+ [3, 2, 1].subset([1, 2, 3]);
+    [1, 3].subset([1, 2, 3]);
+    [1, 1].subset([1, 2, 3]);
+
+      ![3].subset([]);
+   ![3, 2].subset([1, 2]);
+![1, 2, 3].subset([1, 2]);
+};
+
+syncline << "doc/specs/list.tex:612";
+[01234567:#] "doc/specs/list.tex:612"
+//#line 612 "doc/specs/list.tex"
+assert([0, 1, 2].tail == [1, 2]);
+[].tail;
+[00000000:error] !!! tail: cannot be applied onto empty list
+
+syncline << "doc/specs/list.tex:622";
+[01234567:#] "doc/specs/list.tex:622"
+//#line 622 "doc/specs/list.tex"
+assert {
+[1, 2, 3].zip(closure (x, y) { (x, y) }, [4, 5, 6])
+       == [(1, 4), (2, 5), (3, 6)];
+[1, 2, 3].zip(closure (x, y) { x + y }, [4, 5, 6])
+       == [5, 7, 9];
+};
+
+syncline << "doc/specs/list.tex:633";
+[01234567:#] "doc/specs/list.tex:633"
+//#line 633 "doc/specs/list.tex"
+assert {
+[0, 1, 2] == [0, 1, 2];
+!([0, 1, 2] == [0, 0, 2]);
+};
+
+syncline << "doc/specs/list.tex:643";
+[01234567:#] "doc/specs/list.tex:643"
+//#line 643 "doc/specs/list.tex"
+assert
+{
+  ["0", "1", "2"][0] == "0";
+  ["0", "1", "2"][2] == "2";
+};
+["0", "1", "2"][3];
+[00007061:error] !!! []: invalid index: 3
+
+assert
+{
+  ["0", "1", "2"][-1] == "2";
+  ["0", "1", "2"][-3] == "0";
+};
+["0", "1", "2"][-4];
+[00007061:error] !!! []: invalid index: -4
+
+syncline << "doc/specs/list.tex:665";
+[01234567:#] "doc/specs/list.tex:665"
+//#line 665 "doc/specs/list.tex"
+var f = [0, 1, 2];
+[00000000] [0, 1, 2]
+assert
+{
+  (f[1] = 42) == 42;
+  f == [0, 42, 2];
+};
+
+for (var i: [0, 1, 2])
+  f[i] = 10 * f[i];
+assert (f == [0, 420, 20]);
+
+syncline << "doc/specs/list.tex:681";
+[01234567:#] "doc/specs/list.tex:681"
+//#line 681 "doc/specs/list.tex"
+assert {
+[0, 1] * 0 == [];
+[0, 1] * 3 == [0, 1, 0, 1, 0, 1];
+};
+
+syncline << "doc/specs/list.tex:688";
+[01234567:#] "doc/specs/list.tex:688"
+//#line 688 "doc/specs/list.tex"
+[0, 1] * -2;
+[00000063:error] !!! *: argument 1: expected non-negative integer, got -2
+
+syncline << "doc/specs/list.tex:698";
+[01234567:#] "doc/specs/list.tex:698"
+//#line 698 "doc/specs/list.tex"
+var l = [[]] * 3;
+[00000000] [[], [], []]
+l[0] << 1;
+[00000000] [1]
+l;
+[00000000] [[1], [1], [1]]
+
+syncline << "doc/specs/list.tex:710";
+[01234567:#] "doc/specs/list.tex:710"
+//#line 710 "doc/specs/list.tex"
+assert {
+[0, 1] + [2, 3] == [0, 1, 2, 3];
+    [] + [2, 3] == [2, 3];
+[0, 1] + []     == [0, 1];
+    [] + []     == [];
+};
+
+syncline << "doc/specs/list.tex:718";
+[01234567:#] "doc/specs/list.tex:718"
+//#line 718 "doc/specs/list.tex"
+{
+  var l = [1, 2, 3];
+  assert
+  {
+    l + l == [1, 2, 3, 1, 2, 3];
+    l     == [1, 2, 3];
+  };
+};
+
+syncline << "doc/specs/list.tex:734";
+[01234567:#] "doc/specs/list.tex:734"
+//#line 734 "doc/specs/list.tex"
+{
+  var l = [];
+  var alias = l;
+  assert
+  {
+    (l += [1, 2]) == l;
+    l == [1, 2];
+    (l += [3, 4]) == l;
+    l == [1, 2, 3, 4];
+    alias == [1, 2, 3, 4];
+  };
+};
+
+syncline << "doc/specs/list.tex:753";
+[01234567:#] "doc/specs/list.tex:753"
+//#line 753 "doc/specs/list.tex"
+assert {
+[0, 1, 0, 2, 3] - [1, 2] == [0, 0, 3];
+[0, 1, 0, 1, 0] - [1, 2] == [0, 0, 0];
+};
+
+syncline << "doc/specs/list.tex:766";
+[01234567:#] "doc/specs/list.tex:766"
+//#line 766 "doc/specs/list.tex"
+assert {
+  [0, 0, 0] < [0, 0, 1];
+  [0, 1, 2] < [0, 2, 1];
+
+!([0, 1, 2] < [0, 1, 2]);
+!([0, 1, 2] < [0, 0, 2]);
+};
+
+syncline << "doc/specs/list.tex:777";
+[01234567:#] "doc/specs/list.tex:777"
+//#line 777 "doc/specs/list.tex"
+assert {
+           [] < [0];          !(      [0] < []);
+       [0, 1] < [0, 1, 2];    !([0, 1, 2] < [0, 1]);
+  !([0, 1, 2] < [0, 1, 2]);
+};
+
+syncline << "doc/specs/list.tex:786";
+[01234567:#] "doc/specs/list.tex:786"
+//#line 786 "doc/specs/list.tex"
+assert {
+        [] <= [];
+        [] <= [0, 1, 2];
+ [0, 1, 2] <= [0, 1, 2];
+
+        [] >= [];
+ [0, 1, 2] >= [];
+ [0, 1, 2] >= [0, 1, 2];
+ [0, 1, 2] >= [0, 0, 2];
+
+       !([] > []);
+  [0, 1, 2] > [];
+!([0, 1, 2] > [0, 1, 2]);
+  [0, 1, 2] > [0, 0, 2];
+};

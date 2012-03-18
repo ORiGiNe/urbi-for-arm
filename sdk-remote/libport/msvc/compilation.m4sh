@@ -1,0 +1,119 @@
+                                                        -*- shell-script -*-
+URBI_INIT
+
+me=$as_me
+medir=$(absolute "$0").dir
+mkcd $medir
+
+case $host in
+  (*mingw32) cc=$abs_srcdir/msvc/cl.exe
+             exeext=.exe
+             objext=.obj;;
+  (*)        cc=g++
+             exeext=
+             objext=.o;;
+esac
+
+run "--version" $cc --version ||
+  error $? "cannot run $cc"
+
+set -x
+
+msg='Hello world'
+
+# Check compilation of single compilation unit.
+for ext in c cc
+do
+  rm -f test.*
+
+  cat >test.$ext <<EOF
+  #include <stdio.h>
+  int
+  main ()
+  {
+    printf("$msg\n");
+    return 0;
+  }
+EOF
+
+  $cc -c test.$ext
+  test -f test$objext
+
+  $cc -c test.$ext -o test.o
+  test -f test.o
+
+  $cc -o test$exeext test$objext
+  test -f test$exeext
+  test -x test$exeext
+  ./test$exeext >test.out 2>test.err
+  test "$(tr -d '\r' <test.out)" = "$msg"
+  test ! -s test.err
+done
+
+# Make sure we do have failures on invalid input.
+cat >test.c <<EOF
+#error aaaaaaaaaaaarg
+EOF
+! $cc test.c
+! $cc -E test.c
+
+# Check several compilation units.
+for ext in c cc
+do
+  rm -f test.*
+  cat >test.$ext <<EOF
+  extern void foo ();
+  int
+  main ()
+  {
+    foo();
+    return 0;
+  }
+EOF
+
+  cat >foo.$ext <<EOF
+  #include <stdio.h>
+  void
+  foo ()
+  {
+    printf ("$msg\n");
+  }
+EOF
+
+  $cc test.$ext -c -o test.o
+  $cc foo.$ext -c -o foo.o
+  $cc foo.o test.o -o test
+  ./test$exeext >test.out 2>test.err
+  test "$(tr -d '\r' <test.out)" = "$msg"
+  test ! -s test.err
+done
+
+# Check that we can make and use libraries.
+for ext in c cc
+do
+  rm -f test.*
+  cat >test.$ext <<EOF
+  extern void foo ();
+  int
+  main ()
+  {
+    foo();
+    return 0;
+  }
+EOF
+
+  cat >foo.$ext <<EOF
+  #include <stdio.h>
+  void
+  foo ()
+  {
+    printf ("$msg\n");
+  }
+EOF
+
+  $cc foo.$ext -c -o foo.o
+#  $cc foo.o -o foo.a
+done
+
+
+exit 0

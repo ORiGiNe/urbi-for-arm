@@ -1,0 +1,434 @@
+syncline << "doc/specs/system.tex:28";
+[01234567:#] "doc/specs/system.tex:28"
+//#line 28 "doc/specs/system.tex"
+{
+  var nJobs = aliveJobs;
+  for (var i: [1s, 2s, 3s])
+    detach({sleep(i)});
+  sleep(0.5s);
+  assert(aliveJobs - nJobs == 3);
+  sleep(1s);
+  assert(aliveJobs - nJobs == 2);
+  sleep(1s);
+  assert(aliveJobs - nJobs == 1);
+  sleep(1s);
+  assert(aliveJobs - nJobs == 0);
+};
+
+syncline << "doc/specs/system.tex:65";
+[01234567:#] "doc/specs/system.tex:65"
+//#line 65 "doc/specs/system.tex"
+'assert'(true);
+'assert'(42);
+'assert'(1 == 1 + 1);
+[00000002:error] !!! failed assertion: 1.'=='(1.'+'(1))
+
+syncline << "doc/specs/system.tex:76";
+[01234567:#] "doc/specs/system.tex:76"
+//#line 76 "doc/specs/system.tex"
+assert_(true,       "true failed");
+assert_(42,         "42 failed");
+assert_(1 == 1 + 1, "one is not two");
+[00000001:error] !!! failed assertion: one is not two
+
+syncline << "doc/specs/system.tex:90";
+[01234567:#] "doc/specs/system.tex:90"
+//#line 90 "doc/specs/system.tex"
+//#push 100 "foo.u"
+function innermost () { backtrace }|;
+function inner ()     { innermost }|;
+function outer ()     { inner }|;
+function outermost () { outer }|;
+outermost;
+[00000013:backtrace] innermost (foo.u:101.25-33)
+[00000014:backtrace] inner (foo.u:102.25-29)
+[00000015:backtrace] outer (foo.u:103.25-29)
+[00000016:backtrace] outermost (foo.u:104.1-9)
+//#pop
+
+syncline << "doc/specs/system.tex:113";
+[01234567:#] "doc/specs/system.tex:113"
+//#line 113 "doc/specs/system.tex"
+{
+  var first = cycle ; var second = cycle ;
+  assert(first + 1 == second);
+  first = cycle | second = cycle ;
+  assert(first == second);
+};
+
+syncline << "doc/specs/system.tex:127";
+[01234567:#] "doc/specs/system.tex:127"
+//#line 127 "doc/specs/system.tex"
+assert {
+eval("1+2") == 1+2;
+eval("\"x\" * 10") == "x" * 10;
+eval("eval(\"1\")") == 1;
+eval("{ var x = 1; x + x; }") == 2;
+};
+
+syncline << "doc/specs/system.tex:137";
+[01234567:#] "doc/specs/system.tex:137"
+//#line 137 "doc/specs/system.tex"
+assert {
+// Create a slot in the current object.
+eval("var a = 23;") == 23;
+this.a == 23;
+
+eval("var a = 3", Global) == 3;
+Global.a == 3;
+};
+
+syncline << "doc/specs/system.tex:147";
+[01234567:#] "doc/specs/system.tex:147"
+//#line 147 "doc/specs/system.tex"
+eval("1/0");
+[00008316:error] !!! 1.1-3: /: division by 0
+[00008316:error] !!!    called from: eval
+try
+{
+  eval("1/0")
+}
+catch (var e)
+{
+  assert
+  {
+    e.isA(Exception.Primitive);
+    e.location.asString  == "1.1-3";
+    e.routine            == "/";
+    e.message            == "division by 0";
+  }
+};
+
+syncline << "doc/specs/system.tex:169";
+[01234567:#] "doc/specs/system.tex:169"
+//#line 169 "doc/specs/system.tex"
+eval("new Object");
+[00001388:warning] !!! 1.1-10: `new Obj(x)' is deprecated, use `Obj.new(x)'
+[00001388:warning] !!!    called from: eval
+[00001388] Object_0x1001b2320
+
+syncline << "doc/specs/system.tex:179";
+[01234567:#] "doc/specs/system.tex:179"
+//#line 179 "doc/specs/system.tex"
+eval("/");
+[00001028:error] !!! 1.1: syntax error: unexpected /
+[00001028:error] !!!    called from: eval
+
+eval("eval(\"/\")");
+[00001032:error] !!! 1.1: syntax error: unexpected /
+[00001032:error] !!!    called from: 1.1-9: eval
+[00001032:error] !!!    called from: eval
+
+eval("eval(\"eval(\\\"/\\\")\")");
+[00001035:error] !!! 1.1: syntax error: unexpected /
+[00001035:error] !!!    called from: 1.1-9: eval
+[00001035:error] !!!    called from: 1.1-19: eval
+[00001035:error] !!!    called from: eval
+
+syncline << "doc/specs/system.tex:200";
+[01234567:#] "doc/specs/system.tex:200"
+//#line 200 "doc/specs/system.tex"
+assert {
+getenv("UndefinedEnvironmentVariable").isNil;
+!getenv("PATH").isNil;
+};
+
+syncline << "doc/specs/system.tex:214";
+[01234567:#] "doc/specs/system.tex:214"
+//#line 214 "doc/specs/system.tex"
+// Create the file ``123.u'' that contains exactly ``var t = 123;''.
+File.save("123.u", "var t = 123;");
+assert
+{
+  load("123.u") == 123;
+  this.t == 123;
+
+  load("123.u", Global) == 123;
+  Global.t == 123;
+};
+
+syncline << "doc/specs/system.tex:233";
+[01234567:#] "doc/specs/system.tex:233"
+//#line 233 "doc/specs/system.tex"
+// Create the file ``123.u'' that contains exactly ``var y = 123;''.
+File.save("123.u", "var y = 123;");
+assert
+{
+  loadFile("123.u") == 123;
+  this.y == 123;
+
+  loadFile("123.u", Global) == 123;
+  Global.y == 123;
+};
+
+
+syncline << "doc/specs/system.tex:272";
+[01234567:#] "doc/specs/system.tex:272"
+//#line 272 "doc/specs/system.tex"
+// Create the file ``123.u'' that contains exactly ``123;''.
+File.save("123.u", "123;");
+assert
+{
+  maybeLoad("123.u") == 123;
+  maybeLoad("u.123").isVoid;
+};
+
+syncline << "doc/specs/system.tex:285";
+[01234567:#] "doc/specs/system.tex:285"
+//#line 285 "doc/specs/system.tex"
+function one() { echo("called!"); 1 }|;
+assert(!System.ndebug);
+
+assert(one);
+[00000617] *** called!
+
+// Beware of copy-on-write.
+System.ndebug = true|;
+assert(one);
+
+System.ndebug = false|;
+assert(one);
+[00000622] *** called!
+
+syncline << "doc/specs/system.tex:311";
+[01234567:#] "doc/specs/system.tex:311"
+//#line 311 "doc/specs/system.tex"
+assert {
+System.period == 20ms;
+};
+
+syncline << "doc/specs/system.tex:327";
+[01234567:#] "doc/specs/system.tex:327"
+//#line 327 "doc/specs/system.tex"
+assert {
+Path.new(System.programName).basename
+  in ["urbi", "urbi.exe", "urbi-launch", "urbi-launch.exe"];
+};
+
+syncline << "doc/specs/system.tex:341";
+[01234567:#] "doc/specs/system.tex:341"
+//#line 341 "doc/specs/system.tex"
+var Global.x = 0;
+[00000001] 0
+{
+  System.redefinitionMode;
+  // Not an error
+  var Global.x = 1;
+  echo(Global.x);
+};
+[00000002] *** 1
+// redefinitionMode applies only to the scope.
+var Global.x = 0;
+[00000003:error] !!! slot redefinition: x
+
+syncline << "doc/specs/system.tex:364";
+[01234567:#] "doc/specs/system.tex:364"
+//#line 364 "doc/specs/system.tex"
+// Create the file ``test.u'' that echoes a string.
+File.save("test1.u", "echo(\"test 1\"); 1;");
+requireFile("test1.u");
+[00000001] *** test 1
+requireFile("test1.u");
+// File is not re-loaded
+
+File.save("test2.u", "echo(\"test 2\"); 2;");
+load("test2.u");
+[00000004] *** test 2
+[00000004] 2
+requireFile("test2.u");
+load("test2.u");
+[00000006] *** test 2
+[00000006] 2
+
+syncline << "doc/specs/system.tex:386";
+[01234567:#] "doc/specs/system.tex:386"
+//#line 386 "doc/specs/system.tex"
+requireFile("test2.u", Global);
+
+syncline << "doc/specs/system.tex:392";
+[01234567:#] "doc/specs/system.tex:392"
+//#line 392 "doc/specs/system.tex"
+assert {
+ 0  < System.stats["cycles"];
+System.resetStats.isVoid;
+ 1 == System.stats["cycles"];
+};
+
+syncline << "doc/specs/system.tex:406";
+[01234567:#] "doc/specs/system.tex:406"
+//#line 406 "doc/specs/system.tex"
+// Create the file ``123.u'' that contains exactly ``123;''.
+File.save("123.u", "123;");
+assert
+{
+  searchFile("123.u") == Path.cwd / Path.new("123.u");
+};
+
+syncline << "doc/specs/system.tex:419";
+[01234567:#] "doc/specs/system.tex:419"
+//#line 419 "doc/specs/system.tex"
+assert {
+System.searchPath.isA(List);
+System.searchPath[0].isA(Path);
+};
+
+syncline << "doc/specs/system.tex:434";
+[01234567:#] "doc/specs/system.tex:434"
+//#line 434 "doc/specs/system.tex"
+assert {
+setenv("MyVar", 12) == "12";
+getenv("MyVar") == "12";
+
+// A child process that uses the environment variable.
+System.system("exit $MyVar") >> 8 ==
+       {if (Platform.isWindows) 0 else 12};
+setenv("MyVar", 23) == "23";
+System.system("exit $MyVar") >> 8 ==
+       {if (Platform.isWindows) 0 else 23};
+
+// Defining to empty is defining, unless you are on Windows.
+setenv("MyVar", "") == "";
+getenv("MyVar").isNil == Platform.isWindows;
+};
+
+syncline << "doc/specs/system.tex:454";
+[01234567:#] "doc/specs/system.tex:454"
+//#line 454 "doc/specs/system.tex"
+assert {
+{ var t0 = shiftedTime | sleep(1s) | shiftedTime - t0 }.round ~= 1;
+
+  1 ==
+  {
+    var t = Tag.new|;
+    var t0 = time|;
+    var res;
+    t: { sleep(1s) | res = shiftedTime - t0 },
+    t.freeze;
+    sleep(1s);
+    t.unfreeze;
+    sleep(1s);
+    res.round;
+  };
+};
+
+syncline << "doc/specs/system.tex:481";
+[01234567:#] "doc/specs/system.tex:481"
+//#line 481 "doc/specs/system.tex"
+assert {
+(time - {sleep(1s); time}).round == -1;
+};
+
+syncline << "doc/specs/system.tex:489";
+[01234567:#] "doc/specs/system.tex:489"
+//#line 489 "doc/specs/system.tex"
+var jobs = []|;
+var res = []|;
+for (var i : [0, 1, 2])
+{
+  jobs << System.spawn(closure () { res << i; res << i },
+                       true) |
+  if (i == 2)
+    break
+}|
+jobs;
+[00009120] [Job<shell_11>, Job<shell_12>, Job<shell_13>]
+// Wait for the jobs to be done.
+jobs.each (function (var j) { j.waitForTermination });
+assert (res == [0, 1, 0, 2, 1, 2]);
+
+syncline << "doc/specs/system.tex:506";
+[01234567:#] "doc/specs/system.tex:506"
+//#line 506 "doc/specs/system.tex"
+jobs = []|;
+res = []|;
+for (var i : [0, 1, 2])
+{
+  jobs << System.spawn(closure () { res << i; res << i },
+                       false) |
+  if (i == 2)
+    break
+}|
+jobs;
+[00009120] [Job<shell_14>, Job<shell_15>, Job<shell_16>]
+// Give some time to get the output of the detached expressions.
+sleep(100ms);
+assert (res == [0, 1, 0]);
+
+syncline << "doc/specs/system.tex:527";
+[01234567:#] "doc/specs/system.tex:527"
+//#line 527 "doc/specs/system.tex"
+var stats = System.stats|;
+assert
+{
+  stats.isA(Dictionary);
+  stats.keys.sort == ["cycles",
+                      "cyclesMin", "cyclesMean", "cyclesMax",
+                      "cyclesVariance", "cyclesStdDev"].sort;
+  0 < stats["cycles"];
+  stats["cyclesMin"]  <= stats["cyclesMean"];
+  stats["cyclesMean"] <= stats["cyclesMax"];
+};
+
+syncline << "doc/specs/system.tex:557";
+[01234567:#] "doc/specs/system.tex:557"
+//#line 557 "doc/specs/system.tex"
+assert {
+System.system("exit 0") == 0;
+System.system("exit 23") >> 8
+       == { if (System.Platform.isWindows) 0 else 23 };
+};
+
+syncline << "doc/specs/system.tex:567";
+[01234567:#] "doc/specs/system.tex:567"
+//#line 567 "doc/specs/system.tex"
+assert {
+{ var t0 = time | sleep(1s) | time - t0 }.round ~= 1;
+
+  2 ==
+  {
+    var t = Tag.new|;
+    var t0 = time|;
+    var res;
+    t: { sleep(1s) | res = time - t0 },
+    t.freeze;
+    sleep(1s);
+    t.unfreeze;
+    sleep(1s);
+    res.round;
+  };
+};
+
+syncline << "doc/specs/system.tex:591";
+[01234567:#] "doc/specs/system.tex:591"
+//#line 591 "doc/specs/system.tex"
+var t1 = System.timeReference|;
+sleep(1s);
+var t2 = System.timeReference|;
+assert
+{
+  t1 == t2;
+  t1.isA(Date);
+  (Date.now - (System.timeReference + System.time)) < 0.5s;
+};
+
+syncline << "doc/specs/system.tex:602";
+[01234567:#] "doc/specs/system.tex:602"
+//#line 602 "doc/specs/system.tex"
+removeSlots("t1", "t2");
+
+syncline << "doc/specs/system.tex:610";
+[01234567:#] "doc/specs/system.tex:610"
+//#line 610 "doc/specs/system.tex"
+assert {
+setenv("MyVar", 12) == "12";
+!getenv("MyVar").isNil;
+unsetenv("MyVar") == "12";
+getenv("MyVar").isNil;
+};
+
+syncline << "doc/specs/system.tex:621";
+[01234567:#] "doc/specs/system.tex:621"
+//#line 621 "doc/specs/system.tex"
+assert {
+System.version in Regexp.new("\\d+(\\.\\d+)+");
+};

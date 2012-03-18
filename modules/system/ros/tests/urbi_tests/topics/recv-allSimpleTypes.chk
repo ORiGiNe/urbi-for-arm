@@ -1,0 +1,30 @@
+//#roscore
+//#no-fast
+//#plug urbi/ros
+
+var ready = Ros.Topic.new("/ready") |
+ready.advertise("std_msgs/Bool");
+
+var t = Ros.Topic.new("/utests/allSimpleTypes")|;
+var p = Process.new("rosrun", ["utopics", "allSimpleTypes"])|;
+
+recv: at (t.onMessage?(var m))
+{
+  // FIXME: Check the units.
+  if (2000000 < Date.now.asFloat - m["header"]["stamp"][0])
+    lobby.send("Timestamp mismatch!");
+  m["header"].erase("stamp")|;
+  lobby.send(m.asString);
+};
+p.run;
+Ros.waitForTopic("/utests/allSimpleTypes");
+t.subscribe;
+
+sleep(500ms);
+ready << ["data" => 1] |
+sleep(4s);
+
+[00000001] ["bigint" => 4294967330, "float64" => -105.004, "header" => ["frame_id" => "", "seq" => 0], "isTrue" => 0, "level" => 4, "message" => "coin O<"]
+[00000002] ["bigint" => 4294967330, "float64" => -105.004, "header" => ["frame_id" => "", "seq" => 1], "isTrue" => 1, "level" => 5, "message" => "coin O<O<"]
+[00000003] ["bigint" => 4294967330, "float64" => -105.004, "header" => ["frame_id" => "", "seq" => 2], "isTrue" => 0, "level" => 6, "message" => "coin O<O<O<"]
+

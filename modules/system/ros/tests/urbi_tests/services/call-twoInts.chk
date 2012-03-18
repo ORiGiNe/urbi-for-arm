@@ -1,0 +1,27 @@
+//#roscore
+//#no-fast
+//#plug urbi/ros
+
+var p = Process.new("rosrun", ["uservices", "addTwoInts"])|;
+p.run;
+var services;
+every (500ms)
+{
+  services = Ros.services|;
+  if ("/utests/addTwoInts" in services)
+    break;
+  if (p.done)
+  {
+    echoEach(["rosrun failed:"] + p.stderr.asList);
+    shutdown;
+  };
+};
+var s = Ros.Service.new("/utests/addTwoInts", false)|
+waituntil (s.initialized);
+
+s.request(["a" => 42, "b" => 42]);
+[00000001] ["s" => 84]
+
+s.request(["a" => 24, "b" => 12]);
+[00000002] ["s" => 36]
+

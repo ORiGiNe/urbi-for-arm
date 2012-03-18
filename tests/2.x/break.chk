@@ -1,0 +1,29 @@
+var f = function()
+{
+  break;
+  break;
+};
+[00000001:error] !!! input.u:3.3-7: syntax error: `break' not within a loop
+[00000002:error] !!! input.u:4.3-7: syntax error: `break' not within a loop
+
+var i = 0;
+while (i < 10)
+{
+  echo (i);
+  if (i == 5)
+    break;
+  i += 1;
+};
+echo (i);
+
+[00000003] 0
+[00000004] *** 0
+[00000005] *** 1
+[00000006] *** 2
+[00000007] *** 3
+[00000008] *** 4
+[00000009] *** 5
+[00000010] *** 5
+
+break;
+[00000011:error] !!! input.u:@.1-5: syntax error: `break' not within a loop

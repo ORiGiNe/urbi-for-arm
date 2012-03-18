@@ -1,0 +1,14 @@
+// Check that timeout expires
+
+var x = 1;
+[00000001] 1
+
+timeout (1s) { sleep (2s); x = 2 };
+x;
+[00000002] 1
+
+// Check that we exit in a reasonable time (test will timeout otherwise)
+
+timeout (3600s) { sleep (500ms); x = 3 };
+x;
+[00000003] 3

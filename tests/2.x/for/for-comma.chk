@@ -1,0 +1,8 @@
+// Check that "for," is rejected properly and does not prevent
+// further use of "for".
+for, (var i: [1, 2, 3]) { echo (i) };
+[00000001:error] !!! input.u:@.1-4: syntax error: invalid flavor: for,
+for (var i: [1, 2, 3]) { echo (i) };
+[00000002] *** 1
+[00000003] *** 2
+[00000004] *** 3

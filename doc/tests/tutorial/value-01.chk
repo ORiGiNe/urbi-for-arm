@@ -1,0 +1,61 @@
+syncline << "doc/tutorial/value.tex:256";
+[01234567:#] "doc/tutorial/value.tex:256"
+//#line 256 "doc/tutorial/value.tex"
+var o = Object.clone;
+[00000000] Object_0x0
+// This syntax stores the function in the 'f' slot of 'o'.
+function o.f ()
+{
+  echo("This is f with target " + this);
+  return 42;
+} |;
+// The slot value is the function.
+o.getSlot("f");
+[00000001] function () {
+[:]  echo("This is f with target ".'+'(this));
+[:]  return 42;
+[:]}
+// Huho, the function is invoked!
+o.f;
+[00000000] *** This is f with target Object_0x0
+[00000000] 42
+// The parentheses are in fact optional.
+o.f();
+[00000000] *** This is f with target Object_0x0
+[00000000] 42
+
+syncline << "doc/tutorial/value.tex:289";
+[01234567:#] "doc/tutorial/value.tex:289"
+//#line 289 "doc/tutorial/value.tex"
+// The 'empty' method of strings returns whether the string is empty.
+"foo".empty;
+[00000000] false
+"".empty;
+[00000000] true
+// Using getSlot, we can fetch the function without calling it.
+"".getSlot("asList");
+[00000000] function () { split("") }
+
+syncline << "doc/tutorial/value.tex:303";
+[01234567:#] "doc/tutorial/value.tex:303"
+//#line 303 "doc/tutorial/value.tex"
+"foo".size;
+[00000000] 3
+"foo".getSlot("size");
+[00000000] Primitive_0x422f0908
+
+syncline << "doc/tutorial/value.tex:321";
+[01234567:#] "doc/tutorial/value.tex:321"
+//#line 321 "doc/tutorial/value.tex"
+var x = 0;
+[00000000] 0
+x.localSlotNames;
+[00000000] []
+var x.slot = 1;
+[00000000] 1
+x.localSlotNames;
+[00000000] ["slot"]
+x.slot;
+[00000000] 1
+x;
+[00000000] 0

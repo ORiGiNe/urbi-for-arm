@@ -1,0 +1,80 @@
+//#uobject test/all
+
+// Check read from outside notifyChange.
+remall.markBypass(0, 1)|1;
+[00000001] 1
+
+remall.selfWriteB(0, "aaaaaaa")|;
+
+// This will wait 500ms for a write
+remall.a.isNil;
+[00000002] true
+
+remall.a.data.size.print & {sleep(50ms) | remall.selfWriteB(0, "aaaaaaa")};
+[00000003] 7
+sleep(500ms);
+
+remall.a.data.size.print & remall.a.data.size.print & {sleep(50ms) | remall.selfWriteB(0, "aaaaaaa")};
+[00000004] 7
+[00000005] 7
+
+remall2.setBypassNotifyChangeImage("remall.a")|;
+
+
+remall.selfWriteB(0, "aaaaaaa")|;
+
+// This will wait 500ms for a write
+remall.a.isNil;
+[00000006] true
+
+remall.a.data.size.print & {sleep(50ms) | remall.selfWriteB(0, "aaaaaaa")};
+[00000007] 7
+sleep(500ms);
+
+remall.a.data.size.print & remall.a.data.size.print & {sleep(50ms) | remall.selfWriteB(0, "aaaaaaa")};
+[00000008] 7
+[00000009] 7
+
+remall.a = Binary.new("canard", "coincoin")|;
+
+remall.a.data.size;
+[00000010] 8
+
+remall.selfWriteB(0, "aaaaaaa");
+[00000011] "bbbbbbb"
+
+remall.a.isNil;
+[00000012] true
+
+remall.a.data.size.print & remall.a.data.size.print & {sleep(50ms) | remall.selfWriteB(0, "aaaaaaa")};
+[00000013] 7
+[00000014] 7
+
+// Check an other kind of race where value is overwritten again before reader can get it.
+var t = Tag.new|;
+t: every|(10ms)
+  remall.selfWriteB(0, "aaaaaaa"),
+
+for|(var i: 50)
+{
+  assert(remall.a.data.size == 7)
+};
+
+
+// Same check in owned mode
+remall.markBypass(1, 1)|1;
+[00000015] 1
+remall.setOwned(1)|;
+remall.selfWriteB(1, "aaaaaaa")|;
+
+// This will wait 500ms for a write
+remall.b.isNil;
+[00000016] true
+
+remall.b.data.size.print & {sleep(50ms) | remall.selfWriteB(1, "aaaaaaa")};
+[00000017] 7
+sleep(500ms);
+
+remall.b.data.size.print & remall.b.data.size.print & {sleep(50ms) | remall.selfWriteB(1, "aaaaaaa")};
+[00000018] 7
+[00000019] 7

@@ -1,0 +1,24 @@
+load("urbi/component.u")|;
+load("urbi/naming-standard.u")|;
+
+var l = Localizer.new("arm")|;
+var a = Interface.Motor.new |
+var b = Interface.Motor.new |
+var a.val = 12 | var b.val  = 13 |
+l[up] = a | l[down] = b|
+l[up].val;
+[00000001] 12
+l[down].val;
+[00000002] 13
+l.val = 20 |
+a.val;
+[00000003] 20
+b.val;
+[00000004] 20
+var c = Interface.Motor.new | var c.val = 42|;
+l[left] = Localizer.new("blob")|;
+l[left][front] = c|
+l[left][front].val;
+[00000005] 42
+l[left][front].val;
+[00000006] 42

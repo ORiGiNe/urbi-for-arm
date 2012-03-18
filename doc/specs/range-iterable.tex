@@ -1,0 +1,96 @@
+%% Copyright (C) 2009-2011, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{RangeIterable}
+
+This object is meant to be used as a prototype for objects that support an
+\lstinline|asList| method, to use range-based \lstinline|for| loops
+(\autoref{sec:lang:for:each}).
+
+\subsection{Prototypes}
+
+\begin{refObjects}
+\item[Object]
+\end{refObjects}
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+\item[all](<fun>)
+  % FIXME: link to predicate glossary entry
+  Return whether all the members of the target verify the predicate
+  \var{fun}.
+
+\begin{urbiassert}
+// Are all elements positive?
+! [-2, 0, 2, 4].all(function (e) { e > 0 });
+// Are all elements even?
+[-2, 0, 2, 4].all(function (e) { e % 2 == 0 });
+\end{urbiassert}
+
+\item[any](<fun>)
+  % FIXME: link to predicate glossary entry
+  Whether at least one of the members of the target verifies the
+  predicate \var{fun}.
+
+\begin{urbiassert}
+// Is there any even element?
+! [-3, 1, -1].any(function (e) { e % 2 == 0 });
+// Is there any positive element?
+[-3, 1, -1].any(function (e) { e > 0 });
+\end{urbiassert}
+
+\item[each](<fun>)%
+  Apply the given functional value \var{fun} on all ``members'',
+  sequentially.  Corresponds to range-\lstinline|for| loops.
+\begin{urbiscript}[firstnumber=1]
+class range : RangeIterable
+{
+  var asList = [10, 20, 30];
+}|;
+for (var i : range)
+  echo (i);
+[00000000] *** 10
+[00000000] *** 20
+[00000000] *** 30
+\end{urbiscript}
+
+\item['each&'](<fun>)%
+  Apply the given functional value \var{fun} on all ``members'', in
+  parallel, starting all the computations simultaneously.  Corresponds
+  to range-\lstinline|for&| loops.
+\begin{urbiscript}
+{
+  var res = [];
+  for& (var i : range)
+    res << i;
+  assert(res.sort == [10, 20, 30]);
+};
+\end{urbiscript}
+
+\item \lstinline+'each|'(\var{fun})+%  Better done in master than 2.7.
+  Apply the given functional value \var{fun} on all ``members'', with
+  tight sequentially.  Corresponds to range-\lstinline'for|' loops.
+\begin{urbiscript}
+{
+  var res = [];
+  for| (var i : range)
+    res << i;
+  assert(res == [10, 20, 30]);
+};
+\end{urbiscript}
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

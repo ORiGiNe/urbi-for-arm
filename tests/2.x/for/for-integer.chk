@@ -1,0 +1,38 @@
+{
+  var i = 1;
+  for (i + 4)
+  {
+    echo (i);
+    i++;
+  };
+};
+[00000001] *** 1
+[00000002] *** 2
+[00000003] *** 3
+[00000004] *** 4
+[00000005] *** 5
+
+// Check the "duration" of various flavors.
+{
+  var start = cycle |
+  for (3)
+    {};
+  cycle - start;
+};
+[00000006] 4
+
+{
+  var start = cycle |
+  for| (3)
+    {};
+  cycle - start;
+};
+[00000007] 1
+
+{
+  var start = cycle |
+  for& (3)
+    {};
+  cycle - start;
+};
+[00000008] 2

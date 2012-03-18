@@ -1,0 +1,15 @@
+syncline << "doc/tutorial/object.tex:120";
+[01234567:#] "doc/tutorial/object.tex:120"
+//#line 120 "doc/tutorial/object.tex"
+var p = Pair.clone;
+[00000000] (nil, nil)
+// p has no slots of its own.
+p.localSlotNames;
+[00000000] []
+// Yet this works.
+p.first;
+// This is because p has Pair for prototype, and Pair has a 'first' slot.
+p.protos.head === Pair;
+[00000000] true
+"first" in Pair.localSlotNames && "second" in Pair.localSlotNames;
+[00000000] true

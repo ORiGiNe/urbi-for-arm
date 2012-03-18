@@ -1,0 +1,27 @@
+syncline << "doc/specs/server.tex:26";
+[01234567:#] "doc/specs/server.tex:26"
+//#line 26 "doc/specs/server.tex"
+var s = Server.new|
+s.localSlotNames;
+[00000001] ["connection"]
+
+syncline << "doc/specs/server.tex:38";
+[01234567:#] "doc/specs/server.tex:38"
+//#line 38 "doc/specs/server.tex"
+at (s.connection?(var socket))
+{
+  // This code is run at each connection. 'socket' is the incoming
+  // connection.
+};
+
+syncline << "doc/specs/server.tex:53";
+[01234567:#] "doc/specs/server.tex:53"
+//#line 53 "doc/specs/server.tex"
+Server.host;
+[00000003:error] !!! host: server not listening
+
+syncline << "doc/specs/server.tex:64";
+[01234567:#] "doc/specs/server.tex:64"
+//#line 64 "doc/specs/server.tex"
+Server.port;
+[00000004:error] !!! port: server not listening

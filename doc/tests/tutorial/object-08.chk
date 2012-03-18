@@ -1,0 +1,28 @@
+syncline << "doc/tutorial/object.tex:333";
+[01234567:#] "doc/tutorial/object.tex:333"
+//#line 333 "doc/tutorial/object.tex"
+class MyPair
+{
+  var first = nil;
+  var second = nil;
+  function asString() { "(" + first + ", " + second + ")"; };
+};
+[00000000] (nil, nil)
+
+syncline << "doc/tutorial/object.tex:351";
+[01234567:#] "doc/tutorial/object.tex:351"
+//#line 351 "doc/tutorial/object.tex"
+class Top
+{
+  var top = "top";
+};
+[00000000] Top
+
+class Bottom : Top
+{
+  var bottom = "bottom";
+};
+[00000000] Bottom
+
+Bottom.new.top;
+[00000000] "top"

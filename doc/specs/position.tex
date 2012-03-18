@@ -1,0 +1,137 @@
+%% Copyright (C) 2010, 2011, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Position}
+
+This class is used to handle file locations with a line, column and file
+name.
+
+\subsection{Prototypes}
+\begin{refObjects}
+\item[Object]
+\end{refObjects}
+
+\subsection{Construction}
+
+Without argument, a newly constructed Position has its fields initialized to
+the first line and the first column.
+
+\begin{urbiscript}[firstnumber=1]
+Position.new;
+[00000001] 1.1
+\end{urbiscript}
+
+With a position argument \var{p}, the newly constructed Position is a clone
+of \var{p}.
+
+\begin{urbiscript}
+Position.new(Position.new(2, 3));
+[00000001] 2.3
+\end{urbiscript}
+
+With two float arguments \var{l} and \var{c}, the newly constructed
+Position has its line and column defined and an empty file name.
+
+\begin{urbiscript}
+Position.new(2, 3);
+[00000001] 2.3
+\end{urbiscript}
+
+With three arguments \var{f}, \var{l} and \var{c}, the newly
+constructed Position has its file name, line and column defined.
+
+\begin{urbiscript}
+Position.new("file.u", 2, 3);
+[00000001] file.u:2.3
+\end{urbiscript}
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+\item['+'](<n>)%
+  Return a new Position which is shifted from \var{n} columns to the
+  right.  The minimal value of the new position column is 1.
+\begin{urbiassert}
+Position.new(2, 3) + 2 == Position.new(2, 5);
+Position.new(2, 3) + -4 == Position.new(2, 1);
+\end{urbiassert}
+
+\item['-'](<n>)%
+  Return a new Position which is shifted from \var{n} columns to the
+  left.  The minimal value of the new Position column is 1.
+\begin{urbiassert}
+Position.new(2, 3) - 1 == Position.new(2, 2);
+Position.new(2, 3) - -4 == Position.new(2, 7);
+\end{urbiassert}
+
+\item['=='](<other>)%
+  Compare the lines and columns of two Positions.
+\begin{urbiassert}
+Position.new(2, 3) == Position.new(2, 3);
+Position.new("a.u", 2, 3) == Position.new("b.u", 2, 3);
+Position.new(2, 3) != Position.new(2, 2);
+\end{urbiassert}
+
+\item['<'](<other>)%
+  Order comparison of lines and columns.
+\begin{urbiassert}
+Position.new(2, 3) < Position.new(2, 4);
+Position.new(2, 3) < Position.new(3, 1);
+\end{urbiassert}
+
+\item[asString]
+  Present as \samp{\var{file}:\var{line}.\var{column}}, the file name is
+  omitted if it is not defined.
+\begin{urbiassert}
+Position.new("file.u", 2, 3).asString == "file.u:2.3";
+\end{urbiassert}
+
+\item[column]
+  Field which give access to the column number of the Position.
+\begin{urbiassert}
+Position.new(2, 3).column == 3;
+\end{urbiassert}
+
+\item[columns](<n>)%
+  Identical to \lstinline|'+'(\var{n})|.
+\begin{urbiassert}
+Position.new(2, 3).columns(2) == Position.new(2, 5);
+Position.new(2, 3).columns(-4) == Position.new(2, 1);
+\end{urbiassert}
+
+\item[file]
+  The \lstinline|Path| of the Position file.
+\begin{urbiassert}
+Position.new("file.u", 2, 3).file == Path.new("file.u");
+Position.new(2, 3).file == nil;
+\end{urbiassert}
+
+\item[line]
+  Field which give access to the line number of the Position.
+\begin{urbiassert}
+Position.new(2, 3).line == 2;
+\end{urbiassert}
+
+\item[lines](<n>)%
+  Add \var{n} lines and reset the column number to 1.
+\begin{urbiassert}
+Position.new(2, 3).lines(2) == Position.new(4, 1);
+Position.new(2, 3).lines(-1) == Position.new(1, 1);
+\end{urbiassert}
+
+\end{urbiscriptapi}
+
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

@@ -1,0 +1,44 @@
+syncline << "doc/specs/lang.tex:4154";
+[01234567:#] "doc/specs/lang.tex:4154"
+//#line 4154 "doc/specs/lang.tex"
+{
+  var i = 4|
+  while, (i)
+  {
+    var j = i -= 1;
+    echo ("in: i = %s, j = %s" % [i, j]);
+    sleep(j/10);
+    echo ("out: i = %s, j = %s" % [i, j]);
+  }|
+  echo ("done");
+}|
+[00000144] *** in: i = 2, j = 3
+[00000145] *** in: i = 1, j = 2
+[00000145] *** in: i = 0, j = 1
+[00000146] *** in: i = 0, j = 0
+[00000146] *** out: i = 0, j = 0
+[00000246] *** out: i = 0, j = 1
+[00000346] *** out: i = 0, j = 2
+[00000445] *** out: i = 0, j = 3
+[00000446] *** done
+
+syncline << "doc/specs/lang.tex:4187";
+[01234567:#] "doc/specs/lang.tex:4187"
+//#line 4187 "doc/specs/lang.tex"
+{
+  var i = 10|
+  while, (i)
+  {
+    var j = i -= 1;
+    if (j % 2)
+      continue
+    else if (j == 4)
+      break
+    else
+      echo("%s: done" % j)
+  }|
+  echo("done");
+};
+[00000146] *** 8: done
+[00000148] *** 6: done
+[00000150] *** done

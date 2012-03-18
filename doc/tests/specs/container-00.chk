@@ -1,0 +1,31 @@
+syncline << "doc/specs/container.tex:30";
+[01234567:#] "doc/specs/container.tex:30"
+//#line 30 "doc/specs/container.tex"
+class NotCell : Container
+{
+  var val;
+  function init(var v)   { val = v };
+  function hasNot(var v) { val != v };
+}|;
+var c = NotCell.new(23)|;
+assert
+{
+  c.has(23);     23 in c;
+  c.hasNot(3);    3 not in c;
+};
+
+syncline << "doc/specs/container.tex:50";
+[01234567:#] "doc/specs/container.tex:50"
+//#line 50 "doc/specs/container.tex"
+class Cell : Container
+{
+  var val;
+  function init(var v) { val = v };
+  function has(var v)  { val == v };
+}|;
+var d = Cell.new(23)|;
+assert
+{
+  d.has(23);     23 in d;
+  d.hasNot(3);    3 not in d;
+};

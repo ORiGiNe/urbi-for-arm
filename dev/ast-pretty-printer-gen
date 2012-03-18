@@ -1,0 +1,162 @@
+#!/usr/bin/env python
+
+import re, sys
+import ast, tools
+
+if len(sys.argv) != 2:
+  tools.error("Usage: .. SRCDIR")
+srcdir = sys.argv[1]
+
+## Abstract syntax tree C++ visitor - header ----------------------------------
+loader = ast.Loader ()
+nodes, ast_params = loader.load (sys.stdin)
+
+arr = nodes.values ()
+arr.sort (lambda x, y: cmp(x.name, y.name))
+arr = filter ((lambda node: 'printer' in node.__dict__), arr)
+
+## --------------- ##
+## The *.hh file.  ##
+## --------------- ##
+
+visitor_hh = file("pretty-printer.hh.tmp", "w")
+sys.stdout = visitor_hh
+
+print tools.banner(ast_params,
+                   "ast/pretty-printer.hh",
+		   "Definition of ast::PrettyPrinter.") + """
+# include <iosfwd>
+
+# include <ast/default-visitor.hh>
+
+namespace ast
+{
+
+  /// Ast pretty-printer.
+  class PrettyPrinter : public DefaultConstVisitor
+  {
+    /** \\name Ctor & dtor.
+     ** \\{ */
+  public:
+    /// Super class type.
+    typedef DefaultConstVisitor super_type;
+
+    /// Construct a PrettyPrinter.
+    PrettyPrinter (std::ostream& s);
+
+    /// Destroy a PrettyPrinter.
+    virtual ~PrettyPrinter ();
+    /** \\} */
+
+    /// Visit entry point
+    virtual void operator() (const Ast* e);
+
+  protected:
+    using super_type::visit;
+""" % ast_params
+
+print tools.indent(4, ast.visit(arr, True))
+
+print """
+  private:
+    // The stream we output to.
+    std::ostream& ostr_;
+  };
+
+} // namespace ast
+
+#endif // !AST_PRETTY_PRINTER_HH
+"""
+
+
+## --------------- ##
+## The *.cc file.  ##
+## --------------- ##
+
+
+visitor_cc = file("pretty-printer.cc.tmp", "w")
+sys.stdout = visitor_cc
+
+print tools.banner(ast_params,
+                   "ast/pretty-printer.cc",
+		   "Implementation of ast::PrettyPrinter.") + """
+#include <ostream>
+
+#include <ast/all.hh>
+#include <ast/pretty-printer.hh>
+#include <ast/print.hh>
+%(printer_cc_prologue)s
+namespace ast
+{
+
+  PrettyPrinter::PrettyPrinter (std::ostream& ostr)
+    : ostr_ (ostr)
+  {
+  }
+
+  PrettyPrinter::~PrettyPrinter ()
+  {
+  }
+
+  void
+  PrettyPrinter::operator() (const Ast* e)
+  {
+    static bool desugar = getenv("URBI_DESUGAR");
+    rConstAst original = e->original_get();
+    if (!desugar && original)
+      operator()(original.get());
+    else
+      super_type::operator()(e);
+  }
+
+""" % ast_params
+
+for node in arr:
+  action = ''
+  p = re.compile('\\$(\\w+)')
+  if 'printer' in node.__dict__: # if a printer is defined
+    for a in node.printer: # for each action in the printer
+      a = a.lstrip(' ').rstrip(' ')
+      if a[0] == '~' or a[0] == '$':
+	# Handle '~foo' variables
+	attrName = a[1:]
+	attr = node.attribute(attrName)
+	if attr == None:
+	  raise 'No such attribute \'%s\' for node \'%s\'' % (attrName, node.name)
+	mandatory = attr.mandatory
+	child = 'n->%s_get()' % (a[1:])
+	if a[0] == '~':
+	  if mandatory:
+	    action += '    operator()(%s.get());\n' % child
+	  else:
+	    action += '    if (%s) operator()(%s.get());\n' % (child, child)
+	else:
+	  if mandatory:
+	    action += '    ostr_ << %s;\n' % (child)
+	  else:
+	    action += '    if (%s) ostr_ << *%s;\n' % (child, child)
+
+      elif a[0] == '{':
+	a = re.compile('^').sub('    ', a)
+	action += a + '\n'
+      else:
+	action += '    ostr_ << %s;\n' % (a)
+    print """\
+  void
+  PrettyPrinter::visit (const %s* n)
+  {
+    LIBPORT_USE(n);
+%s  }
+""" % (node.name, action)
+
+print """} // namespace ast
+"""
+
+
+# Restore stdout and close files
+sys.stdout = sys.__stdout__
+visitor_hh.close ()
+visitor_cc.close ()
+
+tools.lazy_install (srcdir, "pretty-printer.hh")
+tools.lazy_install (srcdir, "pretty-printer.cc")

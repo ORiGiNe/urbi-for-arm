@@ -1,0 +1,61 @@
+//#uobject test/all
+
+// Check that lobbies get destroyed when the associated connection
+// gets disconnected.
+// Line above to force network mode
+
+var count = lobbies.size|;
+var s = Socket.new|;
+s.connect("127.0.0.1", System.listenPort)|;
+s.isConnected;
+[00000001] true
+
+sleep(1s);
+count == lobbies.size - 1;
+[00000002] true
+s.disconnect;
+s.isConnected;
+[00000003] false
+
+// Check that the extra lobby is gone
+sleep(1ms);
+assert(count == lobbies.size);
+
+
+// Check again when the lobby is doing something
+var Global.x = 0|;
+s.connect("127.0.0.1", System.listenPort)|;
+s.isConnected;
+[00000001] true
+s.write("every|(100ms) Global.x++;");
+
+s.disconnect;
+s.isConnected;
+[00000003] false
+
+// Check that the extra lobby is gone
+sleep(1ms);
+assert(count == lobbies.size);
+// And that its code is stopped
+Global.x - {sleep(200ms)|Global.x};
+[00000004] 0
+
+
+// Exactly the same thing with a background task
+
+s.connect("127.0.0.1", System.listenPort)|;
+s.isConnected;
+[00000001] true
+s.write("every|(100ms) Global.x++,");
+
+s.disconnect;
+s.isConnected;
+[00000003] false
+
+// Check that the extra lobby is gone
+sleep(1ms);
+assert(count == lobbies.size);
+// And that its code is stopped
+Global.x - {sleep(200ms)|Global.x};
+[00000004] 0
+

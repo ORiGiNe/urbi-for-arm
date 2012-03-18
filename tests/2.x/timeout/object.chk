@@ -1,0 +1,24 @@
+// Check that Timeout object work.
+
+var x = 1;
+[00000001] 1
+var t = Timeout.new(1s, false) | {};
+t:{
+  sleep (500ms);
+  x = 2;
+  sleep (1s);
+  x = 3
+};
+x;
+[00000002] 2
+t.timedOut;
+[00000003] true
+t.time = 3600s | {};
+t:{
+  sleep (500ms);
+  x = 3;
+} | {};
+x;
+[00000004] 3
+t.timedOut;
+[00000005] false

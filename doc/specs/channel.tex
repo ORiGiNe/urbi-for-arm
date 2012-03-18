@@ -1,0 +1,162 @@
+%% Copyright (C) 2009-2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Channel}
+Returning data, typically asynchronous, with a label so that the
+``caller'' can find it in the flow.
+
+\subsection{Prototypes}
+
+\begin{itemize}
+\item \refObject{Object}
+\end{itemize}
+
+\subsection{Construction}
+
+Channels are created like any other object. The constructor must be
+called with a string which will be the label.
+
+\begin{urbiscript}[firstnumber=1]
+var ch1 = Channel.new("my_label");
+[00000201] Channel_0x7985810
+
+ch1 << 1;
+[00000201:my_label] 1
+
+var ch2 = ch1;
+[00000201] Channel_0x7985810
+
+ch2 << 1/2;
+[00000201:my_label] 0.5
+\end{urbiscript}
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+\item['<<'](<value>)%
+  Send \var{value} to \this tagged by its label if non-empty.
+
+\begin{urbiscript}
+Channel.new("label") << 42;
+[00000000:label] 42
+
+Channel.new("") << 51;
+[00000000] 51
+\end{urbiscript}
+
+\item[echo](<value>)%
+  Same as \lstinline|lobby.echo(\var{value}, name)|, see
+  \refSlot[Lobby]{echo}.
+
+\begin{urbiscript}
+Channel.new("label").echo(42);
+[00000000:label] *** 42
+
+Channel.new("").echo("Foo");
+[00000000] *** Foo
+\end{urbiscript}
+
+\item[enabled] Whether the Channel is enabled.  Disabled Channels
+  produce no output.
+\begin{urbiscript}
+var c = Channel.new("")|;
+
+c << "enabled";
+[00000000] "enabled"
+
+c.enabled = false|;
+c << "disabled";
+
+c.enabled = true|;
+c << "enabled";
+[00000000] "enabled"
+\end{urbiscript}
+
+\item[Filter] Filtering channel.
+
+The Filter channel outputs text that can be parsed without error by the liburbi.
+It does this by filtering types not handled by the liburbi, and displaying
+them using \refSlot{echo}.
+
+\begin{urbiscript}
+// Use a filtering channel on our lobby output.
+topLevel = Channel.Filter.new("")|;
+// liburbi knows about List, Dictionary, String and Float, so standard display.
+[1, "foo", ["test" => 5]];
+[00000001] [1, "foo", ["test" => 5]]
+// liburbi does not know 'lobby', so it is escaped with echo:
+lobby;
+[00000002] *** Lobby_0xADDR
+// The following list contains a function which is not handled by liburbi, so
+// it gets escaped too.
+[1, function () {}];
+[00000003] *** [1, function () {}]
+// Restore default display to see the difference.
+topLevel = Channel.topLevel|;
+// The echo is now gone.
+[1, function () {}];
+[00001758] [1, function () {}]
+\end{urbiscript}
+
+\item[quote] Whether the strings are output escaped (the default)
+  instead of raw strings.
+\begin{urbiscript}
+var d = Channel.new("")|;
+
+assert(d.enabled);
+d << "A \"String\"";
+[00000000] "A \"String\""
+
+d.quote = false|;
+d << "A \"String\"";
+[00000000] A "String"
+\end{urbiscript}
+
+\item[name] The name of the Channel, used to label the output.
+\begin{urbiscript}
+assert
+{
+  Channel.new("").name == "";
+  Channel.new("foo").name == "foo";
+};
+\end{urbiscript}
+
+\item[null] A predefined stream whose \lstinline|enabled| is
+  \lstinline|false|.
+\begin{urbiscript}
+Channel.null << "Message";
+\end{urbiscript}
+
+
+\item[topLevel] A predefined stream for regular output.  Strings are
+  output escaped.
+\begin{urbiscript}
+Channel.topLevel << "Message";
+[00015895] "Message"
+Channel.topLevel << "\"quote\"";
+[00015895] "\"quote\""
+\end{urbiscript}
+
+\item[warning] A predefined stream for warning messages.  Strings sent
+  to it are not escaped.
+\begin{urbiscript}
+Channel.warning << "Message";
+[00015895:warning] Message
+Channel.warning << "\"quote\"";
+[00015895:warning] "quote"
+\end{urbiscript}
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

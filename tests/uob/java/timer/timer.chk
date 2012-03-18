@@ -1,0 +1,48 @@
+//#java tests.timer.Timer
+
+var t = timer.new|;
+sleep(500ms);
+t.updated;
+[00000001] 0
+
+t.setupUpdate(100);
+[00000002] 0
+sleep(500ms);
+(t.updated - 5).abs < 2 || ("timer freq failure: " + t.updated);
+[00000003] true
+
+t.setupUpdate(-1);
+[00000004] 0
+sleep(200ms);
+t.updated = 0;
+[00000005] 0
+sleep(400ms);
+t.updated > 0;
+[00000006] false
+
+t.setupUpdate(100);
+[00000007] 0
+sleep(400ms);
+t.updated > 0;
+[00000008] true
+
+t.timerup > 0;
+[00000009] false
+var ts = t.setupTimer(100)|;
+sleep(400ms);
+(t.timerup-4).abs < 4 || ("timer freq failure: " + t.timerup);
+[00000010] true
+t.timerup = 0;
+[00000011] 0
+sleep(400ms);
+t.timerup > 0;
+[00000012] true
+t.unsetupTimer(ts)|
+sleep(200ms)|
+t.timerup = 0|;
+sleep(400ms);
+t.timerup > 0;
+[00000013] false
+
+removeLocalSlot("t")|;
+// Should die gracefuly.

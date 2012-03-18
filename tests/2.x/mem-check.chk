@@ -1,0 +1,151 @@
+
+do (Global.Location)
+{
+  function here(var backtrack = 0)
+  {
+    var list = {
+      try { throw Exception.new}
+      catch (var e) { e.'$backtrace' }
+    }|
+    var drop = true|
+    var loc = nil|
+    var i = 0|
+    for| (i = 0; i < list.size && loc.isNil; i += 1)
+    {
+      if (drop)
+        drop = drop && list[i].name != "here"|
+      if (!drop && backtrack++ == 0)
+        loc = list[i].location|
+    }|
+    loc
+  }
+}|;
+
+do (Global.System)
+{
+  function status()
+  {
+    skipIfWindows;
+    var procStatus = Path.new("/") / "proc" / "self" / "status";
+    if (!procStatus.exists)
+      try { testSkip("No /proc/self/status") }
+      catch { System._exit(176) };
+
+    var is = InputStream.new(File.new(procStatus));
+    var d = [ => ];
+    var line;
+    while (!(line = is.getLine.acceptVoid).isVoid)
+    {
+      var l = line.split(":\t");
+      try {
+        d[l[0]] =
+          l[1]
+          .split(" ", 1024, false, false)
+          .map(closure (v) { try { v.asFloat } catch (var e) { v } })
+      }
+      catch (var e)
+      {
+        d[l[0]] = l[1]
+      }
+    };
+    d
+  };
+
+}|;
+
+var Global.checkMem = do(Tag.new)
+{
+  var initStatus = nil;
+  var begStatus = nil;
+  var endStatus = nil;
+
+  var initMem = nil;
+  var begMem = nil;
+  var endBenchMem = nil;
+  var endJudgeMem = nil;
+
+  var loc = nil;
+  var judge_mode = false;
+
+  function get_stat(var status, var name)
+  {
+    clog.enabled = false |
+    assert { status[name][1] == "kB"; }|
+    clog.enabled = true |
+    status[name][0]
+  };
+
+  function init_mem_check() {
+    initStatus = System.status |
+    initMem = get_stat(initStatus, "VmData") |
+    clog << "initialized with %d kB" % [initMem] |
+    // Assert that the initialization stay below 7 MB.
+    assert { initMem < 10 * 1024; }|
+
+    // Emphasize leaks.
+    var Global.nb_iter = 500 |
+  };
+
+  function judge() { judge_mode = true; this };
+  function bench() { judge_mode = false; this };
+  function mode() { if (judge_mode) "judge" else "bench" };
+
+  function check(var f)
+  {
+    loc = Location.here(-1);
+    bench: f(); sleep(0);
+    judge: f(); sleep(0);
+  };
+
+  at (enter?)
+  {
+    begStatus = Global.System.status;
+    begMem = get_stat(begStatus, "VmData");
+    clog << "%s: %s: start with %d kB" % [loc, mode, begMem];
+  };
+
+  at (leave?)
+  {
+    // FIXME: trigger the garbage collection
+    // sleep(100ms);
+
+    endStatus = Global.System.status;
+    var endMem = get_stat(endStatus, "VmData");
+    clog << "%s: %s: leak %d kB" % [loc, mode, endMem - begMem];
+    if (judge_mode)
+    {
+      endJudgeMem = endMem;
+      assert { endJudgeMem <= endBenchMem; };
+    }
+    else
+      endBenchMem = endMem;
+  };
+}|
+
+checkMem.init_mem_check() |
+
+// Check if job creation is leaking.
+checkMem.check(closure () { for (nb_iter) { 1, } }) |
+checkMem.check(closure () { for (nb_iter) { 1 & 1 } }) |
+checkMem.check(closure () { for (nb_iter) { for&(10) 1; } }) |
+
+// Check if allocation is leaking.
+checkMem.check(closure () { for (nb_iter) { Object.new } }) |
+
+// Check if tags creation are leaking memory.
+checkMem.check(closure () { for (nb_iter) { Tag.new } }) |
+
+// Check tagging.
+{
+  var t = Tag.new;
+  checkMem.check(closure () { for (nb_iter) { t: 1 } });
+  checkMem.check(closure () { for (nb_iter) { t: t.stop } });
+}|
+
+// Check if parser is leaking.
+checkMem.check(closure () {
+  for (nb_iter)
+  {
+    eval("[ %s ];" % ("\"pouet_pouet_camion\"," * 10));
+  }
+}) |;

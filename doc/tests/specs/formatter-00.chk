@@ -1,0 +1,53 @@
+syncline << "doc/specs/formatter.tex:27";
+[01234567:#] "doc/specs/formatter.tex:27"
+//#line 27 "doc/specs/formatter.tex"
+Formatter.new("Name:%s, Surname:%s;");
+[00000001] Formatter ["Name:", %s, ", Surname:", %s, ";"]
+
+syncline << "doc/specs/formatter.tex:41";
+[01234567:#] "doc/specs/formatter.tex:41"
+//#line 41 "doc/specs/formatter.tex"
+assert {
+Formatter.new("Name:%s, Surname:%s;").asList.asString
+       == "[\"Name:\", %s, \", Surname:\", %s, \";\"]";
+};
+
+syncline << "doc/specs/formatter.tex:55";
+[01234567:#] "doc/specs/formatter.tex:55"
+//#line 55 "doc/specs/formatter.tex"
+assert {
+Formatter.new("Name:%s, Surname:%s;") % ["Foo", "Bar"]
+       == "Name:Foo, Surname:Bar;";
+};
+
+syncline << "doc/specs/formatter.tex:62";
+[01234567:#] "doc/specs/formatter.tex:62"
+//#line 62 "doc/specs/formatter.tex"
+assert {
+Formatter.new("%06.3f") % Math.pi
+       == "03.142";
+};
+
+syncline << "doc/specs/formatter.tex:69";
+[01234567:#] "doc/specs/formatter.tex:69"
+//#line 69 "doc/specs/formatter.tex"
+assert {
+"%06.3f" % Math.pi == "03.142";
+};
+
+syncline << "doc/specs/formatter.tex:75";
+[01234567:#] "doc/specs/formatter.tex:75"
+//#line 75 "doc/specs/formatter.tex"
+{
+  // Some large database of people.
+  var people =
+    [["Foo", "Bar" ],
+     ["One", "Two" ],
+     ["Un",  "Deux"],];
+  var f = Formatter.new("Name:%7s, Surname:%7s;");
+  for (var p: people)
+    echo (f % p);
+};
+[00031939] *** Name:    Foo, Surname:    Bar;
+[00031940] *** Name:    One, Surname:    Two;
+[00031941] *** Name:     Un, Surname:   Deux;

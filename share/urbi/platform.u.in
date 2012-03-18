@@ -1,0 +1,39 @@
+/*
+ * Copyright (C) 2010, Gostai S.A.S.
+ *
+ * This software is provided "as is" without warranty of any kind,
+ * either expressed or implied, including but not limited to the
+ * implied warranties of fitness for a particular purpose.
+ *
+ * See the LICENSE file for more information.
+ */
+
+class System.Platform
+{
+  var host = "@host@";
+  var hostAlias = "@host_alias@";
+  var hostCpu = "@host_cpu@";
+  var hostOs = "@host_os@";
+  var hostVendor = "@host_vendor@";
+
+  function isWindows ()
+  {
+    return hostOs == "mingw32";
+  };
+
+  function kind ()
+  {
+    if (isWindows)
+      "WIN32"
+    else
+      "POSIX";
+  };
+
+  var compilationModeDebug = @COMPILATION_MODE_DEBUG@;
+  var compilationModeSpace = @COMPILATION_MODE_SPACE@;
+  var compilationModeSpeed = @COMPILATION_MODE_SPEED@;
+
+  // Modules.
+  var enabledModules = @ENABLED_MODULES_U@|;
+  var disabledModules = @DISABLED_MODULES_U@|;
+};

@@ -1,0 +1,61 @@
+# This file is distributed under the same license as the bison package.
+# Estonian translations for bison.
+# Copyright (C) 2001 Free Software Foundation, Inc.
+# Toomas Soome <Toomas.Soome@microlink.ee>, 2011.
+msgid ""
+msgstr ""
+"Project-Id-Version: bison-runtime 2.5-rc1\n"
+"Report-Msgid-Bugs-To: bug-bison@gnu.org\n"
+"POT-Creation-Date: 2012-01-30 16:28+0000\n"
+"PO-Revision-Date: 2011-05-03 22:19+0300\n"
+"Last-Translator: Toomas Soome <Toomas.Soome@microlink.ee>\n"
+"Language-Team: Estonian <linux-ee@lists.eenet.ee>\n"
+"Language: et\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO-8859-15\n"
+"Content-Transfer-Encoding: 8-bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: data/glr.c:872 data/yacc.c:660
+msgid "syntax error: cannot back up"
+msgstr "süntaksi viga: ei saa toetada"
+
+#: data/glr.c:1758
+msgid "syntax is ambiguous"
+msgstr "süntaks on segane"
+
+#: data/glr.c:2081 data/glr.c:2159 data/glr.c:2197 data/glr.c:2466
+#: data/lalr1.cc:1058 data/lalr1.cc:1078 data/yacc.c:1281 data/yacc.c:1805
+#: data/yacc.c:1811
+msgid "syntax error"
+msgstr "süntaksi viga"
+
+#: data/glr.c:2160 data/lalr1.cc:1059 data/yacc.c:1282
+#, c-format
+msgid "syntax error, unexpected %s"
+msgstr "süntaksi viga, ootamatu %s"
+
+#: data/glr.c:2161 data/lalr1.cc:1060 data/yacc.c:1283
+#, c-format
+msgid "syntax error, unexpected %s, expecting %s"
+msgstr "süntaksi viga, ootamatu %s, ootasin %s"
+
+#: data/glr.c:2162 data/lalr1.cc:1061 data/yacc.c:1284
+#, c-format
+msgid "syntax error, unexpected %s, expecting %s or %s"
+msgstr "süntaksi viga, ootamatu %s, ootasin %s või %s"
+
+#: data/glr.c:2163 data/lalr1.cc:1062 data/yacc.c:1285
+#, c-format
+msgid "syntax error, unexpected %s, expecting %s or %s or %s"
+msgstr "süntaksi viga, ootamatu %s, ootasin %s või %s või %s"
+
+#: data/glr.c:2164 data/lalr1.cc:1063 data/yacc.c:1286
+#, c-format
+msgid "syntax error, unexpected %s, expecting %s or %s or %s or %s"
+msgstr "süntaksi viga, ootamatu %s, ootasin %s või %s või %s või %s"
+
+#: data/glr.c:2526 data/yacc.c:1369 data/yacc.c:1371 data/yacc.c:1567
+#: data/yacc.c:1960
+msgid "memory exhausted"
+msgstr "mälu on otsas"

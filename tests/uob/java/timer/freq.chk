@@ -1,0 +1,49 @@
+//#java tests.timer.Timer
+
+
+var t = timer.new|;
+var inu;
+sleep(500ms);
+t.updated;
+[00000001] 0
+{
+  inu=t.setupUpdate(200);
+  inu=t.setupUpdate(200);
+  inu=t.setupUpdate(200);
+  inu=t.setupUpdate(200);
+  inu=t.setupUpdate(200);
+}|;
+sleep(500ms);
+t.updated > 0;
+[00000002] true
+t.updated < 10;
+[00000003] true
+
+
+t.setupUpdate(-1);
+[00000004] 0
+sleep(100ms);
+t.updated = 0;
+[00000005] 0
+sleep(200ms);
+t.updated > 0;
+[00000006] false
+
+{
+  inu=t.setupUpdate(200);
+  inu=t.setupUpdate(-1);
+  inu=t.setupUpdate(200);
+  inu=t.setupUpdate(-1);
+  inu=t.setupUpdate(200);
+  inu=t.setupUpdate(-1);
+  inu=t.setupUpdate(200);
+  inu=t.setupUpdate(-1);
+  inu=t.setupUpdate(200);
+  inu=t.setupUpdate(-1);
+}|;
+sleep(250ms);
+
+t.updated > 0;
+[00000007] true
+t.updated < 10;
+[00000008] true

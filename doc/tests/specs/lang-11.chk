@@ -1,0 +1,13 @@
+syncline << "doc/specs/lang.tex:3716";
+[01234567:#] "doc/specs/lang.tex:3716"
+//#line 3716 "doc/specs/lang.tex"
+var x = 1;
+[00000000] 1
+at (watch(x % 2)?(var value))
+  echo("x %% 2 = %s" % value);
+
+// This is considered as a change, although the computation yields the
+// same result.
+x = 3;
+[00000000] 3
+[00000000] *** x % 2 = 1

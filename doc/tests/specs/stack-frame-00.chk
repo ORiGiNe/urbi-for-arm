@@ -1,0 +1,47 @@
+syncline << "doc/specs/stack-frame.tex:21";
+[01234567:#] "doc/specs/stack-frame.tex:21"
+//#line 21 "doc/specs/stack-frame.tex"
+//#push 1 "foo.u"
+function inner () { throw Exception.new("test") }|;
+
+function getStackFrame()
+{
+  try
+  {
+    inner
+  }
+  catch(var e)
+  {
+    e.backtrace[0]
+  };
+}|;
+//pop
+
+syncline << "doc/specs/stack-frame.tex:53";
+[01234567:#] "doc/specs/stack-frame.tex:53"
+//#line 53 "doc/specs/stack-frame.tex"
+StackFrame.new("inner",
+  Location.new(
+    Position.new("foo.u", 7, 5),
+    Position.new("foo.u", 7, 10)
+  )
+);
+[00000001] foo.u:7.5-9: inner
+
+syncline << "doc/specs/stack-frame.tex:68";
+[01234567:#] "doc/specs/stack-frame.tex:68"
+//#line 68 "doc/specs/stack-frame.tex"
+getStackFrame.name;
+[00000002] "inner"
+
+syncline << "doc/specs/stack-frame.tex:74";
+[01234567:#] "doc/specs/stack-frame.tex:74"
+//#line 74 "doc/specs/stack-frame.tex"
+getStackFrame.location;
+[00000003] foo.u:7.5-9
+
+syncline << "doc/specs/stack-frame.tex:80";
+[01234567:#] "doc/specs/stack-frame.tex:80"
+//#line 80 "doc/specs/stack-frame.tex"
+getStackFrame;
+[00000004] foo.u:7.5-9: inner

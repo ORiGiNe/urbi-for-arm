@@ -1,0 +1,632 @@
+%% Copyright (C) 2009-2012, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{System}
+Details on the architecture the \urbi server runs on.
+
+\subsection{Prototypes}
+\begin{itemize}
+\item \refObject{Object}
+\end{itemize}
+
+\subsection{Slots}
+\begin{urbiscriptapi}
+\item[_exit](<status>)%
+  Shut the server down brutally: the connections are not closed, and
+  the resources are not explicitly released (the operating system
+  reclaims most of them: memory, file descriptors and so forth).
+  Architecture dependent.
+
+
+\item[aliveJobs] The number of detached routines currently running.
+\begin{urbiscript}
+{
+  var nJobs = aliveJobs;
+  for (var i: [1s, 2s, 3s])
+    detach({sleep(i)});
+  sleep(0.5s);
+  assert(aliveJobs - nJobs == 3);
+  sleep(1s);
+  assert(aliveJobs - nJobs == 2);
+  sleep(1s);
+  assert(aliveJobs - nJobs == 1);
+  sleep(1s);
+  assert(aliveJobs - nJobs == 0);
+};
+\end{urbiscript}
+
+
+\item[arguments] The list of the command line arguments passed to the user
+  script.  This is especially useful in scripts.
+\begin{shell}[alsolanguage={[Interactive]urbiscript}]
+$ cat >echo <<EOF
+#! /usr/bin/env urbi
+System.arguments;
+shutdown;
+EOF
+$ chmod +x echo
+$ ./echo 1 2 3
+[00000172] ["1", "2", "3"]
+$ ./echo -x 12 -v "foo"
+[00000172] ["-x", "12", "-v", "foo"]
+\end{shell}
+
+
+\item['assert'](<assertion>)%
+  Unless \refSlot{ndebug} is true, throw an error if
+  \var{assertion} is not verified.  See also the assertion support in
+  \us, \autoref{sec:assertions}.
+\begin{urbiscript}
+'assert'(true);
+'assert'(42);
+'assert'(1 == 1 + 1);
+[00000002:error] !!! failed assertion: 1.'=='(1.'+'(1))
+\end{urbiscript}
+
+
+\item[assert_](<assertion>, <message>)%
+  If \var{assertion} does not evaluate to true, throw the failure
+  \var{message}.
+\begin{urbiscript}
+assert_(true,       "true failed");
+assert_(42,         "42 failed");
+assert_(1 == 1 + 1, "one is not two");
+[00000001:error] !!! failed assertion: one is not two
+\end{urbiscript}
+
+
+\item[assert_op](<operator>, <lhs>, <rhs>)%
+  Deprecated, use \lstinline|assert| instead, see \autoref{sec:assertions}.
+
+
+\item[backtrace]%
+  Display the call stack on the channel \code{backtrace}. \experimental
+\begin{urbiscript}
+//#push 100 "foo.u"
+function innermost () { backtrace }|;
+function inner ()     { innermost }|;
+function outer ()     { inner }|;
+function outermost () { outer }|;
+outermost;
+[00000013:backtrace] innermost (foo.u:101.25-33)
+[00000014:backtrace] inner (foo.u:102.25-29)
+[00000015:backtrace] outer (foo.u:103.25-29)
+[00000016:backtrace] outermost (foo.u:104.1-9)
+//#pop
+\end{urbiscript}
+
+
+%% \item[breakpoint]
+
+
+%% \item[currentRunner]
+
+
+\item[cycle]%
+  The number of execution cycles since the beginning. \experimental
+\begin{urbiscript}
+{
+  var first = cycle ; var second = cycle ;
+  assert(first + 1 == second);
+  first = cycle | second = cycle ;
+  assert(first == second);
+};
+\end{urbiscript}
+
+
+\item[eval](<source>, <target> = this)%
+  Evaluate the \us \var{source}, and return its result.  See also
+  \refSlot{loadFile}.  The \var{source} must be complete, yet the terminator
+  (e.g., \samp{;}) is not required.
+\begin{urbiassert}
+eval("1+2") == 1+2;
+eval("\"x\" * 10") == "x" * 10;
+eval("eval(\"1\")") == 1;
+eval("{ var x = 1; x + x; }") == 2;
+\end{urbiassert}
+
+The evaluation is performed in the context of the current object (\this) or
+\var{target} if specified.  In particular, to create local variables, create
+scopes.
+\begin{urbiassert}
+// Create a slot in the current object.
+eval("var a = 23;") == 23;
+this.a == 23;
+
+eval("var a = 3", Global) == 3;
+Global.a == 3;
+\end{urbiassert}
+
+  Exceptions are thrown on error (including syntax errors).
+\begin{urbiscript}
+eval("1/0");
+[00008316:error] !!! 1.1-3: /: division by 0
+[00008316:error] !!!    called from: eval
+try
+{
+  eval("1/0")
+}
+catch (var e)
+{
+  assert
+  {
+    e.isA(Exception.Primitive);
+    e.location.asString  == "1.1-3";
+    e.routine            == "/";
+    e.message            == "division by 0";
+  }
+};
+\end{urbiscript}
+
+  Warnings are reported.
+
+\begin{urbiscript}
+eval("new Object");
+[00001388:warning] !!! 1.1-10: `new Obj(x)' is deprecated, use `Obj.new(x)'
+[00001388:warning] !!!    called from: eval
+[00001388] Object_0x1001b2320
+\end{urbiscript}
+
+  Nested calls to \refSlot{eval} behave as expected.  The locations in the
+  inner calls refer to the position inside the evaluated string.
+
+\begin{urbiscript}
+eval("/");
+[00001028:error] !!! 1.1: syntax error: unexpected /
+[00001028:error] !!!    called from: eval
+
+eval("eval(\"/\")");
+[00001032:error] !!! 1.1: syntax error: unexpected /
+[00001032:error] !!!    called from: 1.1-9: eval
+[00001032:error] !!!    called from: eval
+
+eval("eval(\"eval(\\\"/\\\")\")");
+[00001035:error] !!! 1.1: syntax error: unexpected /
+[00001035:error] !!!    called from: 1.1-9: eval
+[00001035:error] !!!    called from: 1.1-19: eval
+[00001035:error] !!!    called from: eval
+\end{urbiscript}
+
+\item[getenv](<name>)%
+  The value of the environment variable \var{name} as a \refObject{String}
+  if set, \refObject{nil} otherwise.  See also \refSlot{setenv} and
+  \refSlot{unsetenv}.
+\begin{urbiassert}
+getenv("UndefinedEnvironmentVariable").isNil;
+!getenv("PATH").isNil;
+\end{urbiassert}
+
+
+%% \item[jobs]
+
+
+\item[load](<file>, <target> = this)%
+  Look for \var{file} in the \urbi path (\autoref{sec:tools:envvars}), and
+  load it in the context of \var{target}.  See also \refSlot{loadFile}.
+  Throw a \refSlot[Exception]{FileNotFound} error if the file cannot be
+  found.  Return the last value of the file.
+\begin{urbiscript}
+// Create the file ``123.u'' that contains exactly ``var t = 123;''.
+File.save("123.u", "var t = 123;");
+assert
+{
+  load("123.u") == 123;
+  this.t == 123;
+
+  load("123.u", Global) == 123;
+  Global.t == 123;
+};
+\end{urbiscript}
+
+
+\item[loadFile](<file>, <target> = this)%
+  Load the \us file \var{file} in the context of \var{target}.  Behaves like
+  \refSlot{eval} applied to the content of \var{file}.  Throw a
+  \refSlot[Exception]{FileNotFound} error if the file cannot be found.
+  Return the last value of the file.
+\begin{urbiscript}
+// Create the file ``123.u'' that contains exactly ``var y = 123;''.
+File.save("123.u", "var y = 123;");
+assert
+{
+  loadFile("123.u") == 123;
+  this.y == 123;
+
+  loadFile("123.u", Global) == 123;
+  Global.y == 123;
+};
+
+\end{urbiscript}
+
+
+\item[loadLibrary](<library>)%
+  Load the library \var{library}, to be found in
+  \refSlot[UObject]{searchPath}.  The \var{library} may be a
+  \refObject{String} or a \refObject{Path}.  The \Cxx symbols are made
+  available to the other \Cxx components.  See also \refSlot{loadModule}.
+
+
+\item[loadModule](<module>)%
+  Load the \UObject \var{module}.  Same as \refSlot{loadLibrary}, except
+  that the low-level \Cxx symbols are not made ``global'' (in the sense of
+  the shared library loader).
+
+
+\item[lobbies] Bounce to \refSlot[Lobby]{instances}.
+
+
+\item[lobby] Bounce to \refSlot[Lobby]{lobby}.
+
+
+\item[maybeLoad](<file>, <channel> = Channel.null)%
+  Look for \var{file} in the \urbi path (\autoref{sec:tools:envvars}).
+  If the file is found announce on \var{Channel} that \var{file} is
+  about to be loaded, and load it.
+
+\begin{urbiscript}
+// Create the file ``123.u'' that contains exactly ``123;''.
+File.save("123.u", "123;");
+assert
+{
+  maybeLoad("123.u") == 123;
+  maybeLoad("u.123").isVoid;
+};
+\end{urbiscript}
+
+
+\item[ndebug] If true, do not evaluate the assertions.  See
+  \autoref{sec:assertions}.
+\begin{urbiscript}
+function one() { echo("called!"); 1 }|;
+assert(!System.ndebug);
+
+assert(one);
+[00000617] *** called!
+
+// Beware of copy-on-write.
+System.ndebug = true|;
+assert(one);
+
+System.ndebug = false|;
+assert(one);
+[00000622] *** called!
+\end{urbiscript}
+
+
+%% \item[nonInterruptible]
+
+
+\item[PackageInfo] See \refObject{System.PackageInfo}.
+
+
+\item[period] The \dfn{period} of the \urbi kernel.  Influences the
+  trajectories (\refObject{TrajectoryGenerator}), and the \UObject
+  monitoring.  Defaults to 20ms.
+\begin{urbiassert}
+System.period == 20ms;
+\end{urbiassert}
+
+
+\item[Platform] See \refObject{System.Platform}.
+
+\item[profile](<function>)%
+  Compute some measures during the execution of \var{function} and return
+  the results as a \refObject{Profile} object. A \refObject{Profile} details
+  information about time, function calls and scheduling.
+
+
+\item[programName] The path under which the \urbi process was called.
+  This is typically \file{.../urbi} (\autoref{sec:tools:urbi}) or
+  \file{.../urbi-launch} (\autoref{sec:tools:urbi-launch}).
+\begin{urbiassert}
+Path.new(System.programName).basename
+  in ["urbi", "urbi.exe", "urbi-launch", "urbi-launch.exe"];
+\end{urbiassert}
+
+
+\item[reboot] Restart the \urbi server.  Architecture dependent.
+
+
+\item[redefinitionMode] Switch the current job in redefinition mode
+  until the end of the current scope.  While in redefinition mode,
+  setSlot on already existing slots will overwrite the slot instead of
+  erring.
+
+\begin{urbiscript}
+var Global.x = 0;
+[00000001] 0
+{
+  System.redefinitionMode;
+  // Not an error
+  var Global.x = 1;
+  echo(Global.x);
+};
+[00000002] *** 1
+// redefinitionMode applies only to the scope.
+var Global.x = 0;
+[00000003:error] !!! slot redefinition: x
+\end{urbiscript}
+
+
+\item[requireFile](<file>, <target>)%
+  Load \var{file} in the context of \var{target} if it was not loaded before
+  (with \refSlot{load} or \refSlot{requireFile}). Unlike \refSlot{load},
+  \lstinline{requireFile} always returns \lstinline|void|. If \var{file} is
+  being loaded concurrently \lstinline{requireFile} waits until the loading
+  is finished.
+
+\begin{urbiscript}
+// Create the file ``test.u'' that echoes a string.
+File.save("test1.u", "echo(\"test 1\"); 1;");
+requireFile("test1.u");
+[00000001] *** test 1
+requireFile("test1.u");
+// File is not re-loaded
+
+File.save("test2.u", "echo(\"test 2\"); 2;");
+load("test2.u");
+[00000004] *** test 2
+[00000004] 2
+requireFile("test2.u");
+load("test2.u");
+[00000006] *** test 2
+[00000006] 2
+\end{urbiscript}
+
+  The \var{target} is not taken into account to check whether the file has
+  already been loaded: if you require twice the same file with two different
+  targets, it will be loaded only for the first.
+
+\begin{urbiscript}
+requireFile("test2.u", Global);
+\end{urbiscript}
+
+\item[resetStats]%
+  Reinitialize the \refSlot{stats} computation.
+\begin{urbiassert}
+ 0  < System.stats["cycles"];
+System.resetStats.isVoid;
+ 1 == System.stats["cycles"];
+\end{urbiassert}
+
+
+\item[scopeTag] Bounce to \refSlot[Tag]{scope}.
+
+
+\item[searchFile](<file>)%
+  Look for \var{file} in the \refSlot{searchPath} and return its
+  \refObject{Path}.  Throw a \refSlot[Exception]{FileNotFound} error if the
+  file cannot be found.
+\begin{urbiscript}
+// Create the file ``123.u'' that contains exactly ``123;''.
+File.save("123.u", "123;");
+assert
+{
+  searchFile("123.u") == Path.cwd / Path.new("123.u");
+};
+\end{urbiscript}
+
+
+\item[searchPath] The \urbi path (i.e., the directories where the \us files
+  are looked for, see \autoref{sec:tools:envvars}) as a \refObject{List} of
+  \refObject[Path]{Paths}.
+\begin{urbiassert}
+System.searchPath.isA(List);
+System.searchPath[0].isA(Path);
+\end{urbiassert}
+
+
+\item[setenv](<name>, <value>)%
+  Set the environment variable \var{name} to
+  \lstinline|\var{value}.asString|, and return this value.  See also
+  \refSlot{getenv} and \refSlot{unsetenv}.
+  \begin{windows}
+    Under Windows, setting to an empty value is equivalent to
+    making undefined.
+  \end{windows}
+
+\begin{urbiassert}
+setenv("MyVar", 12) == "12";
+getenv("MyVar") == "12";
+
+// A child process that uses the environment variable.
+System.system("exit $MyVar") >> 8 ==
+       {if (Platform.isWindows) 0 else 12};
+setenv("MyVar", 23) == "23";
+System.system("exit $MyVar") >> 8 ==
+       {if (Platform.isWindows) 0 else 23};
+
+// Defining to empty is defining, unless you are on Windows.
+setenv("MyVar", "") == "";
+getenv("MyVar").isNil == Platform.isWindows;
+\end{urbiassert}
+
+
+\item[shiftedTime] Return the number of seconds elapsed since the
+  \urbi server was launched.  Contrary to \refSlot{time},
+  time spent in frozen code is not counted.
+\begin{urbiassert}
+{ var t0 = shiftedTime | sleep(1s) | shiftedTime - t0 }.round ~= 1;
+
+  1 ==
+  {
+    var t = Tag.new|;
+    var t0 = time|;
+    var res;
+    t: { sleep(1s) | res = shiftedTime - t0 },
+    t.freeze;
+    sleep(1s);
+    t.unfreeze;
+    sleep(1s);
+    res.round;
+  };
+\end{urbiassert}
+
+
+\item[shutdown] Have the \urbi server shut down.  All the connections
+  are closed, the resources are released.  Architecture dependent.
+
+
+\item[sleep](<duration> = inf)%
+  Suspend the execution for \var{duration} seconds.  No CPU cycle is wasted
+  during this wait. If no \var{duration} is given the execution is suspended
+  indefinitely.
+
+\begin{urbiassert}
+(time - {sleep(1s); time}).round == -1;
+\end{urbiassert}
+
+
+\item[spawn](<function>, <clear>)%
+  Run the \var{function}, with fresh tags if \var{clear} is true, otherwise
+  under the control of the current tags.  Return the spawn \refObject{Job}.
+\begin{urbiscript}
+var jobs = []|;
+var res = []|;
+for (var i : [0, 1, 2])
+{
+  jobs << System.spawn(closure () { res << i; res << i },
+                       true) |
+  if (i == 2)
+    break
+}|
+jobs;
+[00009120] [Job<shell_11>, Job<shell_12>, Job<shell_13>]
+// Wait for the jobs to be done.
+jobs.each (function (var j) { j.waitForTermination });
+assert (res == [0, 1, 0, 2, 1, 2]);
+\end{urbiscript}
+
+\begin{urbiscript}
+jobs = []|;
+res = []|;
+for (var i : [0, 1, 2])
+{
+  jobs << System.spawn(closure () { res << i; res << i },
+                       false) |
+  if (i == 2)
+    break
+}|
+jobs;
+[00009120] [Job<shell_14>, Job<shell_15>, Job<shell_16>]
+// Give some time to get the output of the detached expressions.
+sleep(100ms);
+assert (res == [0, 1, 0]);
+\end{urbiscript}
+
+\item[stats]%
+  Return a \refObject{Dictionary} containing information about the execution
+  cycles of \urbi.  This is an internal feature made for developers, it
+  might be changed without notice.  See also \refSlot{resetStats}.
+\begin{urbiscript}
+var stats = System.stats|;
+assert
+{
+  stats.isA(Dictionary);
+  stats.keys.sort == ["cycles",
+                      "cyclesMin", "cyclesMean", "cyclesMax",
+                      "cyclesVariance", "cyclesStdDev"].sort;
+  0 < stats["cycles"];
+  stats["cyclesMin"]  <= stats["cyclesMean"];
+  stats["cyclesMean"] <= stats["cyclesMax"];
+};
+\end{urbiscript}
+
+
+%% \item[stopall]
+
+
+\item[system](<command>)%
+  Ask the operating system to run the \var{command}.  This is
+  typically used to start new processes.  The exact syntax of
+  \var{command} depends on your system.  On Unix systems, this is
+  typically \file{/bin/sh}, while Windows uses \file{command.exe}.
+
+  Return the exit status.
+
+  \begin{windows}
+    Under Windows, the exit status is always 0.
+  \end{windows}
+
+\begin{urbiassert}
+System.system("exit 0") == 0;
+System.system("exit 23") >> 8
+       == { if (System.Platform.isWindows) 0 else 23 };
+\end{urbiassert}
+
+
+\item[time] Return the number of seconds elapsed since the \urbi
+  server was launched.  In presence of a frozen \refObject{Tag}, see
+  also \refSlot{shiftedTime}.
+\begin{urbiassert}
+{ var t0 = time | sleep(1s) | time - t0 }.round ~= 1;
+
+  2 ==
+  {
+    var t = Tag.new|;
+    var t0 = time|;
+    var res;
+    t: { sleep(1s) | res = time - t0 },
+    t.freeze;
+    sleep(1s);
+    t.unfreeze;
+    sleep(1s);
+    res.round;
+  };
+\end{urbiassert}
+
+
+\item[timeReference]%
+  The ``origin of time'' of this run of \urbi, as a \refObject{Date}.  It is
+  a constant during the run.  Basically, \lstinline|System.time| is about
+  \lstinline|Date.now - System.timeReference|.  See also \refSlot{time} and
+  \refSlot[Date]{now}.
+
+\begin{urbiscript}
+var t1 = System.timeReference|;
+sleep(1s);
+var t2 = System.timeReference|;
+assert
+{
+  t1 == t2;
+  t1.isA(Date);
+  (Date.now - (System.timeReference + System.time)) < 0.5s;
+};
+\end{urbiscript}
+\begin{urbicomment}
+removeSlots("t1", "t2");
+\end{urbicomment}
+
+\item[unsetenv](<name>)%
+  Undefine the environment variable \var{name}, return its previous value.
+  See also \refSlot{getenv} and \refSlot{setenv}.
+
+\begin{urbiassert}
+setenv("MyVar", 12) == "12";
+!getenv("MyVar").isNil;
+unsetenv("MyVar") == "12";
+getenv("MyVar").isNil;
+\end{urbiassert}
+
+
+\item[version]%
+  The version of \usdk.  A string composed of two or more numbers separated
+  by periods: \samp{"\packageVersion"}.
+\begin{urbiassert}
+System.version in Regexp.new("\\d+(\\.\\d+)+");
+\end{urbiassert}
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

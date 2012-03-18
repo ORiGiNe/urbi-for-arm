@@ -1,0 +1,11 @@
+class Foo
+{
+  function init
+  {
+    call.argAt(1)
+  };
+} | {};
+
+Foo.new(echo("foo"), echo("bar"));
+[00000001] *** bar
+[00000002] Foo_0xADDR

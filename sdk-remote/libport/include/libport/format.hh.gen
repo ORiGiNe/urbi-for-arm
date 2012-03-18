@@ -1,0 +1,81 @@
+#!/usr/bin/python
+
+# Copyright (C) 2009, 2010, 2011, Gostai S.A.S.
+#
+# This software is provided "as is" without warranty of any kind,
+# either expressed or implied, including but not limited to the
+# implied warranties of fitness for a particular purpose.
+#
+# See the LICENSE file for more information.
+
+
+print('''\
+#ifndef LIBPORT_FORMAT_HH
+# define LIBPORT_FORMAT_HH
+
+# include <libport/system-warning-push.hh>
+# include <boost/format.hpp>
+# include <libport/system-warning-pop.hh>
+
+# include <libport/export.hh>
+
+namespace libport
+{
+
+  /// A Boost Format object cache.
+  /// \\param s   the format string to compile once
+  /// \\returns   a Boost format copy, since it maintains state.
+  LIBPORT_API
+  boost::format format_get(const std::string& s);
+
+  /// Report and rethrow a failure in Boost format.
+  /// Not inline to break dependencies bw Libport.Debug and Libport.Format.
+  LIBPORT_API ATTRIBUTE_NORETURN
+  void format_failure(const std::string& fmt, const std::exception& e);
+
+  // Also accept 0-ary format strings.  Don't return it directly,
+  // still consult boost::format to make sure there are no trailing
+  // %s.
+  inline
+  std::string format(const std::string& fmt)
+  {
+    try
+    {
+      return str(format_get(fmt));
+    }
+    catch (const std::exception& e)
+    {
+      format_failure(fmt, e);
+    }
+  }
+''')
+
+def args(n, f, d = ', '):
+    return d.join(map(f, range(n)))
+
+for n in range(1, 9):
+    a = {
+        'template': args(n, lambda x : 'typename T%s' % x),
+        'formals':  args(n, lambda x : 'const T%s& arg%s' % (x, x)),
+        'format':   args(n, lambda x : 'arg%s' % x, ' % '),
+        }
+    print('''\
+  template <%(template)s>
+  inline
+  std::string format(const std::string& fmt, %(formals)s)
+  {
+    try
+    {
+      return str(format_get(fmt) %% %(format)s);
+    }
+    catch (const std::exception& e)
+    {
+      format_failure(fmt, e);
+    }
+  }
+''' % a)
+
+print('''\
+}
+
+#endif''')

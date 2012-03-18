@@ -1,0 +1,11 @@
+skipIfSpace;
+
+var cha = Event.new |;
+
+at(?cha)
+  echo("Got cha!");
+[00000001:warning] !!! input.u:5.4-7: `?event(arg, ...)' is deprecated, use `event?(arg, ...)'
+
+emit cha;
+[00000002:warning] !!! input.u:@.1-8: `emit event(arg, ...)' is deprecated, use `event!(arg, ...)'
+[00000003] *** Got cha!

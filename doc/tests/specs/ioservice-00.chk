@@ -1,0 +1,35 @@
+syncline << "doc/specs/ioservice.tex:26";
+[01234567:#] "doc/specs/ioservice.tex:26"
+//#line 26 "doc/specs/ioservice.tex"
+var io = IoService.new|;
+var s = io.makeSocket|;
+
+syncline << "doc/specs/ioservice.tex:33";
+[01234567:#] "doc/specs/ioservice.tex:33"
+//#line 33 "doc/specs/ioservice.tex"
+// Make a simple hello server.
+var serverPort = 0|
+do(Server.new)
+{
+  listen("127.0.0.1", "0");
+  lobby.serverPort = port;
+  at(connection?(var s))
+  {
+    s.write("hello");
+  }
+}|;
+// Connect to it using our socket.
+s.connect("0.0.0.0", serverPort);
+at(s.received?(var data))
+  echo("received something");
+s.write("1;");
+
+syncline << "doc/specs/ioservice.tex:55";
+[01234567:#] "doc/specs/ioservice.tex:55"
+//#line 55 "doc/specs/ioservice.tex"
+sleep(200ms);
+s.isConnected(); // Nothing was received yet
+[00000001] true
+io.poll();
+[00000002] *** received something
+sleep(200ms);

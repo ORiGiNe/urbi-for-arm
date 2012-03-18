@@ -1,0 +1,7 @@
+** Bison @BISON_VERSION@
+** Boost @BOOST_VERSION@
+** C++ Compiler @CXX_VERSION@
+** Flex @FLEX_VERSION@
+** oRTP @ORTP_VERSION@
+** ROS @ROS_VERSION@
+** SWIG @SWIG_VERSION@

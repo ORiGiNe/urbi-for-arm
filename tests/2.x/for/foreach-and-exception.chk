@@ -1,0 +1,35 @@
+// Check that the execution of for& is aborted when an exception occurs
+var l = [5, 4, 3, 2, 1] | {};
+for& (var i: l)
+{
+  echo ("Initial: " + i);
+  sleep(i * 100ms);
+  echo ("After sleep: " + i);
+  if (i == 2) { 1/0 }
+};
+[00000001] *** Initial: 5
+[00000002] *** Initial: 4
+[00000003] *** Initial: 3
+[00000004] *** Initial: 2
+[00000005] *** Initial: 1
+[00000006] *** After sleep: 1
+[00000007] *** After sleep: 2
+[00000008:error] !!! input.u:8.17-19: /: division by 0
+[00000009:error] !!!    called from: input.u:3.14-9.1: each&
+
+// Check that break stop correctly the loop and that it does not continue
+// after the pipe. (see issue 3071)
+
+for& (var i : [0, 1, 2])
+{
+  echo("for& and break| " + i);
+  if (i == 1)
+  {
+    break | echo("for&: 'break|' fails")
+  };
+  echo("for&: break fails")
+};
+
+[00000010] *** for& and break| 0
+[00000011] *** for& and break| 1
+[00000012] *** for& and break| 2

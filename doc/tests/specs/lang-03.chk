@@ -1,0 +1,17 @@
+syncline << "doc/specs/lang.tex:3402";
+[01234567:#] "doc/specs/lang.tex:3402"
+//#line 3402 "doc/specs/lang.tex"
+var e = Event.new|;
+at (e?(var start) ~ 1s)
+  echo("in : %s" % (time - start).round)
+onleave
+  echo("out: %s" % (time - start).round);
+
+// This emission is too short to trigger the at.
+e!(time);
+
+// This one is long enough.
+// The body triggers 1s after the emission started.
+e!(time) ~ 2s;
+[00001000] *** in : 1
+[00002000] *** out: 2

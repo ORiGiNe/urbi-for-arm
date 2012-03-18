@@ -1,0 +1,13 @@
+syncline << "doc/specs/tag.tex:49";
+[01234567:#] "doc/specs/tag.tex:49"
+//#line 49 "doc/specs/tag.tex"
+var t = Tag.new|;
+var res;
+detach(res = { t: every(1s) echo("computing") })|;
+sleep(2.2s);
+[00000001] *** computing
+[00000002] *** computing
+[00000003] *** computing
+
+t.stop("result");
+assert(res == "result");

@@ -1,0 +1,124 @@
+%% Copyright (C) 2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Loadable}
+
+Loadable objects can be switched on and off --- typically physical
+devices.
+
+\subsection{Prototypes}
+
+\begin{refObjects}
+\item[Object]
+\end{refObjects}
+
+\subsection{Example}
+
+The intended use is rather as follows:
+
+\begin{urbiscript}
+class Motor: Loadable
+{
+  var val = 0;
+  function go(var d)
+  {
+    if (load)
+      val += d
+    else
+      echo("cannot advance, the motor is off")|;
+  };
+};
+[00000002] Motor
+
+var m = Motor.new;
+[00000003] Motor_0xADDR
+
+m.load;
+[00000004] false
+
+m.go(1);
+[00000006] *** cannot advance, the motor is off
+
+m.on;
+[00000007] Motor_0xADDR
+
+m.go(123);
+m.val;
+[00000009] 123
+\end{urbiscript}
+
+\subsection{Construction}
+
+\lstinline|Loadable| can be constructed, but it hardly makes sense.
+This object should serve as a prototype.
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+\item[load] The current status.
+
+\item[off](<val>)%
+  Set \refSlot{load} to \lstinline|false| and return \this.
+\begin{urbiassert}
+do (Loadable.new)
+{
+  assert
+  {
+    !load;
+    off === this;
+    !load;
+    on === this;
+    load;
+    off === this;
+    !load;
+  };
+};
+\end{urbiassert}
+
+\item[on](<val>)%
+  Set \refSlot{load} to \lstinline|true| and return \this.
+\begin{urbiassert}
+do (Loadable.new)
+{
+  assert
+  {
+    !load;
+    on === this;
+    load;
+    on === this;
+    load;
+  };
+};
+\end{urbiassert}
+
+\item[toggle]%
+  Set \refSlot{load} from \lstinline|true| to \lstinline|false|, and
+  vice-versa.  Return \var{val}.
+\begin{urbiassert}
+do (Loadable.new)
+{
+  assert
+  {
+    !load;
+    toggle === this;
+    load;
+    toggle === this;
+    !load;
+  };
+};
+\end{urbiassert}
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

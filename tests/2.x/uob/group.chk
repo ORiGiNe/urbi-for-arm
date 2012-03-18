@@ -1,0 +1,36 @@
+//#plug test/generic
+var a1 = generic.new;
+var a2 = generic.new;
+var as = Group.new(a1, a2);
+
+var b1 = generic.new;
+var b2 = generic.new;
+var bs = Group.new(b1, b2);
+
+var all = Group.new(as, bs);
+
+all.foo(1);
+[00000001] 2
+[00000002] 2
+[00000003] 2
+[00000004] 2
+noop;
+
+generics.foo(2);
+[00000005] 3
+[00000006] 3
+[00000007] 3
+[00000008] 3
+noop;
+
+generics.val->blend = mix;
+generics.val = 0 & generics.val = 1;
+a1.val;
+[00000009] 0.5
+noop;
+
+generics->blend = add;
+generics.val = 1 & generics.val = 2;
+
+a1.val;
+[00000010] 3

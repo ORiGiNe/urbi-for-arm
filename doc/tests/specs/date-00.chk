@@ -1,0 +1,183 @@
+syncline << "doc/specs/date.tex:36";
+[01234567:#] "doc/specs/date.tex:36"
+//#line 36 "doc/specs/date.tex"
+Date.new("2003-10-10 20:10:50:637");
+[00000001] 2003-10-10 20:10:50.637000
+
+Date.new("2003-10-10 20:10:50");
+[00000001] 2003-10-10 20:10:50.000000
+
+Date.new("2003-Oct-10 20:10");
+[00000002] 2003-10-10 20:10:00.000000
+
+Date.new("2003-10-10 20");
+[00000003] 2003-10-10 20:00:00.000000
+
+syncline << "doc/specs/date.tex:53";
+[01234567:#] "doc/specs/date.tex:53"
+//#line 53 "doc/specs/date.tex"
+Date.new("2003-10-10  20:10:50");
+[00001968:error] !!! new: cannot convert to date: 2003-10-10  20:10:50
+
+syncline << "doc/specs/date.tex:63";
+[01234567:#] "doc/specs/date.tex:63"
+//#line 63 "doc/specs/date.tex"
+Date.new("2003-10-10 00.12");
+[00000003] 2003-10-10 00:12:00.000000
+
+Date.new("2003-10-10 00:00.12");
+[00000003] 2003-10-10 00:00:12.000000
+
+syncline << "doc/specs/date.tex:77";
+[01234567:#] "doc/specs/date.tex:77"
+//#line 77 "doc/specs/date.tex"
+assert {
+Date.new("2010-08-17 12:00:00.2") + 63.2s == Date.new("2010-08-17 12:01:03.4");
+};
+
+syncline << "doc/specs/date.tex:84";
+[01234567:#] "doc/specs/date.tex:84"
+//#line 84 "doc/specs/date.tex"
+assert {
+Date.new("2010-08-17 12:01:00.50") - Date.new("2010-08-17 12:00") == 60.5s;
+Date.new("2010-08-17 12:00")       - Date.new("2010-08-17 12:01") == -60s;
+};
+
+syncline << "doc/specs/date.tex:91";
+[01234567:#] "doc/specs/date.tex:91"
+//#line 91 "doc/specs/date.tex"
+assert {
+Date.new("2010-08-17 12:01") - 60s == Date.new("2010-08-17 12:00");
+Date.new("2010-08-17 12:01") - 60s
+  == Date.new("2010-08-17 12:01") - Duration.new(60s);
+};
+
+syncline << "doc/specs/date.tex:99";
+[01234567:#] "doc/specs/date.tex:99"
+//#line 99 "doc/specs/date.tex"
+assert {
+Date.new("2010-08-17 12:00:00.123") == Date.new("2010-08-17 12:00:00.123");
+Date.new("2010-08-17 12:00")        != Date.new("2010-08-17 12:01");
+};
+
+syncline << "doc/specs/date.tex:106";
+[01234567:#] "doc/specs/date.tex:106"
+//#line 106 "doc/specs/date.tex"
+assert {
+   Date.new("2010-08-17 12:00") < Date.new("2010-08-17 12:01");
+! (Date.new("2010-08-17 12:01") < Date.new("2010-08-17 12:00"));
+};
+
+syncline << "doc/specs/date.tex:112";
+[01234567:#] "doc/specs/date.tex:112"
+//#line 112 "doc/specs/date.tex"
+var d = Date.new("2002-01-20 23:59:59")|;
+assert
+{
+  d.asFloat == d - d.epoch;
+  d.asFloat.isA(Float);
+};
+
+syncline << "doc/specs/date.tex:133";
+[01234567:#] "doc/specs/date.tex:133"
+//#line 133 "doc/specs/date.tex"
+assert {
+Date.new("2009-02-14 00:31:30").asString == "2009-02-14 00:31:30.000000";
+};
+
+syncline << "doc/specs/date.tex:139";
+[01234567:#] "doc/specs/date.tex:139"
+//#line 139 "doc/specs/date.tex"
+{
+  var d = Date.new("2010-09-29 17:32:53");
+  assert(d.day == 29);
+  d.day = 1;
+  assert(d == Date.new("2010-09-01 17:32:53"));
+};
+
+syncline << "doc/specs/date.tex:147";
+[01234567:#] "doc/specs/date.tex:147"
+//#line 147 "doc/specs/date.tex"
+Date.new("2010-02-01 17:32:53").day = 29;
+[00000001:error] !!! updateSlot: Day of month is not valid for year
+
+syncline << "doc/specs/date.tex:161";
+[01234567:#] "doc/specs/date.tex:161"
+//#line 161 "doc/specs/date.tex"
+{
+  var d = Date.new("2010-09-29 17:32:53");
+  assert(d.hour == 17);
+  d.hour = 8;
+  assert(d == Date.new("2010-09-29 08:32:53"));
+};
+
+syncline << "doc/specs/date.tex:173";
+[01234567:#] "doc/specs/date.tex:173"
+//#line 173 "doc/specs/date.tex"
+{
+  var d = Date.new("2010-09-29 17:32:53.123456");
+  assert(d.microsecond == 123456);
+  d.microsecond = 654321;
+  assert(d == Date.new("2010-09-29 17:32:53.654321"));
+};
+
+syncline << "doc/specs/date.tex:184";
+[01234567:#] "doc/specs/date.tex:184"
+//#line 184 "doc/specs/date.tex"
+{
+  var d = Date.new("2010-09-29 17:32:53");
+  assert(d.minute == 32);
+  d.minute = 12;
+  assert(d == Date.new("2010-09-29 17:12:53"));
+};
+
+syncline << "doc/specs/date.tex:195";
+[01234567:#] "doc/specs/date.tex:195"
+//#line 195 "doc/specs/date.tex"
+{
+  var d = Date.new("2010-09-29 17:32:53");
+  assert(d.month == 9);
+  d.month = 3;
+  assert(d == Date.new("2010-03-29 17:32:53"));
+};
+
+syncline << "doc/specs/date.tex:212";
+[01234567:#] "doc/specs/date.tex:212"
+//#line 212 "doc/specs/date.tex"
+{
+  var d = Date.new("2010-09-29 17:32:53");
+  assert(d.second == 53);
+  d.second = 37;
+  assert(d == Date.new("2010-09-29 17:32:37"));
+};
+
+syncline << "doc/specs/date.tex:226";
+[01234567:#] "doc/specs/date.tex:226"
+//#line 226 "doc/specs/date.tex"
+assert {
+Date.new("2010-08-17 00:00:00.0")     .us == 0;
+Date.new("2010-08-17 00:00:00.123456").us == 123456;
+Date.new("2010-08-17 00:00:01.234567").us == 1234567;
+Date.new("2010-08-17 01:02:03.456789").us
+  == (1 * 3600 + 2 * 60 + 3) * 1000000 + 456789;
+};
+
+syncline << "doc/specs/date.tex:234";
+[01234567:#] "doc/specs/date.tex:234"
+//#line 234 "doc/specs/date.tex"
+{
+  var d = Date.new("2010-09-29 17:32:53.123456");
+  assert(d.us == 63173123456);
+  d.us = 123456;
+  assert(d == Date.new("2010-09-29 00:00:00.123456"));
+};
+
+syncline << "doc/specs/date.tex:245";
+[01234567:#] "doc/specs/date.tex:245"
+//#line 245 "doc/specs/date.tex"
+{
+  var d = Date.new("2010-09-29 17:32:53");
+  assert(d.year == 2010);
+  d.year = 2000;
+  assert(d == Date.new("2000-09-29 17:32:53"));
+};

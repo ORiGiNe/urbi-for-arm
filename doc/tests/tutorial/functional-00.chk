@@ -1,0 +1,83 @@
+syncline << "doc/tutorial/functional.tex:26";
+[01234567:#] "doc/tutorial/functional.tex:26"
+//#line 26 "doc/tutorial/functional.tex"
+var o = Object.clone|;
+// Here we can use f as any regular value.
+o.setSlot("m1", function () { echo("Hello") })|;
+// This is strictly equivalent.
+var o.m2 = function () { echo("Hello") }|;
+o.m1;
+[00000000] *** Hello
+o.m2;
+[00000000] *** Hello
+
+syncline << "doc/tutorial/functional.tex:45";
+[01234567:#] "doc/tutorial/functional.tex:45"
+//#line 45 "doc/tutorial/functional.tex"
+function all(list, predicate)
+{
+  for (var elt : list)
+    if (!predicate(elt))
+      return false;
+  return true;
+}|;
+// Check if all elements in a list are positive.
+function positive(x) { x >= 0 }|;
+all([1, 2, 3], getSlot("positive"));
+[00000000] true
+all([1, 2, -3], getSlot("positive"));
+[00000000] false
+
+syncline << "doc/tutorial/functional.tex:72";
+[01234567:#] "doc/tutorial/functional.tex:72"
+//#line 72 "doc/tutorial/functional.tex"
+// Create an anonymous function
+function (x) {x + 1}|;
+// This enable to easily pass function
+// to our "all" function:
+[1, 2, 3].all(function (x) { x > 0});
+[00000000] true
+
+syncline << "doc/tutorial/functional.tex:103";
+[01234567:#] "doc/tutorial/functional.tex:103"
+//#line 103 "doc/tutorial/functional.tex"
+// Note the lack of formal arguments specification
+function first
+{
+  // Evaluate only the first argument.
+  call.evalArgAt(0);
+}|;
+first(echo("first"), echo("second"));
+[00000000] *** first
+function reverse
+{
+  call.evalArgAt(1);
+  call.evalArgAt(0);
+}|;
+reverse(echo("first"), echo("second"));
+[00000000] *** second
+[00000000] *** first
+
+syncline << "doc/tutorial/functional.tex:130";
+[01234567:#] "doc/tutorial/functional.tex:130"
+//#line 130 "doc/tutorial/functional.tex"
+function myAnd
+{
+  if (call.evalArgAt(0))
+    call.evalArgAt(1)
+  else
+    false;
+}|;
+
+function f()
+{
+  echo("f executed");
+  return true;
+}|;
+
+myAnd(false, f());
+[00000000] false
+
+myAnd(true, f());
+[00000000] *** f executed
+[00000000] true

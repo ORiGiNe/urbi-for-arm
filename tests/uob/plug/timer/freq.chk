@@ -1,0 +1,50 @@
+//#uobject test/timer
+//#no-fast
+
+var t = timer.new;
+var inu;
+[00000001] timer_0xADDR
+sleep(500ms);
+t.updated;
+[00000002] 0
+{
+  inu=t.setupUpdate(100);
+  inu=t.setupUpdate(100);
+  inu=t.setupUpdate(100);
+  inu=t.setupUpdate(100);
+  inu=t.setupUpdate(100);
+}|;
+sleep(250ms);
+t.updated > 0;
+[00000003] true
+t.updated < 10 || t.updated;
+[00000004] true
+
+
+t.setupUpdate(-1);
+[00000005] 0
+sleep(100ms);
+t.updated = 0;
+[00000006] 0
+sleep(200ms);
+t.updated > 0;
+[00000007] false
+
+{
+  inu=t.setupUpdate(100);
+  inu=t.setupUpdate(-1);
+  inu=t.setupUpdate(100);
+  inu=t.setupUpdate(-1);
+  inu=t.setupUpdate(100);
+  inu=t.setupUpdate(-1);
+  inu=t.setupUpdate(100);
+  inu=t.setupUpdate(-1);
+  inu=t.setupUpdate(100);
+  inu=t.setupUpdate(-1);
+}|;
+sleep(250ms);
+
+t.updated > 0;
+[00000008] true
+t.updated < 10 || t.updated;
+[00000009] true

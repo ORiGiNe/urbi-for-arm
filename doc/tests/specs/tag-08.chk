@@ -1,0 +1,47 @@
+syncline << "doc/specs/tag.tex:384";
+[01234567:#] "doc/specs/tag.tex:384"
+//#line 384 "doc/specs/tag.tex"
+// Anonymous tag.
+var t1 = Tag.new;
+[00000001] Tag<tag_8>
+
+// Named tag.
+var t2 = Tag.new("cool name");
+[00000001] Tag<cool name>
+
+syncline << "doc/specs/tag.tex:439";
+[01234567:#] "doc/specs/tag.tex:439"
+//#line 439 "doc/specs/tag.tex"
+{
+  assert ("brandNewTag" not in Tag.tags.localSlotNames);
+  brandNewTag: 1;
+  assert ("brandNewTag" in Tag.tags.localSlotNames);
+  assert (Tag.tags.brandNewTag.isA(Tag));
+};
+
+syncline << "doc/specs/tag.tex:463";
+[01234567:#] "doc/specs/tag.tex:463"
+//#line 463 "doc/specs/tag.tex"
+var parent = Tag.new |
+var child = parent.clone |
+
+// Stopping parent also stops children.
+{
+  parent: {sleep(100ms); echo("parent")},
+  child:  {sleep(100ms); echo("child")},
+  parent.stop;
+  sleep(200ms);
+  echo("end");
+};
+[00000001] *** end
+
+// Stopping child has no effect on parent.
+{
+  parent: {sleep(100ms); echo("parent")},
+  child:  {sleep(100ms); echo("child")},
+  child.stop;
+  sleep(200ms);
+  echo("end");
+};
+[00000002] *** parent
+[00000003] *** end

@@ -1,0 +1,73 @@
+syncline << "doc/specs/float/limits.tex:20";
+[01234567:#] "doc/specs/float/limits.tex:20"
+//#line 20 "doc/specs/float/limits.tex"
+assert {
+Float.limits.digits;
+};
+
+syncline << "doc/specs/float/limits.tex:27";
+[01234567:#] "doc/specs/float/limits.tex:27"
+//#line 27 "doc/specs/float/limits.tex"
+assert {
+Float.limits.digits10;
+};
+
+syncline << "doc/specs/float/limits.tex:34";
+[01234567:#] "doc/specs/float/limits.tex:34"
+//#line 34 "doc/specs/float/limits.tex"
+assert {
+1 != 1 + Float.limits.epsilon;
+1 == 1 + Float.limits.epsilon / 2;
+};
+
+syncline << "doc/specs/float/limits.tex:41";
+[01234567:#] "doc/specs/float/limits.tex:41"
+//#line 41 "doc/specs/float/limits.tex"
+assert {
+Float.limits.max     != Float.inf;
+Float.limits.max * 2 == Float.inf;
+};
+
+syncline << "doc/specs/float/limits.tex:49";
+[01234567:#] "doc/specs/float/limits.tex:49"
+//#line 49 "doc/specs/float/limits.tex"
+assert {
+Float.inf != Float.limits.radix ** (Float.limits.maxExponent - 1);
+Float.inf == Float.limits.radix ** Float.limits.maxExponent;
+};
+
+syncline << "doc/specs/float/limits.tex:57";
+[01234567:#] "doc/specs/float/limits.tex:57"
+//#line 57 "doc/specs/float/limits.tex"
+assert {
+Float.inf != 10 ** Float.limits.maxExponent10;
+Float.inf == 10 ** (Float.limits.maxExponent10 + 1);
+};
+
+syncline << "doc/specs/float/limits.tex:64";
+[01234567:#] "doc/specs/float/limits.tex:64"
+//#line 64 "doc/specs/float/limits.tex"
+assert {
+0 != Float.limits.min;
+};
+
+syncline << "doc/specs/float/limits.tex:71";
+[01234567:#] "doc/specs/float/limits.tex:71"
+//#line 71 "doc/specs/float/limits.tex"
+assert {
+0 != Float.limits.radix ** Float.limits.minExponent;
+};
+
+syncline << "doc/specs/float/limits.tex:78";
+[01234567:#] "doc/specs/float/limits.tex:78"
+//#line 78 "doc/specs/float/limits.tex"
+assert {
+0 != 10 ** Float.limits.minExponent10;
+};
+
+syncline << "doc/specs/float/limits.tex:84";
+[01234567:#] "doc/specs/float/limits.tex:84"
+//#line 84 "doc/specs/float/limits.tex"
+assert {
+Float.limits.radix == 2;
+};

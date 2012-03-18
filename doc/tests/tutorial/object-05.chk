@@ -1,0 +1,11 @@
+syncline << "doc/tutorial/object.tex:211";
+[01234567:#] "doc/tutorial/object.tex:211"
+//#line 211 "doc/tutorial/object.tex"
+var p = Pair.clone;
+[00000000] (nil, nil)
+// Check that the 'first' slot is found in Pair
+p.locateSlot("first") === Pair;
+[00000000] true
+// Where does locateSlot itself come from? Object itself!
+p.locateSlot("locateSlot");
+[00000000] Object

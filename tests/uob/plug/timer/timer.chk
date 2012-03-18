@@ -1,0 +1,50 @@
+//#uobject test/timer
+
+var t = timer.new;
+[00000001] timer_0xADDR
+sleep(500ms);
+t.updated;
+[00000002] 0
+
+t.setupUpdate(100);
+[00000003] 0
+sleep(200ms);
+t.updated>0;
+[00000004] true
+
+t.setupUpdate(-1);
+[00000005] 0
+sleep(100ms);
+t.updated = 0;
+[00000006] 0
+sleep(200ms);
+t.updated > 0;
+[00000007] false
+
+t.setupUpdate(100);
+[00000008] 0
+sleep(200ms);
+t.updated > 0;
+[00000009] true
+
+t.timerup;
+[00000010] 0
+var st = t.setupTimer(100)|;
+sleep(200ms);
+t.timerup > 0;
+[00000011] true
+t.timerup = 0;
+[00000012] 0
+sleep(200ms);
+t.timerup > 0;
+[00000013] true
+t.timerup = 0|;
+t.unsetupTimer(st)|;
+sleep(200ms);
+t.timerup > 0;
+[00000014] false
+
+
+removeLocalSlot("t");
+[00000015] Lobby_0xADDR
+// Should die gracefuly.

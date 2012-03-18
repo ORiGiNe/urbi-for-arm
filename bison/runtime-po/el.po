@@ -1,0 +1,62 @@
+# translation of bison-runtime.2.3b.po to Greek
+# Copyright (C) 2008 Free Software Foundation, Inc.
+# This file is distributed under the same license as the bison package.
+#
+# Lefteris Dimitroulakis <edimitro@tee.gr>, 2008.
+msgid ""
+msgstr ""
+"Project-Id-Version: bison-runtime-2.3b\n"
+"Report-Msgid-Bugs-To: bug-bison@gnu.org\n"
+"POT-Creation-Date: 2012-01-30 16:28+0000\n"
+"PO-Revision-Date: 2008-06-21 19:17+0300\n"
+"Last-Translator: Lefteris Dimitroulakis <edimitro@tee.gr>\n"
+"Language-Team: Greek <team@lists.gnome.gr>\n"
+"Language: el\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+
+#: data/glr.c:872 data/yacc.c:660
+msgid "syntax error: cannot back up"
+msgstr "συντακτικό σφάλμα: δεν μπορώ να κάνω πίσω"
+
+#: data/glr.c:1758
+msgid "syntax is ambiguous"
+msgstr "ασαφής σύνταξη"
+
+#: data/glr.c:2081 data/glr.c:2159 data/glr.c:2197 data/glr.c:2466
+#: data/lalr1.cc:1058 data/lalr1.cc:1078 data/yacc.c:1281 data/yacc.c:1805
+#: data/yacc.c:1811
+msgid "syntax error"
+msgstr "συντακτικό σφάλμα"
+
+#: data/glr.c:2160 data/lalr1.cc:1059 data/yacc.c:1282
+#, c-format
+msgid "syntax error, unexpected %s"
+msgstr "συντακτικό σφάλμα, αναπάντεχο %s"
+
+#: data/glr.c:2161 data/lalr1.cc:1060 data/yacc.c:1283
+#, c-format
+msgid "syntax error, unexpected %s, expecting %s"
+msgstr "συντακτικό σφάλμα, αναπάντεχο %s, αναμενόμενο %s"
+
+#: data/glr.c:2162 data/lalr1.cc:1061 data/yacc.c:1284
+#, c-format
+msgid "syntax error, unexpected %s, expecting %s or %s"
+msgstr "συντακτικό σφάλμα, αναπάντεχο %s, αναμενόμενο %s ή %s"
+
+#: data/glr.c:2163 data/lalr1.cc:1062 data/yacc.c:1285
+#, c-format
+msgid "syntax error, unexpected %s, expecting %s or %s or %s"
+msgstr "συντακτικό σφάλμα, αναπάντεχο %s, αναμενόμενο %s ή %s ή %s"
+
+#: data/glr.c:2164 data/lalr1.cc:1063 data/yacc.c:1286
+#, c-format
+msgid "syntax error, unexpected %s, expecting %s or %s or %s or %s"
+msgstr "συντακτικό σφάλμα, αναπάντεχο %s, αναμενόμενο %s ή %s ή %s ή %s"
+
+#: data/glr.c:2526 data/yacc.c:1369 data/yacc.c:1371 data/yacc.c:1567
+#: data/yacc.c:1960
+msgid "memory exhausted"
+msgstr "η μνήμη εξαντλήθηκε"

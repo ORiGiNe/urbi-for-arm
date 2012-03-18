@@ -1,0 +1,15 @@
+// Bug report from Alexandre Gabus.
+var test;
+try
+{
+  test += 3;
+}
+catch
+{
+  test = 1;
+  test += 3;
+};
+[00000001] 4
+
+echo(test);
+[00000002] *** 4

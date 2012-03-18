@@ -1,0 +1,51 @@
+//#roscore
+//#no-fast
+//#plug urbi/ros
+
+skipIfDebug;
+
+var ready = Ros.Topic.new("/ready") |
+ready.advertise("std_msgs/Bool");
+
+var t = Ros.Topic.new("/utests/stressTest")|;
+var p = Process.new("rosrun", ["utopics", "stressTest"])|;
+var count = 0|;
+var time0;
+var time350;
+
+recv: at(t.onMessage?(var m))
+{
+  if (count++ == 0)
+  {
+    time0 = time;
+    assert
+    {
+      m["width"] == 640;
+      m["height"] == 480;
+      m["encoding"] == "rgb";
+      m["data"].type == "Binary";
+      m["data"].data.size == 921600;
+    };
+  };
+  if (count == 350)
+    time350 = time;
+};
+
+p.run;
+Ros.waitForTopic("/utests/stressTest");
+t.subscribe;
+
+sleep(500ms);
+ready << ["data" => 1] |
+sleep(10s);
+
+// These tests are too demanding for our Mac OS X.
+skipIfHostName("bf-macintel-1");
+
+assert
+{
+  count == 350;
+  // FIXME: we used to accept up to 7.5, not 10.  10 is actually an
+  // empty check...  We give 10s to run, tops.
+  time350 - time0 <= 10;
+};

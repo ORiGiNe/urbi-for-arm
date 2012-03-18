@@ -1,0 +1,105 @@
+// Check infrastructure under events
+var e = Event.new | {};
+var res = [] | {};
+
+e.trigger(-1, 0) | {};
+at(e?(var a, var b)) { res << (a + b) },
+assert { res == [-1] };
+e.'emit' (1, 2);
+assert { res == [-1, 3] };
+e.'emit' (3, 4);
+assert { res == [-1, 3, 7] };
+res.clear() | {};
+e.'emit' (5, 6) & e.'emit' (7, 8);
+assert
+{
+  res.size == 2;
+  11 in res;
+  15 in res;
+};
+at(e?(5, var b)) { sleep(1s); echo (b) },
+e.'emit' (5, 6) & e.'emit' (7, 8);
+[00000001] *** 6
+sleep (2s);
+
+// Check no payload/empty payload
+{
+  var a = Event.new;
+  var b = Event.new;
+  at (a?)
+    echo("always");
+  at (b?())
+    echo("empty");
+  a!;
+  b!;
+[00000002] *** always
+[00000003] *** empty
+  a!(42);
+  b!(42);
+[00000004] *** always
+};
+
+// Check synchronicity
+var tEmit = 20ms |;
+var tWait = 25ms |;
+e = Event.new |;
+
+at(e?) { echo("a"); sleep(tEmit); echo("b") }
+onleave { echo("c"); sleep(tEmit); echo("d") };
+
+e! | echo("?");
+[00000001] *** ?
+[00000002] *** a
+[00000003] *** c
+[00000101] *** b
+[00000102] *** d
+
+sleep(tWait);
+
+e.syncEmit | echo("?");
+[00000001] *** a
+[00000101] *** b
+[00000102] *** c
+[00000202] *** d
+[00000203] *** ?
+
+sleep(tWait);
+
+var handler = e.trigger | echo("?");
+[00000001] *** ?
+[00000002] *** a
+[00000102] *** b
+sleep(200ms);
+handler.stop | echo("?");
+[00000301] *** ?
+[00000302] *** c
+[00000402] *** d
+
+sleep(tWait);
+
+handler = e.trigger | handler.stop;
+[00000001] *** a
+[00000002] *** c
+[00000201] *** b
+[00000202] *** d
+
+sleep(tWait);
+
+handler = e.syncTrigger | echo("?");
+[00000001] *** a
+[00000201] *** b
+[00000202] *** ?
+sleep(200ms);
+handler.stop | echo("?");
+[00000402] *** c
+[00000502] *** d
+[00000503] *** ?
+
+// Check tag stopped at.
+// FIXME: does not work at all in 2.7, but 3.* does it.
+// e = Event.new |;
+// t: at (e?) {echo(1); echo(2); echo(3); echo(1); echo(2); echo(3)};
+// e! | t.stop;
+// [00000001] *** 1
+//
+// sleep(1s);

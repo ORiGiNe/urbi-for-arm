@@ -1,0 +1,42 @@
+syncline << "doc/specs/file.tex:153";
+[01234567:#] "doc/specs/file.tex:153"
+//#line 153 "doc/specs/file.tex"
+var p = Path.new("foo.txt") |
+p.exists;
+[00000002] false
+
+var f = File.create(p);
+[00000003] File("foo.txt")
+p.exists;
+[00000004] true
+
+f.remove;
+p.exists;
+[00000006] false
+
+syncline << "doc/specs/file.tex:171";
+[01234567:#] "doc/specs/file.tex:171"
+//#line 171 "doc/specs/file.tex"
+File.save("file.txt", "1\n2\n");
+File.new("file.txt").rename("bar.txt");
+[00000001] File("bar.txt")
+assert
+{
+  !Path.new("file.txt").exists;
+  File.new("bar.txt").content.data == "1\n2\n";
+};
+
+syncline << "doc/specs/file.tex:185";
+[01234567:#] "doc/specs/file.tex:185"
+//#line 185 "doc/specs/file.tex"
+assert {
+File.save("file.txt", "1\n2\n").isVoid;
+File.new("file.txt").content.data == "1\n2\n";
+};
+
+syncline << "doc/specs/file.tex:192";
+[01234567:#] "doc/specs/file.tex:192"
+//#line 192 "doc/specs/file.tex"
+File.save("file.txt", "1234");
+File.new("file.txt").size;
+[00000001] 4

@@ -1,0 +1,159 @@
+syncline << "doc/tutorial/value.tex:25";
+[01234567:#] "doc/tutorial/value.tex:25"
+//#line 25 "doc/tutorial/value.tex"
+// Create a fresh object with two slots.
+class Foo
+{
+  var a = 42;
+  var b = "foo";
+};
+[00000000] Foo
+
+syncline << "doc/tutorial/value.tex:38";
+[01234567:#] "doc/tutorial/value.tex:38"
+//#line 38 "doc/tutorial/value.tex"
+// Inspect it.
+Foo.localSlotNames;
+[00000000] ["a", "asFoo", "b", "type"]
+
+syncline << "doc/tutorial/value.tex:47";
+[01234567:#] "doc/tutorial/value.tex:47"
+//#line 47 "doc/tutorial/value.tex"
+// We now know the name of its slots. Let's see their value.
+Foo.a;
+[00000000] 42
+Foo.b;
+[00000000] "foo"
+
+syncline << "doc/tutorial/value.tex:58";
+[01234567:#] "doc/tutorial/value.tex:58"
+//#line 58 "doc/tutorial/value.tex"
+Foo.inspect;
+[00000000] *** Inspecting Foo
+[00000000] *** ** Prototypes:
+[00000000] ***   Object
+[00000000] *** ** Local Slots:
+[00000000] ***   a : Float
+[00000000] ***   asFoo : Code
+[00000000] ***   b : String
+[00000000] ***   type : String
+
+syncline << "doc/tutorial/value.tex:78";
+[01234567:#] "doc/tutorial/value.tex:78"
+//#line 78 "doc/tutorial/value.tex"
+// Create the o variable as a fresh object.
+var o = Object.clone;
+[00000000] Object_0x00000000
+// Check its content
+o.inspect;
+[00006725] *** Inspecting Object_0x00000000
+[00006725] *** ** Prototypes:
+[00006726] ***   Object
+[00006726] *** ** Local Slots:
+
+syncline << "doc/tutorial/value.tex:107";
+[01234567:#] "doc/tutorial/value.tex:107"
+//#line 107 "doc/tutorial/value.tex"
+o.setSlot("a", 42);
+[00000000] 42
+o.inspect;
+[00009837] *** Inspecting Object_0x00000000
+[00009837] *** ** Prototypes:
+[00009837] ***   Object
+[00009838] *** ** Local Slots:
+[00009838] ***   a : Float
+
+syncline << "doc/tutorial/value.tex:121";
+[01234567:#] "doc/tutorial/value.tex:121"
+//#line 121 "doc/tutorial/value.tex"
+// This is equivalent to o.setSlot("b", "foo").
+var o.b = "foo";
+[00000000] "foo"
+o.inspect;
+[00072678] *** Inspecting Object_0x00000000
+[00072678] *** ** Prototypes:
+[00072679] ***   Object
+[00072679] *** ** Local Slots:
+[00072679] ***   a : Float
+[00072680] ***   b : String
+
+syncline << "doc/tutorial/value.tex:145";
+[01234567:#] "doc/tutorial/value.tex:145"
+//#line 145 "doc/tutorial/value.tex"
+function set(object, name, value)
+{
+  // We have to use setSlot here, since we don't
+  // know the actual name of the slot.
+  return object.setSlot("x_" + name, value);
+}|;
+
+function get(object, name)
+{
+  // We have to use getSlot here, since we don't
+  // know the actual name of the slot.
+  return object.getSlot("x_" + name);
+}|;
+
+var x = Object.clone;
+[00000000] Object_0x42342448
+set(x, "foo", 0);
+[00000000] 0
+set(x, "bar", 1);
+[00000000] 1
+x.localSlotNames;
+[00000000] ["x_bar", "x_foo"]
+get(x, "foo");
+[00000000] 0
+get(x, "bar");
+[00000000] 1
+
+syncline << "doc/tutorial/value.tex:182";
+[01234567:#] "doc/tutorial/value.tex:182"
+//#line 182 "doc/tutorial/value.tex"
+o.a;
+[00000000] 42
+o.updateSlot("a", 51);
+[00000000] 51
+o.a;
+[00000000] 51
+
+syncline << "doc/tutorial/value.tex:194";
+[01234567:#] "doc/tutorial/value.tex:194"
+//#line 194 "doc/tutorial/value.tex"
+o.b;
+[00000000] "foo"
+// Equivalent to o.updateSlot("b", "bar")
+o.b = "bar";
+[00000000] "bar"
+o.b;
+[00000000] "bar"
+
+syncline << "doc/tutorial/value.tex:212";
+[01234567:#] "doc/tutorial/value.tex:212"
+//#line 212 "doc/tutorial/value.tex"
+var o.c = 0;
+[00000000] 0
+// Can't redefine a slot like this
+var o.c = 1;
+[00000000:error] !!! slot redefinition: c
+// Okay.
+o.c = 1;
+[00000000] 1
+
+syncline << "doc/tutorial/value.tex:225";
+[01234567:#] "doc/tutorial/value.tex:225"
+//#line 225 "doc/tutorial/value.tex"
+o.localSlotNames;
+[00000000] ["a", "b", "c"]
+o.removeLocalSlot("c");
+[00000000] Object_0x00000000
+o.localSlotNames;
+[00000000] ["a", "b"]
+
+syncline << "doc/tutorial/value.tex:239";
+[01234567:#] "doc/tutorial/value.tex:239"
+//#line 239 "doc/tutorial/value.tex"
+o.d;
+[00000000:error] !!! lookup failed: d
+o.d = 0;
+[00000000:error] !!! lookup failed: d

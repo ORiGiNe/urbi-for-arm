@@ -1,0 +1,108 @@
+%% Copyright (C) 2010, 2011, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\chapter{Segway RMP}
+\label{sec:segway-rmp}
+
+The Segway \dfn{RMP} (Robotic Mobility Platform) is a robotic platform based
+on the Segway Personal Transporter.  \urbi for Segway RMP can be downloaded
+from \url{http://www.urbiforge.org/index.php/Robots/Segway}.
+
+\sectionObject{RMP}
+The UObject RMP provides the interface from \urbi.
+
+\subsection{Instantiation}
+
+\begin{urbiunchecked}
+var rmp = RMP.new(\var{period});
+\end{urbiunchecked}
+
+\var{period} is the period, in seconds, at which orders will be sent and
+coders will be read.
+
+\subsection{Slots}
+
+\paragraph{Raw actuator variables}
+
+\begin{urbiscriptapi}
+\item[forwardSpeed] forward speed in meters per second.  Can be read to
+  (behaves as a sensor), or written to (actuator).
+
+
+\item[yawSpeed] yaw speed in radian per second.  Can be read and written
+  to.
+\end{urbiscriptapi}
+
+\paragraph{Raw sensors}
+Current speed and coder values.
+\begin{urbiscriptapi}
+\item[forward]
+
+
+\item[left]
+
+
+\item[leftSpeed]
+
+
+\item[right]
+
+
+\item[rightSpeed]
+
+
+\item[yaw]
+\end{urbiscriptapi}
+
+\paragraph{Calibration}
+
+\urbi unit per coder unit coefficients.
+
+\begin{urbiscriptapi}
+\item[forwardCoeff]
+
+
+\item[forwardSpeedCoeff]
+
+
+\item[leftCoeff]
+
+
+\item[leftSpeedCoeff]
+
+
+\item[rightCoeff]
+
+
+\item[rightSpeedCoeff]
+
+
+\item[yawCoeff]
+
+
+\item[yawSpeedCoeff]
+\end{urbiscriptapi}
+
+The file \file{usegway.u} contains approximate values for meter, seconds,
+radian units.
+
+
+\section{GSRAPI compliance}
+
+The file \file{rmp.u} will initialize the RMP UObject and give it a Gostai
+Standard Robotic API compliant interface.
+
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

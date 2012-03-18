@@ -1,0 +1,23 @@
+syncline << "doc/tutorial/object.tex:143";
+[01234567:#] "doc/tutorial/object.tex:143"
+//#line 143 "doc/tutorial/object.tex"
+// We create a fresh object.
+var c = Object.clone;
+[00000000] Object_0x1
+// As expected, it has no 'slot' slot.
+c.slot;
+[00000000:error] !!! lookup failed: slot
+var p = Object.clone;
+[00000000] Object_0x2
+var p.slot = 0;
+[00000000] 0
+c.addProto(p);
+[00000000] Object_0x1
+// Now, 'slot' is found in c, because it is inherited from p.
+c.slot;
+[00000000] 0
+c.removeProto(p);
+[00000000] Object_0x1
+// Back to our good old lookup error.
+c.slot;
+[00000000:error] !!! lookup failed: slot

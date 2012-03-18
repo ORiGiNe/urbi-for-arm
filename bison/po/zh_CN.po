@@ -1,0 +1,1089 @@
+# Chinese simplified translation for bison.
+# Copyright (C) 2011 Free Software Foundation, Inc.
+# This file is distributed under the same license as the bison package.
+# Wylmer Wang <wantinghard@gmail.com>, 2011.
+# Ji ZhengYu <zhengyuji@gmail.com>, 2011.
+msgid ""
+msgstr ""
+"Project-Id-Version: bison 2.5\n"
+"Report-Msgid-Bugs-To: bug-bison@gnu.org\n"
+"POT-Creation-Date: 2012-01-30 16:28+0000\n"
+"PO-Revision-Date: 2011-07-25 11:00中国标准时间\n"
+"Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
+"Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: src/complain.c:115 src/complain.c:126 src/complain.c:135 src/complain.c:183
+#: src/complain.c:193
+msgid "warning"
+msgstr "警告"
+
+#: src/complain.c:203 src/complain.c:210
+msgid "fatal error"
+msgstr "致命错误"
+
+#: src/conflicts.c:77
+#, c-format
+msgid "    Conflict between rule %d and token %s resolved as shift"
+msgstr ""
+
+#: src/conflicts.c:86
+#, c-format
+msgid "    Conflict between rule %d and token %s resolved as reduce"
+msgstr ""
+
+#: src/conflicts.c:94
+#, c-format
+msgid "    Conflict between rule %d and token %s resolved as an error"
+msgstr ""
+
+#: src/conflicts.c:497
+#, c-format
+msgid "conflicts: %d shift/reduce, %d reduce/reduce\n"
+msgstr ""
+
+#: src/conflicts.c:500
+#, c-format
+msgid "conflicts: %d shift/reduce\n"
+msgstr ""
+
+#: src/conflicts.c:502
+#, c-format
+msgid "conflicts: %d reduce/reduce\n"
+msgstr ""
+
+#: src/conflicts.c:520
+#, c-format
+msgid "State %d "
+msgstr "状态 %d"
+
+#: src/conflicts.c:587
+#, c-format
+msgid "%%expect-rr applies only to GLR parsers"
+msgstr "%%expect-rr 只应用于 GLR 解析器"
+
+#: src/conflicts.c:621
+#, c-format
+msgid "expected %d shift/reduce conflict"
+msgid_plural "expected %d shift/reduce conflicts"
+msgstr[0] ""
+
+#: src/conflicts.c:626
+#, c-format
+msgid "expected %d reduce/reduce conflict"
+msgid_plural "expected %d reduce/reduce conflicts"
+msgstr[0] ""
+
+#: src/files.c:112
+#, fuzzy, c-format
+msgid "cannot open file '%s'"
+msgstr "无法打开文件“%s”"
+
+#: src/files.c:128
+#, c-format
+msgid "I/O error"
+msgstr "I/O 错误"
+
+#: src/files.c:131
+#, c-format
+msgid "cannot close file"
+msgstr "无法关闭文件"
+
+#: src/files.c:350
+#, c-format
+msgid "refusing to overwrite the input file %s"
+msgstr "拒绝覆盖输入文件 %s"
+
+#: src/files.c:360
+#, c-format
+msgid "conflicting outputs to file %s"
+msgstr "到文件 %s 的输出冲突"
+
+#: src/getargs.c:267
+#, c-format
+msgid "Try `%s --help' for more information.\n"
+msgstr "尝试“%s --help”了解更多信息。\n"
+
+#: src/getargs.c:276
+#, c-format
+msgid "Usage: %s [OPTION]... FILE\n"
+msgstr "用法：%s [选项]... 文件\n"
+
+#: src/getargs.c:277
+msgid ""
+"Generate a deterministic LR or generalized LR (GLR) parser employing\n"
+"LALR(1), IELR(1), or canonical LR(1) parser tables.  IELR(1) and\n"
+"canonical LR(1) support is experimental.\n"
+"\n"
+msgstr ""
+
+#: src/getargs.c:284
+msgid ""
+"Mandatory arguments to long options are mandatory for short options too.\n"
+msgstr "长选项的强制参数对短选项也是强制的。\n"
+
+#: src/getargs.c:287
+msgid "The same is true for optional arguments.\n"
+msgstr "可选项也是如此。\n"
+
+#: src/getargs.c:291
+msgid ""
+"\n"
+"Operation modes:\n"
+"  -h, --help                 display this help and exit\n"
+"  -V, --version              output version information and exit\n"
+"      --print-localedir      output directory containing locale-dependent "
+"data\n"
+"      --print-datadir        output directory containing skeletons and XSLT\n"
+"  -y, --yacc                 emulate POSIX Yacc\n"
+"  -W, --warnings[=CATEGORY]  report the warnings falling in CATEGORY\n"
+"\n"
+msgstr ""
+
+#: src/getargs.c:303
+#, c-format
+msgid ""
+"Parser:\n"
+"  -L, --language=LANGUAGE          specify the output programming language\n"
+"                                   (this is an experimental feature)\n"
+"  -S, --skeleton=FILE              specify the skeleton to use\n"
+"  -t, --debug                      instrument the parser for tracing\n"
+"                                   same as `-Dparse.trace'\n"
+"      --locations                  enable location support\n"
+"  -D, --define=NAME[=VALUE]        similar to `%define NAME \"VALUE\"'\n"
+"  -F, --force-define=NAME[=VALUE]  override `%define NAME \"VALUE\"'\n"
+"  -p, --name-prefix=PREFIX         prepend PREFIX to the external symbols\n"
+"  -l, --no-lines                   don't generate `#line' directives\n"
+"  -k, --token-table                include a table of token names\n"
+"\n"
+msgstr ""
+
+#: src/getargs.c:321
+msgid ""
+"Output:\n"
+"      --defines[=FILE]       also produce a header file\n"
+"  -d                         likewise but cannot specify FILE (for POSIX "
+"Yacc)\n"
+"  -r, --report=THINGS        also produce details on the automaton\n"
+"      --report-file=FILE     write report to FILE\n"
+"  -v, --verbose              same as `--report=state'\n"
+"  -b, --file-prefix=PREFIX   specify a PREFIX for output files\n"
+"  -o, --output=FILE          leave output to FILE\n"
+"  -g, --graph[=FILE]         also output a graph of the automaton\n"
+"  -x, --xml[=FILE]           also output an XML report of the automaton\n"
+"                             (the XML schema is experimental)\n"
+"\n"
+msgstr ""
+
+#: src/getargs.c:336
+msgid ""
+"Warning categories include:\n"
+"  `midrule-values'  unset or unused midrule values\n"
+"  `yacc'            incompatibilities with POSIX Yacc\n"
+"  `conflicts-sr'    S/R conflicts (enabled by default)\n"
+"  `conflicts-rr'    R/R conflicts (enabled by default)\n"
+"  `other'           all other warnings (enabled by default)\n"
+"  `all'             all the warnings\n"
+"  `no-CATEGORY'     turn off warnings in CATEGORY\n"
+"  `none'            turn off all the warnings\n"
+"  `error'           treat warnings as errors\n"
+"\n"
+msgstr ""
+
+#: src/getargs.c:350
+msgid ""
+"THINGS is a list of comma separated words that can include:\n"
+"  `state'        describe the states\n"
+"  `itemset'      complete the core item sets with their closure\n"
+"  `lookahead'    explicitly associate lookahead tokens to items\n"
+"  `solved'       describe shift/reduce conflicts solving\n"
+"  `all'          include all the above information\n"
+"  `none'         disable the report\n"
+msgstr ""
+
+#: src/getargs.c:360
+#, c-format
+msgid ""
+"\n"
+"Report bugs to <%s>.\n"
+msgstr ""
+"\n"
+"向 <%s> 报告问题。\n"
+
+#: src/getargs.c:376
+#, c-format
+msgid "bison (GNU Bison) %s"
+msgstr "bison (GNU Bison) %s"
+
+#: src/getargs.c:378
+msgid "Written by Robert Corbett and Richard Stallman.\n"
+msgstr "由 Robert Corbett 和 Richard Stallman 编写。\n"
+
+#: src/getargs.c:382
+#, c-format
+msgid "Copyright (C) %d Free Software Foundation, Inc.\n"
+msgstr "版权所有 (C) %d Free Software Foundation, Inc.\n"
+
+#: src/getargs.c:385
+msgid ""
+"This is free software; see the source for copying conditions.  There is NO\n"
+"warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
+msgstr ""
+
+#: src/getargs.c:406
+#, c-format
+msgid "multiple skeleton declarations are invalid"
+msgstr ""
+
+#: src/getargs.c:424
+#, fuzzy, c-format
+msgid "invalid language '%s'"
+msgstr "无效的语言“%s”"
+
+#: src/getargs.c:427
+msgid "multiple language declarations are invalid"
+msgstr "多语言声明是无效的"
+
+#: src/getargs.c:682
+#, fuzzy, c-format
+msgid "missing operand after '%s'"
+msgstr "“%s”后缺少操作符"
+
+#: src/getargs.c:684
+#, fuzzy, c-format
+msgid "extra operand '%s'"
+msgstr "额外的操作符“%s”"
+
+#: src/gram.c:114
+msgid "empty"
+msgstr "空"
+
+#: src/gram.c:203
+msgid "Grammar"
+msgstr "语法"
+
+#: src/graphviz.c:43
+#, c-format
+msgid ""
+"// Generated by %s.\n"
+"// Report bugs to <%s>.\n"
+"// Home page: <%s>.\n"
+"\n"
+msgstr ""
+"// 由 %s 生成。\n"
+"// 向 <%s> 报告问题。\n"
+"// 主页：<%s>。\n"
+"\n"
+
+#: src/location.c:93 src/scan-gram.l:948
+#, c-format
+msgid "line number overflow"
+msgstr "行号溢出"
+
+#: src/location.c:95
+#, c-format
+msgid "column number overflow"
+msgstr "列号溢出"
+
+#: src/main.c:137
+msgid "rule useless in parser due to conflicts"
+msgstr "由于冲突，解析器中的规则不起作用"
+
+#: src/muscle-tab.c:442
+#, fuzzy, c-format
+msgid "%%define variable '%s' redefined"
+msgstr "重新定义了 %%define 变量“%s”"
+
+#: src/muscle-tab.c:445
+#, c-format
+msgid "previous definition"
+msgstr "上次定义"
+
+#: src/muscle-tab.c:506
+#, fuzzy, c-format
+msgid ""
+"undefined %%define variable '%s' passed to muscle_percent_define_get_loc"
+msgstr "将未定义的 %%define 变量“%s” 传递给了 muscle_percent_define_get_loc"
+
+#: src/muscle-tab.c:520
+#, fuzzy, c-format
+msgid ""
+"undefined %%define variable '%s' passed to muscle_percent_define_get_syncline"
+msgstr ""
+"将未定义的 %%define 变量“%s”传递给了 muscle_percent_define_get_syncline"
+
+#: src/muscle-tab.c:566
+#, fuzzy, c-format
+msgid "invalid value for %%define Boolean variable '%s'"
+msgstr "%%define 布尔型变量 %s 的值无效"
+
+#: src/muscle-tab.c:572
+#, fuzzy, c-format
+msgid ""
+"undefined %%define variable '%s' passed to muscle_percent_define_flag_if"
+msgstr "将未定义的 %%define 变量 “%s” 传递给了 muscle_percent_define_flag_if"
+
+#: src/muscle-tab.c:624
+#, fuzzy, c-format
+msgid "invalid value for %%define variable '%s': '%s'"
+msgstr "%%define 变量 %s 的值无效：“%s”"
+
+#: src/muscle-tab.c:627
+#, fuzzy, c-format
+msgid "accepted value: '%s'"
+msgstr "接受的值：“%s”"
+
+#: src/muscle-tab.c:637
+#, fuzzy, c-format
+msgid ""
+"undefined %%define variable '%s' passed to muscle_percent_define_check_values"
+msgstr ""
+"将未定义的 %%define 变量 “%s” 传递给了 muscle_percent_define_check_values"
+
+#: src/parse-gram.y:775
+#, c-format
+msgid "missing identifier in parameter declaration"
+msgstr "参数声明中缺少识别符"
+
+#: src/print.c:48
+#, c-format
+msgid " type %d is %s\n"
+msgstr " 类型 %d 为 %s\n"
+
+#: src/print.c:165
+#, c-format
+msgid "shift, and go to state %d\n"
+msgstr ""
+
+#: src/print.c:167
+#, c-format
+msgid "go to state %d\n"
+msgstr "转到状态 %d\n"
+
+#: src/print.c:204
+msgid "error (nonassociative)\n"
+msgstr ""
+
+#: src/print.c:227
+#, c-format
+msgid "reduce using rule %d (%s)"
+msgstr ""
+
+#: src/print.c:229
+#, c-format
+msgid "accept"
+msgstr "接受"
+
+#: src/print.c:265 src/print.c:339
+msgid "$default"
+msgstr "$default"
+
+#: src/print.c:374
+#, c-format
+msgid "state %d"
+msgstr "状态 %d"
+
+#: src/print.c:410
+msgid "Terminals, with rules where they appear"
+msgstr ""
+
+#: src/print.c:437
+msgid "Nonterminals, with rules where they appear"
+msgstr ""
+
+#: src/print.c:466
+#, c-format
+msgid " on left:"
+msgstr ""
+
+#: src/print.c:483
+#, c-format
+msgid " on right:"
+msgstr ""
+
+#: src/print.c:511
+msgid "Rules useless in parser due to conflicts"
+msgstr "由于冲突，解析器中的规则不起作用"
+
+#: src/reader.c:63
+#, c-format
+msgid "multiple %s declarations"
+msgstr "多次 %s 定义"
+
+#: src/reader.c:133
+#, c-format
+msgid "result type clash on merge function '%s': <%s> != <%s>"
+msgstr ""
+
+#: src/reader.c:136 src/symtab.c:190 src/symtab.c:198 src/symtab.c:964
+#: src/symtab.c:977 src/symtab.c:990 src/symtab.c:1003
+#, c-format
+msgid "previous declaration"
+msgstr "上次声明"
+
+#: src/reader.c:202
+#, c-format
+msgid "duplicated symbol name for %s ignored"
+msgstr ""
+
+#: src/reader.c:246
+#, c-format
+msgid "rule given for %s, which is a token"
+msgstr ""
+
+#: src/reader.c:301
+#, c-format
+msgid "type clash on default action: <%s> != <%s>"
+msgstr ""
+
+#: src/reader.c:307
+#, c-format
+msgid "empty rule for typed nonterminal, and no action"
+msgstr ""
+
+#: src/reader.c:325
+#, c-format
+msgid "unused value: $%d"
+msgstr "未使用的值：$%d"
+
+#: src/reader.c:327
+msgid "unset value: $$"
+msgstr "未设置的值：$$"
+
+#: src/reader.c:338
+#, c-format
+msgid "token for %%prec is not defined: %s"
+msgstr ""
+
+#: src/reader.c:429 src/reader.c:443 src/reader.c:456
+#, c-format
+msgid "only one %s allowed per rule"
+msgstr ""
+
+#: src/reader.c:439 src/reader.c:454
+#, c-format
+msgid "%s affects only GLR parsers"
+msgstr "%s 只影响 GLR 解析器"
+
+#: src/reader.c:441
+#, c-format
+msgid "%s must be followed by positive number"
+msgstr "%s 后面只能跟正数"
+
+#: src/reader.c:553
+#, c-format
+msgid "rule is too long"
+msgstr "规则过长"
+
+#: src/reader.c:671
+#, c-format
+msgid "no rules in the input grammar"
+msgstr "输入语法中没有规则"
+
+#: src/reduce.c:242
+msgid "rule useless in grammar"
+msgstr "语法中的规则无效"
+
+#: src/reduce.c:303
+#, c-format
+msgid "nonterminal useless in grammar: %s"
+msgstr ""
+
+#: src/reduce.c:351
+msgid "Nonterminals useless in grammar"
+msgstr ""
+
+#: src/reduce.c:364
+msgid "Terminals unused in grammar"
+msgstr ""
+
+#: src/reduce.c:373
+msgid "Rules useless in grammar"
+msgstr "语法中的规则无效"
+
+#: src/reduce.c:386
+#, c-format
+msgid "%d nonterminal useless in grammar"
+msgid_plural "%d nonterminals useless in grammar"
+msgstr[0] ""
+
+#: src/reduce.c:391
+#, c-format
+msgid "%d rule useless in grammar"
+msgid_plural "%d rules useless in grammar"
+msgstr[0] ""
+
+#: src/reduce.c:420
+#, c-format
+msgid "start symbol %s does not derive any sentence"
+msgstr ""
+
+#: src/scan-code.l:201
+#, c-format
+msgid "stray '$'"
+msgstr ""
+
+#: src/scan-code.l:206
+#, c-format
+msgid "stray '@'"
+msgstr ""
+
+#: src/scan-code.l:231
+#, c-format
+msgid "a ';' might be needed at the end of action code"
+msgstr ""
+
+#: src/scan-code.l:232
+#, c-format
+msgid "future versions of Bison will not add the ';'"
+msgstr ""
+
+#: src/scan-code.l:254
+#, c-format
+msgid "use of YYFAIL, which is deprecated and will be removed"
+msgstr "使用了 YYFAIL，它已经废弃并将被移除"
+
+#: src/scan-code.l:439 src/scan-code.l:442
+#, c-format
+msgid "refers to: %c%s at %s"
+msgstr ""
+
+#: src/scan-code.l:458
+#, c-format
+msgid "possibly meant: %c"
+msgstr "可能指：%c"
+
+#: src/scan-code.l:467
+#, c-format
+msgid ", hiding %c"
+msgstr ""
+
+#: src/scan-code.l:475
+#, c-format
+msgid " at %s"
+msgstr " 位于 %s"
+
+#: src/scan-code.l:480
+#, c-format
+msgid ", cannot be accessed from mid-rule action at $%d"
+msgstr ""
+
+#: src/scan-code.l:532 src/scan-gram.l:870
+#, c-format
+msgid "integer out of range: %s"
+msgstr "整数超出范围：%s"
+
+#: src/scan-code.l:621
+#, c-format
+msgid "invalid reference: %s"
+msgstr "无效引用：%s"
+
+#: src/scan-code.l:630
+#, fuzzy, c-format
+msgid "syntax error after '%c', expecting integer, letter, '_', '[', or '$'"
+msgstr "“%c”后语法错误，应为整数、字母、“_”、“[”或“$”"
+
+#: src/scan-code.l:637
+#, c-format
+msgid "symbol not found in production before $%d: %.*s"
+msgstr ""
+
+#: src/scan-code.l:644
+#, c-format
+msgid "symbol not found in production: %.*s"
+msgstr ""
+
+#: src/scan-code.l:659
+#, c-format
+msgid "misleading reference: %s"
+msgstr ""
+
+#: src/scan-code.l:674
+#, c-format
+msgid "ambiguous reference: %s"
+msgstr ""
+
+#: src/scan-code.l:733
+#, c-format
+msgid "explicit type given in untyped grammar"
+msgstr ""
+
+#: src/scan-code.l:758
+#, c-format
+msgid "$$ for the midrule at $%d of '%s' has no declared type"
+msgstr ""
+
+#: src/scan-code.l:763
+#, c-format
+msgid "$$ of '%s' has no declared type"
+msgstr ""
+
+#: src/scan-code.l:785
+#, c-format
+msgid "$%s of '%s' has no declared type"
+msgstr ""
+
+#: src/scan-gram.l:167
+#, c-format
+msgid "stray ',' treated as white space"
+msgstr ""
+
+#: src/scan-gram.l:242
+#, c-format
+msgid "invalid directive: %s"
+msgstr ""
+
+#: src/scan-gram.l:268
+#, c-format
+msgid "invalid identifier: %s"
+msgstr "无效标识符：%s"
+
+#: src/scan-gram.l:326
+#, c-format
+msgid "invalid character: %s"
+msgstr "无效字符：%s"
+
+#: src/scan-gram.l:343
+#, c-format
+msgid "invalid null character"
+msgstr "无效的空字符"
+
+#: src/scan-gram.l:395
+#, c-format
+msgid "unexpected identifier in bracketed name: %s"
+msgstr ""
+
+#: src/scan-gram.l:417
+#, c-format
+msgid "an identifier expected"
+msgstr "应有一个标识符"
+
+#: src/scan-gram.l:420
+#, c-format
+msgid "invalid character in bracketed name: %s"
+msgstr ""
+
+#: src/scan-gram.l:518 src/scan-gram.l:539
+#, c-format
+msgid "empty character literal"
+msgstr ""
+
+#: src/scan-gram.l:523 src/scan-gram.l:544
+#, c-format
+msgid "extra characters in character literal"
+msgstr ""
+
+#: src/scan-gram.l:597 src/scan-gram.l:607 src/scan-gram.l:627
+#, c-format
+msgid "invalid number after \\-escape: %s"
+msgstr ""
+
+#: src/scan-gram.l:639
+#, c-format
+msgid "invalid character after \\-escape: %s"
+msgstr ""
+
+#: src/scan-gram.l:980
+#, fuzzy, c-format
+msgid "missing '%s' at end of file"
+msgstr "文件末尾缺少“%s”"
+
+#: src/scan-gram.l:991
+#, fuzzy, c-format
+msgid "missing '%s' at end of line"
+msgstr "行尾缺少“%s”"
+
+#: src/scan-skel.l:145
+#, c-format
+msgid "unclosed %s directive in skeleton"
+msgstr ""
+
+#: src/scan-skel.l:290
+#, c-format
+msgid "too few arguments for %s directive in skeleton"
+msgstr ""
+
+#: src/scan-skel.l:297
+#, c-format
+msgid "too many arguments for %s directive in skeleton"
+msgstr ""
+
+#: src/symlist.c:211
+#, c-format
+msgid "invalid $ value: $%d"
+msgstr "无效的 $ 值：$%d"
+
+#: src/symtab.c:72
+#, c-format
+msgid "POSIX Yacc forbids dashes in symbol names: %s"
+msgstr "POSIX Yacc 禁止符号名中有破折号：%s"
+
+#: src/symtab.c:92
+#, c-format
+msgid "too many symbols in input grammar (limit is %d)"
+msgstr "输入语法中的符号过多(限制为 %d)"
+
+#: src/symtab.c:189
+#, c-format
+msgid "%s redeclaration for %s"
+msgstr ""
+
+#: src/symtab.c:197
+#, c-format
+msgid "%s redeclaration for <%s>"
+msgstr ""
+
+#: src/symtab.c:364
+#, c-format
+msgid "symbol %s redefined"
+msgstr "符号 %s 重复定义"
+
+#: src/symtab.c:378
+#, c-format
+msgid "symbol %s redeclared"
+msgstr "符号 %s 重复声明"
+
+#: src/symtab.c:399
+#, c-format
+msgid "redefining user token number of %s"
+msgstr ""
+
+#: src/symtab.c:427
+#, c-format
+msgid "symbol %s is used, but is not defined as a token and has no rules"
+msgstr ""
+
+#: src/symtab.c:447
+#, c-format
+msgid "symbol '%s' used more than once as a literal string"
+msgstr ""
+
+#: src/symtab.c:450
+#, c-format
+msgid "symbol '%s' given more than one literal string"
+msgstr ""
+
+#: src/symtab.c:566
+#, c-format
+msgid "user token number %d redeclaration for %s"
+msgstr ""
+
+#: src/symtab.c:568
+#, c-format
+msgid "previous declaration for %s"
+msgstr ""
+
+#: src/symtab.c:943
+#, c-format
+msgid "the start symbol %s is undefined"
+msgstr "起始符号 %s 未定义"
+
+#: src/symtab.c:947
+#, c-format
+msgid "the start symbol %s is a token"
+msgstr ""
+
+#: src/symtab.c:962
+#, c-format
+msgid "redeclaration for default tagged %%destructor"
+msgstr ""
+
+#: src/symtab.c:975
+#, c-format
+msgid "redeclaration for default tagless %%destructor"
+msgstr ""
+
+#: src/symtab.c:988
+#, c-format
+msgid "redeclaration for default tagged %%printer"
+msgstr ""
+
+#: src/symtab.c:1001
+#, c-format
+msgid "redeclaration for default tagless %%printer"
+msgstr ""
+
+#: djgpp/subpipe.c:63 djgpp/subpipe.c:286 djgpp/subpipe.c:288
+#, c-format
+msgid "removing of '%s' failed"
+msgstr ""
+
+#: djgpp/subpipe.c:85 djgpp/subpipe.c:92
+#, c-format
+msgid "creation of a temporary file failed"
+msgstr ""
+
+#: djgpp/subpipe.c:127
+#, c-format
+msgid "saving stdin failed"
+msgstr ""
+
+#: djgpp/subpipe.c:131
+#, c-format
+msgid "saving stdout failed"
+msgstr ""
+
+#: djgpp/subpipe.c:153 djgpp/subpipe.c:197 djgpp/subpipe.c:258
+#, fuzzy, c-format
+msgid "opening of tmpfile failed"
+msgstr "_open_osfhandle 失败"
+
+#: djgpp/subpipe.c:157
+#, c-format
+msgid "redirecting bison's stdout to the temporary file failed"
+msgstr ""
+
+#: djgpp/subpipe.c:201
+#, c-format
+msgid "redirecting m4's stdin from the temporary file failed"
+msgstr ""
+
+#: djgpp/subpipe.c:212
+#, c-format
+msgid "opening of a temporary file failed"
+msgstr ""
+
+#: djgpp/subpipe.c:218
+#, c-format
+msgid "redirecting m4's stdout to a temporary file failed"
+msgstr ""
+
+#: djgpp/subpipe.c:234
+#, c-format
+msgid "subsidiary program '%s' interrupted"
+msgstr ""
+
+#: djgpp/subpipe.c:241
+#, c-format
+msgid "subsidiary program '%s' not found"
+msgstr ""
+
+#: djgpp/subpipe.c:265
+#, c-format
+msgid "redirecting bison's stdin from the temporary file failed"
+msgstr ""
+
+#: lib/argmatch.c:133
+#, c-format
+msgid "invalid argument %s for %s"
+msgstr "%2$s 的参数 %1$s 无效"
+
+#: lib/argmatch.c:134
+#, c-format
+msgid "ambiguous argument %s for %s"
+msgstr ""
+
+#: lib/argmatch.c:153
+msgid "Valid arguments are:"
+msgstr "有效参数为："
+
+#: lib/bitset_stats.c:177
+#, c-format
+msgid "%u bitset_allocs, %u freed (%.2f%%).\n"
+msgstr ""
+
+#: lib/bitset_stats.c:180
+#, c-format
+msgid "%u bitset_sets, %u cached (%.2f%%)\n"
+msgstr ""
+
+#: lib/bitset_stats.c:183
+#, c-format
+msgid "%u bitset_resets, %u cached (%.2f%%)\n"
+msgstr ""
+
+#: lib/bitset_stats.c:186
+#, c-format
+msgid "%u bitset_tests, %u cached (%.2f%%)\n"
+msgstr ""
+
+#: lib/bitset_stats.c:190
+#, c-format
+msgid "%u bitset_lists\n"
+msgstr ""
+
+#: lib/bitset_stats.c:192
+msgid "count log histogram\n"
+msgstr ""
+
+#: lib/bitset_stats.c:195
+msgid "size log histogram\n"
+msgstr ""
+
+#: lib/bitset_stats.c:198
+msgid "density histogram\n"
+msgstr "密度直方图\n"
+
+#: lib/bitset_stats.c:212
+#, c-format
+msgid ""
+"Bitset statistics:\n"
+"\n"
+msgstr ""
+
+#: lib/bitset_stats.c:215
+#, c-format
+msgid "Accumulated runs = %u\n"
+msgstr "累计运行 = %u\n"
+
+#: lib/bitset_stats.c:259 lib/bitset_stats.c:264
+msgid "Could not read stats file."
+msgstr ""
+
+#: lib/bitset_stats.c:261
+#, c-format
+msgid "Bad stats file size.\n"
+msgstr ""
+
+#: lib/bitset_stats.c:287 lib/bitset_stats.c:289
+msgid "Could not write stats file."
+msgstr ""
+
+#: lib/bitset_stats.c:292
+msgid "Could not open stats file for writing."
+msgstr ""
+
+#: lib/error.c:188
+msgid "Unknown system error"
+msgstr "未知系统错误"
+
+#: lib/getopt.c:547 lib/getopt.c:576
+#, c-format
+msgid "%s: option '%s' is ambiguous; possibilities:"
+msgstr ""
+
+#: lib/getopt.c:624 lib/getopt.c:628
+#, c-format
+msgid "%s: option '--%s' doesn't allow an argument\n"
+msgstr "%s：“--%s”选项不允许有参数\n"
+
+#: lib/getopt.c:637 lib/getopt.c:642
+#, c-format
+msgid "%s: option '%c%s' doesn't allow an argument\n"
+msgstr "%s：“%c%s”选项不允许有参数\n"
+
+#: lib/getopt.c:685 lib/getopt.c:704
+#, fuzzy, c-format
+msgid "%s: option '--%s' requires an argument\n"
+msgstr "%s：“--%s”选项需要一个参数\n"
+
+#: lib/getopt.c:742 lib/getopt.c:745
+#, c-format
+msgid "%s: unrecognized option '--%s'\n"
+msgstr "%s：无法识别的选项“--%s”\n"
+
+#: lib/getopt.c:753 lib/getopt.c:756
+#, c-format
+msgid "%s: unrecognized option '%c%s'\n"
+msgstr "%s：无法识别的选项“%c%s”\n"
+
+#: lib/getopt.c:805 lib/getopt.c:808
+#, c-format
+msgid "%s: invalid option -- '%c'\n"
+msgstr "%s：无效选项 -- “%c”\n"
+
+#: lib/getopt.c:861 lib/getopt.c:878 lib/getopt.c:1088 lib/getopt.c:1106
+#, c-format
+msgid "%s: option requires an argument -- '%c'\n"
+msgstr "%s：选项需要一个参数 -- “%c”\n"
+
+#: lib/getopt.c:934 lib/getopt.c:950
+#, c-format
+msgid "%s: option '-W %s' is ambiguous\n"
+msgstr ""
+
+#: lib/getopt.c:974 lib/getopt.c:992
+#, c-format
+msgid "%s: option '-W %s' doesn't allow an argument\n"
+msgstr "%s：“-W %s”选项不允许有参数\n"
+
+#: lib/getopt.c:1013 lib/getopt.c:1031
+#, c-format
+msgid "%s: option '-W %s' requires an argument\n"
+msgstr "%s：“-W %s”选项需要一个参数\n"
+
+#: lib/obstack.c:413 lib/obstack.c:415 lib/xalloc-die.c:34
+msgid "memory exhausted"
+msgstr "内存耗尽"
+
+#: lib/spawn-pipe.c:138 lib/spawn-pipe.c:141 lib/spawn-pipe.c:262
+#: lib/spawn-pipe.c:265
+#, c-format
+msgid "cannot create pipe"
+msgstr "无法创建管道"
+
+#: lib/spawn-pipe.c:232 lib/spawn-pipe.c:346 lib/wait-process.c:282
+#: lib/wait-process.c:356
+#, c-format
+msgid "%s subprocess failed"
+msgstr "%s 子进程失败"
+
+#. TRANSLATORS:
+#. Get translations for open and closing quotation marks.
+#. The message catalog should translate "`" to a left
+#. quotation mark suitable for the locale, and similarly for
+#. "'".  For example, a French Unicode local should translate
+#. these to U+00AB (LEFT-POINTING DOUBLE ANGLE
+#. QUOTATION MARK), and U+00BB (RIGHT-POINTING DOUBLE ANGLE
+#. QUOTATION MARK), respectively.
+#.
+#. If the catalog has no translation, we will try to
+#. use Unicode U+2018 (LEFT SINGLE QUOTATION MARK) and
+#. Unicode U+2019 (RIGHT SINGLE QUOTATION MARK).  If the
+#. current locale is not Unicode, locale_quoting_style
+#. will quote 'like this', and clocale_quoting_style will
+#. quote "like this".  You should always include translations
+#. for "`" and "'" even if U+2018 and U+2019 are appropriate
+#. for your locale.
+#.
+#. If you don't know what to put here, please see
+#. <http://en.wikipedia.org/wiki/Quotation_marks_in_other_languages>
+#. and use glyphs suitable for your language.
+#: lib/quotearg.c:311
+msgid "`"
+msgstr "“"
+
+#: lib/quotearg.c:312
+msgid "'"
+msgstr "”"
+
+#: lib/timevar.c:475
+msgid ""
+"\n"
+"Execution times (seconds)\n"
+msgstr ""
+"\n"
+"执行时间(秒)\n"
+
+#: lib/timevar.c:525
+msgid " TOTAL                 :"
+msgstr " 总计                 ："
+
+#: lib/timevar.c:561
+#, c-format
+msgid "time in %s: %ld.%06ld (%ld%%)\n"
+msgstr ""
+
+#: lib/w32spawn.h:43
+#, c-format
+msgid "_open_osfhandle failed"
+msgstr "_open_osfhandle 失败"
+
+#: lib/w32spawn.h:84
+#, c-format
+msgid "cannot restore fd %d: dup2 failed"
+msgstr "无法恢复文件描述符 %d：dup2 失败"
+
+#: lib/wait-process.c:223 lib/wait-process.c:255 lib/wait-process.c:317
+#, c-format
+msgid "%s subprocess"
+msgstr "%s 子进程"
+
+#: lib/wait-process.c:274 lib/wait-process.c:346
+#, c-format
+msgid "%s subprocess got fatal signal %d"
+msgstr "%s 子进程收到致命信号 %d"

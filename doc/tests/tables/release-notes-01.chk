@@ -1,0 +1,223 @@
+syncline << "doc/tables/release-notes.tex:308";
+[01234567:#] "doc/tables/release-notes.tex:308"
+//#line 308 "doc/tables/release-notes.tex"
+var x = 0|;
+var y = 0|;
+var e = watch(x + y)|;
+at (e?(var value))
+  echo("x + y = %s" % value);
+x = 1|;
+[00000000] *** x + y = 1
+y = 2|;
+[00000000] *** x + y = 3
+
+syncline << "doc/tables/release-notes.tex:372";
+[01234567:#] "doc/tables/release-notes.tex:372"
+//#line 372 "doc/tables/release-notes.tex"
+function variadic(var a1, var a2, var a3, var args[])
+{
+  echo("a1 = %s, a2 = %s, a3 = %s, args = %s"
+       % [a1, a2, a3, args]);
+}|
+variadic(1, 2, 3);
+[00000002] *** a1 = 1, a2 = 2, a3 = 3, args = []
+variadic(1, 2, 3, 4);
+[00000002] *** a1 = 1, a2 = 2, a3 = 3, args = [4]
+variadic(1, 2, 3, 4, 5);
+[00000002] *** a1 = 1, a2 = 2, a3 = 3, args = [4, 5]
+
+syncline << "doc/tables/release-notes.tex:388";
+[01234567:#] "doc/tables/release-notes.tex:388"
+//#line 388 "doc/tables/release-notes.tex"
+Directory.createAll("dir1/dir2/dir3")|;
+Directory.new("dir1").rename("dir")|;
+Directory.new("dir/dir2").copy("dir/dir4")|;
+Directory.new("dir").removeAll;
+
+syncline << "doc/tables/release-notes.tex:494";
+[01234567:#] "doc/tables/release-notes.tex:494"
+//#line 494 "doc/tables/release-notes.tex"
+removeSlot("doesNotExist")|;
+[00000002:warning] !!! no such local slot: doesNotExist
+[00000002:warning] !!!    called from: removeSlot
+
+syncline << "doc/tables/release-notes.tex:555";
+[01234567:#] "doc/tables/release-notes.tex:555"
+//#line 555 "doc/tables/release-notes.tex"
+var a = 0 | var b = 1,
+echo(a);
+[00000001] *** 0
+echo(b);
+[00000001] *** 1
+
+syncline << "doc/tables/release-notes.tex:576";
+[01234567:#] "doc/tables/release-notes.tex:576"
+//#line 576 "doc/tables/release-notes.tex"
+enum Suit
+{
+  hearts,
+  diamonds,
+  clubs,
+  spades, // Last comma is optional
+};
+[00000001] Suit
+
+for (var suit : Suit)
+  if (suit in [Suit.spades, Suit.clubs])
+    echo("Black: " + suit)
+  else
+    echo("Red: " + suit);
+[00000001] *** Red: hearts
+[00000002] *** Red: diamonds
+[00000003] *** Black: clubs
+[00000004] *** Black: spades
+
+syncline << "doc/tables/release-notes.tex:628";
+[01234567:#] "doc/tables/release-notes.tex:628"
+//#line 628 "doc/tables/release-notes.tex"
+["a" + "b" => "ab", 12.asString => "12"];
+[00002405] ["12" => "12", "ab" => "ab"]
+
+syncline << "doc/tables/release-notes.tex:711";
+[01234567:#] "doc/tables/release-notes.tex:711"
+//#line 711 "doc/tables/release-notes.tex"
+// Can we run "riskyFeature"?
+try { riskyFeature } catch { false } else { true };
+[00004220] false
+
+function riskyFeature() { throw "die" }|;
+try { riskyFeature } catch { false } else { true };
+[00004433] false
+
+riskyFeature = function () { 42 }|;
+try { riskyFeature } catch { false } else { true };
+[00004447] true
+
+syncline << "doc/tables/release-notes.tex:728";
+[01234567:#] "doc/tables/release-notes.tex:728"
+//#line 728 "doc/tables/release-notes.tex"
+try { echo(1) } catch { echo(2) } else { echo(3) } finally { echo(4) };
+[00002670] *** 1
+[00002670] *** 3
+[00002670] *** 4
+
+try { throw 1 } catch { echo(2) } else { echo(3) } finally { echo(4) };
+[00002671] *** 2
+[00002671] *** 4
+
+syncline << "doc/tables/release-notes.tex:741";
+[01234567:#] "doc/tables/release-notes.tex:741"
+//#line 741 "doc/tables/release-notes.tex"
+eval("new Object");
+[00001388:warning] !!! 1.1-10: `new Obj(x)' is deprecated, use `Obj.new(x)'
+[00001388:warning] !!!    called from: eval
+[00001388] Object_0x1001b2320
+
+syncline << "doc/tables/release-notes.tex:769";
+[01234567:#] "doc/tables/release-notes.tex:769"
+//#line 769 "doc/tables/release-notes.tex"
+at (isdef (myVar))
+  echo("var myVar = " + myVar),
+
+myVar;
+[00000001:error] !!! lookup failed: myVar
+
+var myVar = 42|;
+[00000003] *** var myVar = 42
+
+syncline << "doc/tables/release-notes.tex:918";
+[01234567:#] "doc/tables/release-notes.tex:918"
+//#line 918 "doc/tables/release-notes.tex"
+var one = 1|;
+var two = 2|;
+assert (one == two);
+[00000002:error] !!! failed assertion: one == two (1 != 2)
+
+syncline << "doc/tables/release-notes.tex:1528";
+[01234567:#] "doc/tables/release-notes.tex:1528"
+//#line 1528 "doc/tables/release-notes.tex"
+"2.1".asFloat;
+[00000002] 2.1
+"2.0a".asFloat;
+[00000003:error] !!! asFloat: cannot convert to float: "2.0a"
+
+syncline << "doc/tables/release-notes.tex:1641";
+[01234567:#] "doc/tables/release-notes.tex:1641"
+//#line 1641 "doc/tables/release-notes.tex"
+class A {
+  function '()' (x) { echo("A called with " + x) };
+}|;
+A;
+[00000001] A
+A();
+[00000002] A
+A(42);
+[00000003] *** A called with 42
+
+syncline << "doc/tables/release-notes.tex:1720";
+[01234567:#] "doc/tables/release-notes.tex:1720"
+//#line 1720 "doc/tables/release-notes.tex"
+["a", "b", "c"].insert(1, "foo");
+[00000001] ["a", "foo", "b", "c"]
+
+syncline << "doc/tables/release-notes.tex:1731";
+[01234567:#] "doc/tables/release-notes.tex:1731"
+//#line 1731 "doc/tables/release-notes.tex"
+["foo", "bar", "Baz"].sort;
+[00000001] ["Baz", "bar", "foo"]
+["foo", "bar", "Baz"].sort(function(x, y) {x.toLower < y.toLower});
+[00000002] ["bar", "Baz", "foo"]
+
+syncline << "doc/tables/release-notes.tex:1747";
+[01234567:#] "doc/tables/release-notes.tex:1747"
+//#line 1747 "doc/tables/release-notes.tex"
+var ne = System.getenv("nonexistent");
+if (!ne.isNil) do_something(ne);
+
+syncline << "doc/tables/release-notes.tex:1837";
+[01234567:#] "doc/tables/release-notes.tex:1837"
+//#line 1837 "doc/tables/release-notes.tex"
+var object = 1|;
+var from = 1|;
+
+syncline << "doc/tables/release-notes.tex:1846";
+[01234567:#] "doc/tables/release-notes.tex:1846"
+//#line 1846 "doc/tables/release-notes.tex"
+0x2a;
+[00000001] 42
+
+syncline << "doc/tables/release-notes.tex:1871";
+[01234567:#] "doc/tables/release-notes.tex:1871"
+//#line 1871 "doc/tables/release-notes.tex"
+for (var c: "foo") echo (c);
+[00000001] *** f
+[00000002] *** o
+[00000003] *** o
+
+syncline << "doc/tables/release-notes.tex:1896";
+[01234567:#] "doc/tables/release-notes.tex:1896"
+//#line 1896 "doc/tables/release-notes.tex"
+["the", "brown", "Fox"].min;
+[00000001] "Fox"
+["the", "brown", "Fox"].min(function (l, r) { l.toLower < r.toLower });
+[00000002] "brown"
+
+syncline << "doc/tables/release-notes.tex:1907";
+[01234567:#] "doc/tables/release-notes.tex:1907"
+//#line 1907 "doc/tables/release-notes.tex"
+min(3, 2, 17);
+[00000001] 2
+
+syncline << "doc/tables/release-notes.tex:1916";
+[01234567:#] "doc/tables/release-notes.tex:1916"
+//#line 1916 "doc/tables/release-notes.tex"
+["a", "b", "c"][-1];
+[00000001] "c"
+
+syncline << "doc/tables/release-notes.tex:1926";
+[01234567:#] "doc/tables/release-notes.tex:1926"
+//#line 1926 "doc/tables/release-notes.tex"
+Tag.new;
+[00000001] Tag<tag_1>
+Tag.new("mytag");
+[00000002] Tag<mytag>

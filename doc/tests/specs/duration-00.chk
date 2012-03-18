@@ -1,0 +1,36 @@
+syncline << "doc/specs/duration.tex:24";
+[01234567:#] "doc/specs/duration.tex:24"
+//#line 24 "doc/specs/duration.tex"
+Duration.new;
+[00000001] Duration(0s)
+Duration.new(1h);
+[00023593] Duration(3600s)
+
+syncline << "doc/specs/duration.tex:33";
+[01234567:#] "doc/specs/duration.tex:33"
+//#line 33 "doc/specs/duration.tex"
+Duration.new(-1);
+[00000001] Duration(-1s)
+
+syncline << "doc/specs/duration.tex:44";
+[01234567:#] "doc/specs/duration.tex:44"
+//#line 44 "doc/specs/duration.tex"
+assert {
+Duration.new(1000).asFloat == 1000;
+Duration.new(1000.1234).asFloat == 1000.1234;
+};
+
+syncline << "doc/specs/duration.tex:51";
+[01234567:#] "doc/specs/duration.tex:51"
+//#line 51 "doc/specs/duration.tex"
+assert {
+Duration.new(1000).asString == "1000s";
+};
+
+syncline << "doc/specs/duration.tex:57";
+[01234567:#] "doc/specs/duration.tex:57"
+//#line 57 "doc/specs/duration.tex"
+assert {
+Duration.new(1000)   .seconds == 1000;
+Duration.new(1000.52).seconds == 1000.52;
+};

@@ -1,0 +1,41 @@
+//#uobject test/all
+var inu = 0 | {};
+//hack: we put a valid message in binary data
+var remall.e = BIN 0;
+[00000001] BIN 0
+[:]
+inu = remall.writeB("remall.e", "[00000000:ts] 1\n");sleep(200ms);
+[00000002] 0
+remall.e;
+[00000003] BIN 16
+[00000004:ts] 1
+[:]
+var remall.e2 = BIN 0;
+[00000005] BIN 0
+[:]
+
+inu = remall.writeBNone ("remall.e2", "[00000000:ts] 51\n");sleep(200ms);
+[00000006] 0
+remall.e2;
+[00000007] BIN 17
+[00000008:ts] 51
+[:]
+var remall.f = BIN 3 rgb 1 1;123
+[00000009] BIN 3 rgb 1 1
+[:]123
+inu = remall.writeI("remall.f","[00000000:ts] 2\n");
+[00000010] 0
+remall.f;
+[00000011] BIN 16 jpeg 42 42
+[00000012:ts] 2
+[:]
+
+var remall.g = BIN 4 raw 1 16000 16 1;1234
+[00000013] BIN 4 raw 1 16000 16 1
+[:]1234
+inu = remall.writeSnd("remall.g", "[00000000:ts] 3\n");
+[00000014] 0
+remall.g;
+[00000015] BIN 16 raw 1 42 8 2
+[00000016:ts] 3
+[:]

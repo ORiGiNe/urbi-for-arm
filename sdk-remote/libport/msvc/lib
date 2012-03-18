@@ -1,0 +1,6 @@
+#! /bin/sh
+#
+# It looks like libtool may invoke "lib" instead of "lib.exe"
+# sometimes.
+
+lib.exe "$@"

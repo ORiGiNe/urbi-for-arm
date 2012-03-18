@@ -1,0 +1,50 @@
+//#uobject test/all
+
+// We test bypass mode by having the notify callbing write on the
+// (theoreticaly) const buffer, and having the writter check the
+// buffer content. It will thus check if the buffer realy is not
+// copied durring the process.
+remall.markBypass(0, 1)|1;
+[00000001] 1
+
+remall2.setBypassNotifyChangeImage("remall.a")|;
+assert
+{
+  remall.selfWriteI(0, "aaaaaa") == "bbbbbb";
+  remall.selfWriteB(0, "aaaaaaa") == "bbbbbbb";
+
+  remall.a.isNil;
+};
+
+remall.markBypass(1, 1)|1;
+[00000005] 1
+remall2.setBypassNotifyChangeBinary("remall.b")|;
+assert
+{
+  remall.selfWriteI(1, "aaaaa") == "bbbbb";
+  remall.selfWriteB(1, "aaa") == "bbb";
+
+  remall.b.isNil;
+};
+
+
+// Check urbi interception
+var i;
+remall.&a.notifyChange(closure() { i=remall.a})|;
+remall.selfWriteI(0, "aaaaaa");
+[00000009] "bbbbbb"
+// Cannot check data content, it will depend on callback order.
+i.data.size;
+[00000010] 6
+
+
+// Disable bypass mode, check that nothing segv.
+assert
+{
+  remall.markBypass(0, 0) == 1;
+  remall.selfWriteI(0, "aaaaaa") == "aaaaaa";
+  remall.selfWriteB(0, "aaaaaaa") == "aaaaaaa";
+  remall.markBypass(1, 0) == 1;
+  remall.selfWriteI(1, "aaaaaa") == "aaaaaa";
+  remall.selfWriteB(1, "aaaaaaa") == "aaaaaaa";
+};

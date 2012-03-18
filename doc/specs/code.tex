@@ -1,0 +1,143 @@
+%% Copyright (C) 2009-2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Code}
+
+Functions written in \us.
+
+\subsection{Prototypes}
+
+\begin{refObjects}
+\item[Comparable]
+\item[Executable]
+\end{refObjects}
+
+\subsection{Construction}
+
+The keywords \lstinline|function| and \lstinline|closure| build Code
+instances.
+
+\begin{urbiassert}
+function(){}.protos[0] === &Code;
+closure (){}.protos[0] === &Code;
+\end{urbiassert}
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+\item[==](<that>)%
+  Whether \this and \var{that} are the same source code (actually checks
+  that both have the same \refSlot{asString}), and same closed values.
+
+  Closures and functions are different, even if the body is the same.
+\begin{urbiassert}
+function () { 1 } == function () { 1 };
+function () { 1 } != closure  () { 1 };
+closure  () { 1 } != function () { 1 };
+closure  () { 1 } == closure  () { 1 };
+\end{urbiassert}
+
+No form of equivalence is applied on the body, it must be the same.
+\begin{urbiassert}
+function () { 1 + 1 } == function () { 1 + 1 };
+function () { 1 + 2 } != function () { 2 + 1 };
+\end{urbiassert}
+
+Arguments do matter, even if in practice the functions are the same.
+\begin{urbiassert}
+function (var ignored) {} != function () {};
+function (var x) { x }    != function (y) { y };
+\end{urbiassert}
+
+A lazy function cannot be equal to a strict one.
+\begin{urbiassert}
+function () { 1 } != function { 1 };
+\end{urbiassert}
+
+If the functions capture different variables, they are different.
+\begin{urbiscript}
+{
+  var x;
+  function Global.capture_x() { x };
+  function Global.capture_x_again () { x };
+  {
+    var x;
+    function Global.capture_another_x() { x };
+  }
+}|;
+assert
+{
+  &capture_x == &capture_x_again;
+  &capture_x != &capture_another_x;
+};
+\end{urbiscript}
+
+If the functions capture different targets, they are different.
+\begin{urbiscript}
+class Foo
+{
+  function makeFunction() { function () {} };
+  function makeClosure()  { closure () {} };
+}|;
+
+class Bar
+{
+  function makeFunction() { function () {} };
+  function makeClosure()  { closure () {} };
+}|;
+
+assert
+{
+  Foo.makeFunction() == Bar.makeFunction();
+  Foo.makeClosure()  != Bar.makeClosure();
+};
+\end{urbiscript}
+
+\item[apply](<args>)%
+  Invoke the routine, with all the arguments.  The target, \this, will be
+  set to \lstinline|\var{args}[0]| and the remaining arguments with be given
+  as arguments.
+\begin{urbiassert}
+function (x, y) { x+y }.apply([nil, 10, 20]) == 30;
+function () { this }.apply([123]) == 123;
+
+// There is Object.apply.
+1.apply([this]) == 1;
+\end{urbiassert}
+\begin{urbiscript}
+function () {}.apply([]);
+[00000001:error] !!! apply: argument list must begin with `this'
+
+function () {}.apply([1, 2]);
+[00000002:error] !!! apply: expected 0 argument, given 1
+\end{urbiscript}
+
+\item[asString]
+  Conversion to \refObject{String}.
+\begin{urbiassert}
+closure  () { 1 }.asString == "closure () { 1 }";
+function () { 1 }.asString == "function () { 1 }";
+\end{urbiassert}
+
+\item[bodyString]
+  Conversion to \refObject{String} of the routine body.
+\begin{urbiassert}
+closure  () { 1 }.bodyString == "1";
+function () { 1 }.bodyString == "1";
+\end{urbiassert}
+
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

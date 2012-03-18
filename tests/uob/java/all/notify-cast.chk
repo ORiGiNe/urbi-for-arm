@@ -1,0 +1,19 @@
+//#uobject test/all
+
+// Writes from remote UObject will be asynchronous.
+var sem = Semaphore.new(0)|;
+at(remall.a->changed?) sem.release;
+// Check notifychange with various types as argument
+
+remall.notifyWriteA(remall.&b, 0);
+remall.b = 12| sem.acquire|remall.a;
+[00000001] 12
+
+remall.notifyWriteA(remall.&c, 1);
+remall.c = "foo"| sem.acquire|remall.a;
+[00000002] "foo"
+
+var b = Binary.new("fooo", "fooofooo")|;
+remall.notifyWriteA(remall.&d, 2);
+remall.d = b| sem.acquire| assert(remall.a == b) |1;
+[00000003] 1

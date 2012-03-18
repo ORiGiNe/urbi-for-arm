@@ -1,0 +1,23 @@
+syncline << "doc/tutorial/value.tex:352";
+[01234567:#] "doc/tutorial/value.tex:352"
+//#line 352 "doc/tutorial/value.tex"
+var o = Object.clone;
+[00000000] Object_0x100000
+o.uid;
+[00000000] "0x100000"
+42.uid;
+[00000000] "0x200000"
+42.uid;
+[00000000] "0x300000"
+
+syncline << "doc/tutorial/value.tex:375";
+[01234567:#] "doc/tutorial/value.tex:375"
+//#line 375 "doc/tutorial/value.tex"
+var a = 42;
+[00000000] 42
+var b = 42;
+[00000000] 42
+a == b;
+[00000000] true
+a === b;
+[00000000] false

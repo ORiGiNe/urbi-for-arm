@@ -1,0 +1,85 @@
+%% Copyright (C) 2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{PubSub}
+
+\lstinline|PubSub| provides an abstraction over \lstinline|Barrier|
+\refObject{Barrier} to queue signals for each subscriber.
+
+\subsection{Prototypes}
+
+\begin{refObjects}
+\item[Object]
+\end{refObjects}
+
+\subsection{Construction}
+
+A \lstinline|PubSub| can be created with no arguments.  Values can be
+published and read by each subscriber.
+
+\begin{urbiscript}[firstnumber=1]
+var ps = PubSub.new;
+[00000000] PubSub_0x28c1bc0
+\end{urbiscript}
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+
+\item[publish](<ev>)%
+  Queue the value \var{ev} to the queue of each subscriber.  This method
+  returns the value \var{ev}.
+
+\begin{urbiscript}
+{
+  var sub = ps.subscribe;
+  assert
+  {
+    ps.publish(2) == 2;
+    sub.getOne == 2;
+  };
+  ps.unsubscribe(sub)
+}|;
+\end{urbiscript}
+
+\item[subscribe] Create a \refSlot{Subscriber} and insert it inside the list
+  of subscribers.
+
+\begin{urbiscript}
+var sub = ps.subscribe |
+ps.subscribers == [sub];
+[00000000] true
+\end{urbiscript}
+
+\item[Subscriber] See \refObject{PubSub.Subscriber}.
+
+\item[subscribers] Field containing the list of \refSlot{Subscriber} which
+  are watching published values.  This field only exists in instances of
+  \lstinline|PubSub|.
+
+\item[unsubscribe](<sub>)%
+  Remove a subscriber from the list of subscriber watching the published
+  values.
+
+\begin{urbiscript}
+ps.unsubscribe(sub) |
+ps.subscribers;
+[00000000] []
+\end{urbiscript}
+
+
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

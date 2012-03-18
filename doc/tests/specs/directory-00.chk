@@ -1,0 +1,136 @@
+syncline << "doc/specs/directory.tex:25";
+[01234567:#] "doc/specs/directory.tex:25"
+//#line 25 "doc/specs/directory.tex"
+Directory.new(".");
+[00000001] Directory(".")
+Directory.new(Path.new("."));
+[00000002] Directory(".")
+
+syncline << "doc/specs/directory.tex:40";
+[01234567:#] "doc/specs/directory.tex:40"
+//#line 40 "doc/specs/directory.tex"
+var dir1 = Directory.create("dir1")|;
+var dir2 = Directory.create("dir1/dir2")|;
+var file = File.create("dir1/file")|;
+dir1 / "dir2";
+[00000001] Directory("dir1/dir2")
+dir1 / "file";
+[00000002] File("dir1/file")
+dir1.removeAll;
+
+syncline << "doc/specs/directory.tex:57";
+[01234567:#] "doc/specs/directory.tex:57"
+//#line 57 "doc/specs/directory.tex"
+dir1 = Directory.create("dir1")|;
+dir2 = Directory.create("dir2")|;
+file = File.create("file")|;
+dir1 << file << dir2;
+[00000001] Directory("dir1")
+dir1.content;
+[00000003] ["dir2", "file"]
+dir2;
+[00000004] Directory("dir2")
+file;
+[00000005] File("file")
+dir1.removeAll;
+dir2.removeAll;
+file.remove;
+
+syncline << "doc/specs/directory.tex:79";
+[01234567:#] "doc/specs/directory.tex:79"
+//#line 79 "doc/specs/directory.tex"
+assert {
+Directory.new(".").asString == ".";
+};
+
+syncline << "doc/specs/directory.tex:93";
+[01234567:#] "doc/specs/directory.tex:93"
+//#line 93 "doc/specs/directory.tex"
+dir1 = Directory.create("dir1")|;
+dir2 = Directory.create("dir1/dir2")|;
+file = File.create("dir1/file")|;
+var directory1 = dir1.copy("directory1");
+[00000001] Directory("directory1")
+dir1;
+[00000002] Directory("dir1")
+directory1.content;
+[00000003] ["dir2", "file"]
+dir1.removeAll;
+directory1.removeAll;
+
+syncline << "doc/specs/directory.tex:111";
+[01234567:#] "doc/specs/directory.tex:111"
+//#line 111 "doc/specs/directory.tex"
+var dir = Directory.create("dir")|;
+dir1 = Directory.create("dir1")|;
+dir2 = Directory.create("dir1/dir2")|;
+file = File.create("dir1/file")|;
+dir1.copyInto(dir);
+[00000001] Directory("dir/dir1")
+dir1;
+[00000002] Directory("dir1")
+dir1.content;
+[00000003] ["dir2", "file"]
+dir.content;
+[00000004] ["dir1"]
+Directory.new("dir/dir1").content;
+[00000005] ["dir2", "file"]
+dir.removeAll;
+dir1.removeAll;
+
+syncline << "doc/specs/directory.tex:134";
+[01234567:#] "doc/specs/directory.tex:134"
+//#line 134 "doc/specs/directory.tex"
+dir1 = Directory.create("dir1")|;
+dir2 = Directory.create("dir1/dir2")|;
+var file1 = File.create("dir1/file1")|;
+var file2 = File.create("dir1/dir2/file2")|;
+dir1.content;
+[00000001] ["dir2", "file1"]
+dir2.content;
+[00000002] ["file2"]
+dir1.clear;
+assert(dir1.empty);
+dir1.remove;
+
+syncline << "doc/specs/directory.tex:152";
+[01234567:#] "doc/specs/directory.tex:152"
+//#line 152 "doc/specs/directory.tex"
+dir = Directory.new("dir");
+[00000001:error] !!! new: directory does not exist: "dir"
+dir = Directory.create("dir");
+[00000002] Directory("dir")
+dir = Directory.create("dir");
+[00000001:error] !!! create: directory exists: "dir"
+dir.content;
+[00000003] []
+dir.remove;
+
+syncline << "doc/specs/directory.tex:170";
+[01234567:#] "doc/specs/directory.tex:170"
+//#line 170 "doc/specs/directory.tex"
+Directory.create("dir1/dir2/dir3");
+[00000001:error] !!! create: no such file or directory: "dir1/dir2/dir3"
+dir1 = Directory.create("dir1");
+[00000002] Directory("dir1")
+Directory.createAll("dir1/dir2/dir3");
+[00000002] Directory("dir1/dir2/dir3")
+dir1.removeAll;
+
+syncline << "doc/specs/directory.tex:182";
+[01234567:#] "doc/specs/directory.tex:182"
+//#line 182 "doc/specs/directory.tex"
+dir = Directory.create("dir")|;
+assert(dir.empty);
+File.create("dir/file")|;
+assert(!dir.empty);
+dir.removeAll;
+
+syncline << "doc/specs/directory.tex:192";
+[01234567:#] "doc/specs/directory.tex:192"
+//#line 192 "doc/specs/directory.tex"
+dir = Directory.create("dir");
+[00000001] Directory("dir")
+assert(dir.exists);
+dir.remove;
+assert(!dir.exists);

@@ -1,0 +1,75 @@
+%% Copyright (C) 2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{PubSub.Subscriber}
+
+\lstinline|Subscriber| is created by \refSlot[PubSub]{subscribe}.  It
+provides methods to access to the list of values published by
+\lstinline|PubSub| instances.
+
+\subsection{Prototypes}
+
+\begin{refObjects}
+\item[Object]
+\end{refObjects}
+
+\subsection{Construction}
+
+A \lstinline|PubSub.Subscriber| can be created with a call to
+\refSlot[PubSub]{subscribe}.  This way of creating a \lstinline|Subscriber|
+adds the subscriber as a watcher of values published on the instance of
+\refObject{PubSub}.
+
+\begin{urbiscript}[firstnumber=1]
+var ps = PubSub.new |;
+var sub = ps.subscribe;
+[00000000] Subscriber_0x28607c0
+\end{urbiscript}
+
+%% PubSub.Subscriber.new is not documented because there is no method to add
+%% a subscriber into the list of subscribers of a PubSub instance except by
+%% doing it in a dirty way.  This may allow to have a subscriber watching
+%% multiple published values.
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+
+%% \lstinline|enqueue(\var{ev})| is not documented because I assume it is an
+%% implementation detail of PubSub.
+\item[getOne]
+  Block until a value is accessible and return it.  If a value is already
+  queued, then the method returns it without blocking.
+
+\begin{urbiscript}
+echo(sub.getOne) &
+ps.publish(3);
+[00000000] *** 3
+\end{urbiscript}
+
+
+\item[getAll] Block until a value is accessible.  Return the list of
+  queued values.  If the values are already queued, then return them
+  without blocking.
+
+\begin{urbiscript}
+ps.publish(4) |
+ps.publish(5) |
+echo(sub.getAll);
+[00000000] *** [4, 5]
+\end{urbiscript}
+
+\end{urbiscriptapi}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../../urbi.dict"
+%%% fill-column: 76
+%%% End:

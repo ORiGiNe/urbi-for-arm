@@ -1,0 +1,32 @@
+syncline << "doc/specs/pubsub.tex:26";
+[01234567:#] "doc/specs/pubsub.tex:26"
+//#line 26 "doc/specs/pubsub.tex"
+var ps = PubSub.new;
+[00000000] PubSub_0x28c1bc0
+
+syncline << "doc/specs/pubsub.tex:39";
+[01234567:#] "doc/specs/pubsub.tex:39"
+//#line 39 "doc/specs/pubsub.tex"
+{
+  var sub = ps.subscribe;
+  assert
+  {
+    ps.publish(2) == 2;
+    sub.getOne == 2;
+  };
+  ps.unsubscribe(sub)
+}|;
+
+syncline << "doc/specs/pubsub.tex:54";
+[01234567:#] "doc/specs/pubsub.tex:54"
+//#line 54 "doc/specs/pubsub.tex"
+var sub = ps.subscribe |
+ps.subscribers == [sub];
+[00000000] true
+
+syncline << "doc/specs/pubsub.tex:70";
+[01234567:#] "doc/specs/pubsub.tex:70"
+//#line 70 "doc/specs/pubsub.tex"
+ps.unsubscribe(sub) |
+ps.subscribers;
+[00000000] []

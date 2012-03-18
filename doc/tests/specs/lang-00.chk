@@ -1,0 +1,1000 @@
+syncline << "doc/specs/lang.tex:36";
+[01234567:#] "doc/specs/lang.tex:36"
+//#line 36 "doc/specs/lang.tex"
+#Été;
+[00048238:error] !!! syntax error: invalid character: `#'
+[00048239:error] !!! syntax error: invalid character: `\xc3'
+[00048239:error] !!! syntax error: invalid character: `\x89'
+[00048239:error] !!! syntax error: invalid character: `\xc3'
+[00048239:error] !!! syntax error: invalid character: `\xa9'
+
+syncline << "doc/specs/lang.tex:58";
+[01234567:#] "doc/specs/lang.tex:58"
+//#line 58 "doc/specs/lang.tex"
+1; // This is a one line comment.
+[00000001] 1
+
+2; /* an inner comment */ 3;
+[00000002] 2
+[00000003] 3
+
+4; /* nested /* comments */ 5; */ 6;
+[00000004] 4
+[00000005] 6
+
+7
+  /*
+    /*
+       Multi-line.
+    */
+  */
+;
+[00000006] 7
+
+syncline << "doc/specs/lang.tex:129";
+[01234567:#] "doc/specs/lang.tex:129"
+//#line 129 "doc/specs/lang.tex"
+var x;
+var foobar51;
+var this.a_name_with_underscores;
+// Invalid.
+// var 3x;
+// obj.3x();
+
+// Invalid because "if" is a keyword.
+// var if;
+// obj.if();
+// However, keywords can be escaped with simple quotes.
+var 'if';
+var this.'else';
+
+// Identifiers can be escaped with simple quotes
+var '%x';
+var '1 2 3';
+var this.'[]';
+
+syncline << "doc/specs/lang.tex:291";
+[01234567:#] "doc/specs/lang.tex:291"
+//#line 291 "doc/specs/lang.tex"
+assert {
+pi == 180deg;
+pi == 200grad;
+};
+
+syncline << "doc/specs/lang.tex:308";
+[01234567:#] "doc/specs/lang.tex:308"
+//#line 308 "doc/specs/lang.tex"
+[ => ]; // The empty dictionary
+[00000000] [ => ]
+["a" => 1, "b" => 2, "c" => 3];
+[00000000] ["a" => 1, "b" => 2, "c" => 3]
+
+syncline << "doc/specs/lang.tex:341";
+[01234567:#] "doc/specs/lang.tex:341"
+//#line 341 "doc/specs/lang.tex"
+assert {
+1d   == 24h;
+0.5d == 12h;
+1h   == 60min;
+1min == 60s;
+1s   == 1000ms;
+
+
+1s == 1;
+1s 2s 3s == 6;
+1s 1ms == 1.001;
+1ms 1s == 1.001;
+};
+
+syncline << "doc/specs/lang.tex:365";
+[01234567:#] "doc/specs/lang.tex:365"
+//#line 365 "doc/specs/lang.tex"
+assert {
+            1 == 1;
+            1 == 1.0;
+          1.2 == 1.2000;
+      1.234e6 == 1234000;
+        1e+11 == 1E+11;
+         1e10 == 10000000000;
+         1e30 == 1e10 * 1e10 * 1e10;
+};
+
+syncline << "doc/specs/lang.tex:396";
+[01234567:#] "doc/specs/lang.tex:396"
+//#line 396 "doc/specs/lang.tex"
+0.000001;
+[00000011] 1e-06
+
+0.0000001;
+[00000012] 1e-07
+
+0.00000000001;
+[00000013] 1e-11
+
+1e+3;
+[00000014] 1000
+
+1E-5;
+[00000014] 1e-05
+
+syncline << "doc/specs/lang.tex:418";
+[01234567:#] "doc/specs/lang.tex:418"
+//#line 418 "doc/specs/lang.tex"
+1.;
+[00004701:error] !!! syntax error: unexpected ;
+
+syncline << "doc/specs/lang.tex:426";
+[01234567:#] "doc/specs/lang.tex:426"
+//#line 426 "doc/specs/lang.tex"
+assert {
+      0x2a == 42;
+      0x2A == 42;
+  0xabcdef == 11259375;
+  0xABCDEF == 11259375;
+0xFFFFFFFF == 4294967295;
+};
+
+syncline << "doc/specs/lang.tex:436";
+[01234567:#] "doc/specs/lang.tex:436"
+//#line 436 "doc/specs/lang.tex"
+123foo;
+[00005658:error] !!! syntax error: invalid token: `123foo'
+12.3foo;
+[00018827:error] !!! syntax error: invalid token: `12.3foo'
+0xabcdef;
+[00060432] 11259375
+0xabcdefg;
+[00061848:error] !!! syntax error: invalid token: `0xabcdefg'
+
+syncline << "doc/specs/lang.tex:455";
+[01234567:#] "doc/specs/lang.tex:455"
+//#line 455 "doc/specs/lang.tex"
+[]; // The empty list
+[00000000] []
+[1, 2, 3];
+[00000000] [1, 2, 3]
+
+syncline << "doc/specs/lang.tex:507";
+[01234567:#] "doc/specs/lang.tex:507"
+//#line 507 "doc/specs/lang.tex"
+assert {
+// Special characters.
+"\"" == "\"";
+"\\" == "\\";
+
+// ASCII characters.
+"\a" == "\007"; "\a" == "\x07";
+"\b" == "\010"; "\b" == "\x08";
+"\f" == "\014"; "\f" == "\x0c";
+"\n" == "\012"; "\n" == "\x0a";
+"\r" == "\015"; "\r" == "\x0d";
+"\t" == "\011"; "\t" == "\x09";
+"\v" == "\013"; "\v" == "\x0b";
+
+// Octal escapes.
+"\0" == "\00"; "\0" == "\000";
+"\0000" == "\0""0";
+"\062\063" == "23";
+
+// Hexadecimal escapes.
+"\x00" == "\0";
+"\x32\x33" == "23";
+
+// Binary blob escape.
+"\B(3)("\")" == "\"\\\"";
+};
+
+syncline << "doc/specs/lang.tex:538";
+[01234567:#] "doc/specs/lang.tex:538"
+//#line 538 "doc/specs/lang.tex"
+assert {
+"foo" "bar" "baz" == "foobarbaz";
+};
+
+syncline << "doc/specs/lang.tex:547";
+[01234567:#] "doc/specs/lang.tex:547"
+//#line 547 "doc/specs/lang.tex"
+"";
+[00000000] ""
+"foo";
+[00000000] "foo"
+"a\nb"; // urbiscript escapes string when dumping them
+[00000000] "a\nb"
+echo("a\nb"); // We can see there is an actual line feed
+[00000000] *** a
+[:]b
+echo("a\\nb");
+[00000000] *** a\nb
+
+syncline << "doc/specs/lang.tex:573";
+[01234567:#] "doc/specs/lang.tex:573"
+//#line 573 "doc/specs/lang.tex"
+();
+[00000000] ()
+(1,);
+[00000000] (1,)
+(1, 2);
+[00000000] (1, 2)
+(1, 2, 3, 4,);
+[00000000] (1, 2, 3, 4)
+
+syncline << "doc/specs/lang.tex:620";
+[01234567:#] "doc/specs/lang.tex:620"
+//#line 620 "doc/specs/lang.tex"
+class Base
+{
+  var slot = 12;
+}|;
+
+assert
+{
+  hasLocalSlot("Base");
+  Base.type   == "Base";
+  Base.protos == [Object];
+  Base.slot   == 12;
+  Base.asBase === Base;
+};
+
+class Global.Derive : Base
+{
+  var slot = 34;
+}|;
+
+assert
+{
+  Global.hasLocalSlot("Derive");
+  Global.Derive.type     == "Derive";
+  Global.Derive.protos   == [Base];
+  Global.Derive.slot     == 34;
+  Global.Derive.asDerive === Global.Derive;
+  Global.Derive.asBase   === Global.Derive;
+};
+
+class Base2 {}|;
+
+class Derive2 : Base, Base2 {}|;
+
+assert
+{
+  Derive2.type      == "Derive2";
+  Derive2.protos    == [Base, Base2];
+  Derive2.slot      == 12;
+  Derive2.asDerive2 === Derive2;
+  Derive2.asBase    === Derive2;
+  Derive2.asBase2   === Derive2;
+};
+
+syncline << "doc/specs/lang.tex:668";
+[01234567:#] "doc/specs/lang.tex:668"
+//#line 668 "doc/specs/lang.tex"
+function Global.verboseId(var x)
+{
+  echo(x) | x
+}|;
+class verboseId(Global).math : verboseId(Math)
+{
+};
+[00000686] *** Global
+[00000686] *** Math
+[00000686] math
+
+syncline << "doc/specs/lang.tex:702";
+[01234567:#] "doc/specs/lang.tex:702"
+//#line 702 "doc/specs/lang.tex"
+1; 2; 3;
+[00000000] 1
+[00000000] 2
+[00000000] 3
+
+syncline << "doc/specs/lang.tex:719";
+[01234567:#] "doc/specs/lang.tex:719"
+//#line 719 "doc/specs/lang.tex"
+{
+  for (3)
+  {
+    sleep(1s);
+    echo("ping");
+  },
+  sleep(0.5s);
+  for (3)
+  {
+    sleep(1s);
+    echo("pong");
+  },
+};
+[00000316] *** ping
+[00000316] *** pong
+[00000316] *** ping
+[00000316] *** pong
+[00000316] *** ping
+[00000316] *** pong
+
+syncline << "doc/specs/lang.tex:746";
+[01234567:#] "doc/specs/lang.tex:746"
+//#line 746 "doc/specs/lang.tex"
+{
+  sleep(100ms) | echo("1"),
+  sleep(400ms) | echo("2"),
+  echo("done");
+};
+[00000316] *** done
+[00000316] *** 1
+[00000316] *** 2
+
+syncline << "doc/specs/lang.tex:757";
+[01234567:#] "doc/specs/lang.tex:757"
+//#line 757 "doc/specs/lang.tex"
+{
+  sleep(100ms) | echo("1"),
+  sleep(400ms) | echo("2"),
+};
+echo("done");
+[00000316] *** 1
+[00000316] *** 2
+[00000316] *** done
+
+syncline << "doc/specs/lang.tex:775";
+[01234567:#] "doc/specs/lang.tex:775"
+//#line 775 "doc/specs/lang.tex"
+{
+  { echo("11") ; sleep(100ms) ; echo("12") },
+  { echo("21") ; sleep(400ms) ; echo("22") },
+};
+[00000316] *** 11
+[00000316] *** 21
+[00000316] *** 12
+[00000316] *** 22
+
+syncline << "doc/specs/lang.tex:787";
+[01234567:#] "doc/specs/lang.tex:787"
+//#line 787 "doc/specs/lang.tex"
+{
+  { echo("11") | echo("12") },
+  { echo("21") | echo("22") },
+};
+[00000316] *** 11
+[00000316] *** 12
+[00000316] *** 21
+[00000316] *** 22
+
+syncline << "doc/specs/lang.tex:961";
+[01234567:#] "doc/specs/lang.tex:961"
+//#line 961 "doc/specs/lang.tex"
+assert {
+       1 + 1 ==    2;
+       1 - 2 ==   -1;
+       2 * 3 ==    6;
+      10 / 2 ==    5;
+     2 ** 10 == 1024;
+    -(1 + 2) ==   -3;
+   1 + 2 * 3 ==    7;
+ (1 + 2) * 3 ==    9;
+     -2 ** 2 ==   -4;
+   - - - - 1 ==    1;
+};
+
+syncline << "doc/specs/lang.tex:994";
+[01234567:#] "doc/specs/lang.tex:994"
+//#line 994 "doc/specs/lang.tex"
+var y = 0;
+[00000000] 0
+y = 10;
+[00000000] 10
+y += 10;
+[00000000] 20
+y /= 5;
+[00000000] 4
+
+syncline << "doc/specs/lang.tex:1016";
+[01234567:#] "doc/specs/lang.tex:1016"
+//#line 1016 "doc/specs/lang.tex"
+var value = 0|;
+var valueAlias = value|;
+value += 10;
+[00002275] 10
+valueAlias;
+[00002301] 0
+
+syncline << "doc/specs/lang.tex:1049";
+[01234567:#] "doc/specs/lang.tex:1049"
+//#line 1049 "doc/specs/lang.tex"
+var myList = []|;
+var myList.specialFeature = 42|;
+myList += [1, 2, 3];
+[00848865] [1, 2, 3]
+myList.specialFeature;
+[00848869] 42
+var myOtherList = myList + [4, 5];
+[00848873] [1, 2, 3, 4, 5]
+myOtherList.specialFeature;
+[00848926:error] !!! lookup failed: specialFeature
+
+syncline << "doc/specs/lang.tex:1066";
+[01234567:#] "doc/specs/lang.tex:1066"
+//#line 1066 "doc/specs/lang.tex"
+var something = []|;
+var somethingElse = something|;
+something += [1, 2];
+[00008557] [1, 2]
+somethingElse += [3, 4];
+[00008562] [1, 2, 3, 4]
+something;
+[00008566] [1, 2, 3, 4]
+
+syncline << "doc/specs/lang.tex:1087";
+[01234567:#] "doc/specs/lang.tex:1087"
+//#line 1087 "doc/specs/lang.tex"
+class Counter
+{
+  var count = 0;
+  function init (n)   { var this.count = n };
+  // Display the value, and the identity.
+  function asString() { "%s @ %s" % [count, uid ] };
+  function '+'(var n) { new(count + n) };
+  function '-'(var n) { new(count - n) };
+}|;
+
+syncline << "doc/specs/lang.tex:1100";
+[01234567:#] "doc/specs/lang.tex:1100"
+//#line 1100 "doc/specs/lang.tex"
+class ImmutableCounter : Counter
+{
+  function '+='(var n) { this + n };
+  function '-='(var n) { this - n };
+}|;
+
+var ic1 = ImmutableCounter.new(0);
+[00010566] 0 @ 0x100354b70
+var ic2 = ic1;
+[00010574] 0 @ 0x100354b70
+
+ic1 += 1;
+[00010588] 1 @ 0x10875bee0
+
+// ic1 points to a new object.
+ic1;
+[00010592] 1 @ 0x10875bee0
+// ic2 still points to its original value.
+ic2;
+[00010594] 0 @ 0x100354b70
+
+syncline << "doc/specs/lang.tex:1123";
+[01234567:#] "doc/specs/lang.tex:1123"
+//#line 1123 "doc/specs/lang.tex"
+class MutableCounter : Counter
+{
+  function '+='(var n) { count += n | this };
+  function '-='(var n) { count -= n | this };
+}|;
+
+var mc1 = MutableCounter.new(0);
+[00029902] 0 @ 0x100364e00
+var mc2 = mc1;
+[00029911] 0 @ 0x100364e00
+
+mc1 += 1;
+[00029925] 1 @ 0x100364e00
+
+// mc1 points to the same, updated, object.
+mc1;
+[00029930] 1 @ 0x100364e00
+// mc2 too.
+mc2;
+[00029936] 1 @ 0x100364e00
+
+syncline << "doc/specs/lang.tex:1163";
+[01234567:#] "doc/specs/lang.tex:1163"
+//#line 1163 "doc/specs/lang.tex"
+{
+  var count = 0;
+  var countAlias = count;
+  assert
+  {
+    count++ == 0;
+    count   == 1;
+    countAlias == 0;
+    count++ == 1;
+    count   == 2;
+    countAlias == 0;
+    count-- == 2;
+    count   == 1;
+  };
+};
+
+syncline << "doc/specs/lang.tex:1210";
+[01234567:#] "doc/specs/lang.tex:1210"
+//#line 1210 "doc/specs/lang.tex"
+assert {
+4 << 2 == 16;
+4 >> 2 ==  1;
+};
+
+syncline << "doc/specs/lang.tex:1231";
+[01234567:#] "doc/specs/lang.tex:1231"
+//#line 1231 "doc/specs/lang.tex"
+assert {
+!true     === false; !false === true;
+!42       === false; !0     === true;
+!"42"     === false; !""    === true;
+![42]     === false; ![]    === true;
+!["4"=>2] === false; ![=>]  === true;
+};
+
+syncline << "doc/specs/lang.tex:1243";
+[01234567:#] "doc/specs/lang.tex:1243"
+//#line 1243 "doc/specs/lang.tex"
+assert {
+true && true;
+
+(0 && "foo") == 0;
+(2 && "foo") == "foo";
+
+(""    && "foo") == "";
+("foo" && "bar") == "bar";
+};
+
+syncline << "doc/specs/lang.tex:1254";
+[01234567:#] "doc/specs/lang.tex:1254"
+//#line 1254 "doc/specs/lang.tex"
+var zero = 0|;
+var one = 1|;
+var two = 2|;
+
+// First argument evaluated once, second is not needed.
+({ echo("lhs") | zero } && { echo("rhs") | one }) === zero;
+[00029936] *** lhs
+[00029936] true
+
+({ echo("lhs") | one }  && { echo("rhs") | two }) === two;
+[00029966] *** lhs
+[00029966] *** rhs
+[00029966] true
+
+syncline << "doc/specs/lang.tex:1269";
+[01234567:#] "doc/specs/lang.tex:1269"
+//#line 1269 "doc/specs/lang.tex"
+removeSlots("zero", "one", "two");
+
+syncline << "doc/specs/lang.tex:1277";
+[01234567:#] "doc/specs/lang.tex:1277"
+//#line 1277 "doc/specs/lang.tex"
+assert {
+true || false;
+
+(0 || "foo") == "foo";
+(2 ||  1/0)  == 2;
+
+(""    || "foo") == "foo";
+("foo" || 1/0)   == "foo";
+};
+
+syncline << "doc/specs/lang.tex:1287";
+[01234567:#] "doc/specs/lang.tex:1287"
+//#line 1287 "doc/specs/lang.tex"
+var zero = 0|;
+var one = 1|;
+var two = 2|;
+
+// First argument evaluated once, second is not needed.
+({ echo("lhs") | one }  || { echo("rhs") | two }) === one;
+[00029936] *** lhs
+[00029936] true
+
+({ echo("lhs") | zero } || { echo("rhs") | one }) === one;
+[00029966] *** lhs
+[00029966] *** rhs
+[00029966] true
+
+syncline << "doc/specs/lang.tex:1302";
+[01234567:#] "doc/specs/lang.tex:1302"
+//#line 1302 "doc/specs/lang.tex"
+removeSlots("zero", "one", "two");
+
+syncline << "doc/specs/lang.tex:1328";
+[01234567:#] "doc/specs/lang.tex:1328"
+//#line 1328 "doc/specs/lang.tex"
+assert
+{
+ ! (0 < 0);
+    0 <= 0;
+    0 == 0;
+   0 !== 0;
+};
+var z = 0;
+[00000000] 0
+assert
+{
+     z === z;
+  ! (z !== z);
+};
+
+syncline << "doc/specs/lang.tex:1363";
+[01234567:#] "doc/specs/lang.tex:1363"
+//#line 1363 "doc/specs/lang.tex"
+assert {
+1     in [0, 1, 2];
+3 not in [0, 1, 2];
+
+"one"   in     ["zero" => 0, "one" => 1, "two" => 2];
+"three" not in ["zero" => 0, "one" => 1, "two" => 2];
+};
+
+syncline << "doc/specs/lang.tex:1376";
+[01234567:#] "doc/specs/lang.tex:1376"
+//#line 1376 "doc/specs/lang.tex"
+// On lists.
+var l = [1, 2, 3, 4, 5];
+[00000000] [1, 2, 3, 4, 5]
+assert
+{
+  l[0] == 1;
+  l[-1] == 5;
+  (l[0] = 10) == 10;
+  l == [10, 2, 3, 4, 5];
+};
+
+// On strings.
+var s = "abcdef";
+[00000005] "abcdef"
+assert
+{
+  s[0] == "a";
+  s[1,3] == "bc";
+  (s[1,3] = "foo") == "foo";
+  s == "afoodef";
+};
+
+syncline << "doc/specs/lang.tex:1416";
+[01234567:#] "doc/specs/lang.tex:1416"
+//#line 1416 "doc/specs/lang.tex"
+var obj = Object.new|;
+function obj.f() { 24 }|;
+
+assert
+{
+  obj.f == 24;
+  obj.&f != 24;
+  obj.&f.isA(&Code);
+  obj.&f === obj.getSlot("f");
+};
+
+syncline << "doc/specs/lang.tex:1505";
+[01234567:#] "doc/specs/lang.tex:1505"
+//#line 1505 "doc/specs/lang.tex"
+// Return value is 1.  Displayed.
+1;
+[00000000] 1
+// Return value is that of {}, i.e., void.  Nothing displayed.
+1 | {};
+// Same as "1 | {}", a valueless expression.
+1|;
+
+syncline << "doc/specs/lang.tex:1518";
+[01234567:#] "doc/specs/lang.tex:1518"
+//#line 1518 "doc/specs/lang.tex"
+// Scopes evaluate to their last expression
+{
+  1;
+  2;
+  3; // This last separator is optional.
+};
+[00000000] 3
+// Scopes can be used as expressions
+{1; 2; 3} + 1;
+[00000000] 4
+
+syncline << "doc/specs/lang.tex:1543";
+[01234567:#] "doc/specs/lang.tex:1543"
+//#line 1543 "doc/specs/lang.tex"
+// This declare variable x with value 42, and evaluates to 42.
+var t = 42;
+[00000000] 42
+// x equals 42
+t;
+[00000000] 42
+// We can assign it a new value
+t = 51;
+[00000000] 51
+t;
+[00000000] 51
+// Initialization defaults to void
+var u;
+u.isVoid;
+[00000000] true
+
+syncline << "doc/specs/lang.tex:1569";
+[01234567:#] "doc/specs/lang.tex:1569"
+//#line 1569 "doc/specs/lang.tex"
+{
+  var x = "x";
+  var y = "outer y";
+  {
+    var y = "inner y";
+    var z = "z";
+    // We can access variables of parent scopes.
+    echo(x);
+    // This refers to the inner y.
+    echo(y);
+    echo(z);
+  };
+  // This refers to the outer y.
+  echo(y);
+  // This would be invalid: z does not exist anymore.
+  // echo(z);
+  // This would be invalid: x is already declared in this scope.
+  // var x;
+};
+[00000000] *** x
+[00000000] *** inner y
+[00000000] *** z
+[00000000] *** outer y
+
+syncline << "doc/specs/lang.tex:1610";
+[01234567:#] "doc/specs/lang.tex:1610"
+//#line 1610 "doc/specs/lang.tex"
+function () { echo(0) };
+[00000000] function () { echo(0) }
+
+function (arg1, arg2) { echo(0) };
+[00000000] function (var arg1, var arg2) { echo(0) }
+
+function (
+           arg1, // Ignored argument.
+           arg2, // Also ignored.
+          )
+{
+  echo(0)
+};
+[00000000] function (var arg1, var arg2) { echo(0) }
+
+syncline << "doc/specs/lang.tex:1631";
+[01234567:#] "doc/specs/lang.tex:1631"
+//#line 1631 "doc/specs/lang.tex"
+// Functions are often stored in variables to call them later.
+var f1 = function () {
+  echo("hello")
+}|
+f1();
+[00000000] *** hello
+
+// This form is strictly equivalent, yet simpler.
+function f2()
+{
+  echo("hello")
+}|
+f2();
+[00000000] *** hello
+
+syncline << "doc/specs/lang.tex:1656";
+[01234567:#] "doc/specs/lang.tex:1656"
+//#line 1656 "doc/specs/lang.tex"
+class Foo
+{
+  function init()
+  {
+    // This is a function local to init().
+    function foo()      { 42 };
+    function this.bar() { 51 };
+    foo() + bar();
+  };
+}|;
+
+Foo.foo;
+[00001720:error] !!! lookup failed: foo
+Foo.bar;
+[00001750:error] !!! lookup failed: bar
+
+[00001787] 93
+Foo.init;
+Foo.foo;
+[00001787:error] !!! lookup failed: foo
+Foo.bar;
+[00001818] 51
+
+syncline << "doc/specs/lang.tex:1690";
+[01234567:#] "doc/specs/lang.tex:1690"
+//#line 1690 "doc/specs/lang.tex"
+var f = function(a, b) {
+  echo(b + a);
+}|
+f(1, 0);
+[00000000] *** 1
+// Calling a function with the wrong number of argument is an error.
+f(0);
+[00000000:error] !!! f: expected 2 arguments, given 1
+f(0, 1, 2);
+[00000000:error] !!! f: expected 2 arguments, given 3
+
+syncline << "doc/specs/lang.tex:1704";
+[01234567:#] "doc/specs/lang.tex:1704"
+//#line 1704 "doc/specs/lang.tex"
+f(
+  "bar",
+  "foo",
+ );
+[00000000] *** foobar
+
+syncline << "doc/specs/lang.tex:1723";
+[01234567:#] "doc/specs/lang.tex:1723"
+//#line 1723 "doc/specs/lang.tex"
+function g1(a, b)
+{
+  echo(a);
+  echo(b);
+  a // Return value is a
+}|
+g1(1, 2);
+[00000000] *** 1
+[00000000] *** 2
+[00000000] 1
+
+function g2(a, b)
+{
+  echo(a);
+  return a; // Stop execution at this point and return a
+  echo(b); // This is not executed
+}|
+g2(1, 2);
+[00000000] *** 1
+[00000000] 1
+
+function g3()
+{
+  return; // Stop execution at this point and return void
+  echo(0); // This is not executed
+}|
+g3(); // Returns void, so nothing is printed.
+
+syncline << "doc/specs/lang.tex:1775";
+[01234567:#] "doc/specs/lang.tex:1775"
+//#line 1775 "doc/specs/lang.tex"
+function first1(a, b) {
+  echo(a); echo(b)
+}|
+first1({echo("Arg1"); 1},
+       {echo("Arg2"); 2});
+[00000000] *** Arg1
+[00000000] *** Arg2
+[00000000] *** 1
+[00000000] *** 2
+
+syncline << "doc/specs/lang.tex:1792";
+[01234567:#] "doc/specs/lang.tex:1792"
+//#line 1792 "doc/specs/lang.tex"
+function first2
+{
+  echo(call.evalArgAt(0));
+  echo(call.evalArgAt(1));
+}|
+first2({echo("Arg1"); 1},
+       {echo("Arg2"); 2});
+[00000000] *** Arg1
+[00000000] *** 1
+[00000000] *** Arg2
+[00000000] *** 2
+
+syncline << "doc/specs/lang.tex:1810";
+[01234567:#] "doc/specs/lang.tex:1810"
+//#line 1810 "doc/specs/lang.tex"
+function first3
+{
+  var a = call.evalArgAt(0);
+  var b = call.evalArgAt(1);
+  echo(a); echo(b);
+}|
+first3({echo("Arg1"); 1},
+       {echo("Arg2"); 2});
+[00000000] *** Arg1
+[00000000] *** Arg2
+[00000000] *** 1
+[00000000] *** 2
+
+syncline << "doc/specs/lang.tex:1834";
+[01234567:#] "doc/specs/lang.tex:1834"
+//#line 1834 "doc/specs/lang.tex"
+var n = 0|
+function cl()
+{
+  // x refers to a variable outside the function
+  n++;
+  echo(n);
+}|
+cl();
+[00000000] *** 1
+n;
+[00000000] 1
+n++;
+[00000000] 1
+cl();
+[00000000] *** 3
+
+syncline << "doc/specs/lang.tex:1855";
+[01234567:#] "doc/specs/lang.tex:1855"
+//#line 1855 "doc/specs/lang.tex"
+function wrapper()
+{
+  // Normally, x is local to 'wrapper', and is limited to this scope.
+  var x = 0;
+  at (x > 1)
+    echo("ping");
+  // Here we make it escape the scope by returning a closure on it.
+  return function() { x++ };
+} |
+
+var w = wrapper()|
+w();
+[00000000] 0
+w();
+[00000000] 1
+[00000000] *** ping
+
+syncline << "doc/specs/lang.tex:1883";
+[01234567:#] "doc/specs/lang.tex:1883"
+//#line 1883 "doc/specs/lang.tex"
+function variadic(var args[])
+{
+  echo(args)
+} |
+
+variadic();
+[00000000] *** []
+variadic(1, 2, 3);
+[00000000] *** [1, 2, 3]
+
+syncline << "doc/specs/lang.tex:1902";
+[01234567:#] "doc/specs/lang.tex:1902"
+//#line 1902 "doc/specs/lang.tex"
+removeSlot("variadic")|;
+
+syncline << "doc/specs/lang.tex:1906";
+[01234567:#] "doc/specs/lang.tex:1906"
+//#line 1906 "doc/specs/lang.tex"
+function invalid(var args[], var last)
+{} |;
+[00000000:error] !!! syntax error: argument after list-argument
+
+function variadic(var a1, var a2, var a3, var args[])
+{
+  echo(a1);
+  echo(a2);
+  echo(a3);
+  echo(args)
+} |
+
+// Not enough arguments.
+variadic();
+[00000000:error] !!! variadic: expected at least 3 arguments, given 0
+
+// No variadic arguments.
+variadic(1, 2, 3);
+[00000000] *** 1
+[00000000] *** 2
+[00000000] *** 3
+[00000000] *** []
+
+// Two variadic arguments.
+variadic(1, 2, 3, 4, 5);
+[00000000] *** 1
+[00000000] *** 2
+[00000000] *** 3
+[00000000] *** [4, 5]
+
+syncline << "doc/specs/lang.tex:1966";
+[01234567:#] "doc/specs/lang.tex:1966"
+//#line 1966 "doc/specs/lang.tex"
+var o = Object.new|
+assert (o.localSlotNames == []);
+
+o.createSlot("test");
+assert
+{
+  o.localSlotNames == ["test"];
+  o.&test.isVoid;
+};
+
+o.updateSlot("test", 42);
+[00000000] 42
+assert
+{
+  o.&test == 42;
+};

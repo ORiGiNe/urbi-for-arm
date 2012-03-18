@@ -1,0 +1,29 @@
+//#roscore
+//#plug urbi/ros
+//#no-fast
+//#plug test/all
+
+skipIfUrbi2;
+
+var publisher = Ros.Topic.new("/camera/image/compressed") |
+publisher.advertise("sensor_msgs/CompressedImage");
+Ros.waitForTopic("/camera/image/compressed") |
+
+var img = publisher.structure.new |
+img["data"] = img00 |
+img["format"] = img00.keywords |
+
+every (500ms)
+  publisher << img,
+
+// We watch what ROS is receiving.
+// We stop the process after one message from ROS (-n 1).
+var p =
+  Process.new("rostopic", ["echo", "/camera/image/compressed/data", "-n", "1"]) |
+p.run |
+
+// ROS adds " --- " at the end, erase it.
+var data = p.stdout.content |;
+data = data[0, data.size - 5] |
+
+assert(all.imageDiff(data, img["data"].data, "jpeg") == 0);

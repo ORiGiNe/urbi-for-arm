@@ -1,0 +1,7 @@
+syncline << "doc/tutorial/concurrent.tex:171";
+[01234567:#] "doc/tutorial/concurrent.tex:171"
+//#line 171 "doc/tutorial/concurrent.tex"
+// Since mytag is not declared, this will first do:
+// var Tag.mytag = Tag.new("mytag");
+mytag : 42;
+[00000000] 42

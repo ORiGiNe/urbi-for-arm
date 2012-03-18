@@ -1,0 +1,14 @@
+//#uobject test/all
+remall.throwException(0);
+[00000001:error] !!! input.u:@.1-24: throwException: Exception while calling remote bound method: java.lang.Error: KABOOM
+remall.throwException(1);
+[00000002:error] !!! input.u:@.1-24: throwException: Exception while calling remote bound method: java.lang.RuntimeException: KABOOM
+1;
+[00000003] 1
+
+detach(remall.throwException(1))|;
+[00000004:error] !!! input.u:@.8-31: throwException: Exception while calling remote bound method: java.lang.RuntimeException: KABOOM
+[00000005:error] !!!    called from: input.u:9.8-31: detach
+
+sleep(100ms); 2;
+[00000006] 2

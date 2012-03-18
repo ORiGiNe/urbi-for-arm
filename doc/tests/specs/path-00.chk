@@ -1,0 +1,132 @@
+syncline << "doc/specs/path.tex:26";
+[01234567:#] "doc/specs/path.tex:26"
+//#line 26 "doc/specs/path.tex"
+Path.new("/path/file.u");
+[00000001] Path("/path/file.u")
+
+syncline << "doc/specs/path.tex:34";
+[01234567:#] "doc/specs/path.tex:34"
+//#line 34 "doc/specs/path.tex"
+Path.new("././///.//foo/");
+[00000002] Path("foo")
+
+syncline << "doc/specs/path.tex:43";
+[01234567:#] "doc/specs/path.tex:43"
+//#line 43 "doc/specs/path.tex"
+assert {
+Path.new("/abs/path").absolute;
+!Path.new("rel/path").absolute;
+};
+
+syncline << "doc/specs/path.tex:52";
+[01234567:#] "doc/specs/path.tex:52"
+//#line 52 "doc/specs/path.tex"
+assert {
+Path.new("/path/to/file.u").asList == ["path", "to", "file.u"];
+Path.new("/path").asList           == Path.new("path").asList;
+};
+
+syncline << "doc/specs/path.tex:58";
+[01234567:#] "doc/specs/path.tex:58"
+//#line 58 "doc/specs/path.tex"
+assert {
+Path.new("file.txt").asPrintable == "Path(\"file.txt\")";
+};
+
+syncline << "doc/specs/path.tex:64";
+[01234567:#] "doc/specs/path.tex:64"
+//#line 64 "doc/specs/path.tex"
+assert {
+Path.new("file.txt").asString == "file.txt";
+};
+
+syncline << "doc/specs/path.tex:70";
+[01234567:#] "doc/specs/path.tex:70"
+//#line 70 "doc/specs/path.tex"
+assert {
+Path.new("/absolute/path/file.u").basename == "file.u";
+Path.new("relative/path/file.u").basename  == "file.u";
+};
+
+syncline << "doc/specs/path.tex:86";
+[01234567:#] "doc/specs/path.tex:86"
+//#line 86 "doc/specs/path.tex"
+{
+  // Save current directory.
+  var pwd = Path.cwd|
+  // Go into ``/''.
+  var root = Path.new("/").cd;
+  // Current working directory is ``/''.
+  assert(Path.cwd == root);
+  // Go back to the directory we were in.
+  assert(pwd.cd == pwd);
+};
+
+syncline << "doc/specs/path.tex:101";
+[01234567:#] "doc/specs/path.tex:101"
+//#line 101 "doc/specs/path.tex"
+assert {
+Path.new("/abs/path/file.u").dirname == Path.new("/abs/path");
+Path.new("rel/path/file.u").dirname  == Path.new("rel/path");
+};
+
+syncline << "doc/specs/path.tex:109";
+[01234567:#] "doc/specs/path.tex:109"
+//#line 109 "doc/specs/path.tex"
+assert {
+Path.cwd.exists;
+Path.new("/").exists;
+!Path.new("/this/path/does/not/exists").exists;
+};
+
+syncline << "doc/specs/path.tex:117";
+[01234567:#] "doc/specs/path.tex:117"
+//#line 117 "doc/specs/path.tex"
+assert {
+Path.cwd.isDir;
+};
+
+syncline << "doc/specs/path.tex:123";
+[01234567:#] "doc/specs/path.tex:123"
+//#line 123 "doc/specs/path.tex"
+assert {
+!Path.cwd.isReg;
+};
+
+syncline << "doc/specs/path.tex:134";
+[01234567:#] "doc/specs/path.tex:134"
+//#line 134 "doc/specs/path.tex"
+assert {
+Path.new(".").readable;
+};
+
+syncline << "doc/specs/path.tex:140";
+[01234567:#] "doc/specs/path.tex:140"
+//#line 140 "doc/specs/path.tex"
+assert {
+Path.new(".").writable;
+};
+
+syncline << "doc/specs/path.tex:148";
+[01234567:#] "doc/specs/path.tex:148"
+//#line 148 "doc/specs/path.tex"
+assert(Path.new("/foo/bar") / Path.new("baz/qux/quux")
+       == Path.new("/foo/bar/baz/qux/quux"));
+Path.cwd / Path.new("/tmp/foo");
+[00000003:error] !!! /: Rhs of concatenation is absolute: /tmp/foo
+
+syncline << "doc/specs/path.tex:159";
+[01234567:#] "doc/specs/path.tex:159"
+//#line 159 "doc/specs/path.tex"
+assert {
+  Path.new("/a")  == Path.new("/a");
+!(Path.new("/a")  == Path.new("a")  );
+};
+
+syncline << "doc/specs/path.tex:167";
+[01234567:#] "doc/specs/path.tex:167"
+//#line 167 "doc/specs/path.tex"
+assert {
+  Path.new("/a")   < Path.new("/a/b");
+!(Path.new("/a/b") < Path.new("/a")  );
+};

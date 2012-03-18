@@ -1,0 +1,164 @@
+%% Copyright (C) 2009-2012, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\chapter{Flow Control Constructs}
+\label{sec:tut:flow}
+
+In this section, we'll introduce some flow control structures that
+will prove handy later. Most of them are inspired by \langC/\Cxx.
+
+\section{if}
+
+The \lstinline{if} construct is the same has \langC/\Cxx's one. The
+\lstinline{if} keyword is followed by a condition between parentheses and
+an expression, and optionally the \lstinline{else} keyword and another
+expression. If the condition evaluates to true, the first expression
+is evaluated. Otherwise, the second expression is evaluated if
+present.
+
+\begin{urbiscript}[firstnumber=1]
+if (true)
+  echo("ok");
+[00000000] *** ok
+if (false)
+  echo("ko")
+else
+  echo("ok");
+[00000000] *** ok
+\end{urbiscript}
+
+The \lstinline|if| construct is an expression: it has a value.
+
+\begin{urbiscript}
+echo({ if (false) "a" else "b" });
+[00000000] *** b
+\end{urbiscript}
+
+\section{while}
+
+The \lstinline{while} construct is, again, the same as in \langC/\Cxx. The
+\lstinline{while} keyword is followed by a condition between parentheses
+and an expression. If the condition evaluation is false, the
+execution jumps after the while block; otherwise, the expression is
+evaluated and control jumps before the while block.
+
+% FIXME: += wasn't introduced
+\begin{urbiscript}
+var x = 2;
+[00000000] 2
+while (x < 40)
+{
+  x += 10;
+  echo(x);
+};
+[00000000] *** 12
+[00000000] *** 22
+[00000000] *** 32
+[00000000] *** 42
+\end{urbiscript}
+
+\section{for}
+
+The \lstinline{for} keyword supports different constructs, as in
+languages such as Java, \Cs, or even the forthcoming \Cxx revision.
+
+The first construct is hardly more than syntactic sugar for a
+\lstinline{while} loop.
+
+\begin{urbiscript}
+for (var x = 2; x < 40; x += 10)
+  echo(x);
+[00000000] *** 2
+[00000000] *** 12
+[00000000] *** 22
+[00000000] *** 32
+\end{urbiscript}
+
+The second construct allows to iterate over members of a collection,
+such as a list. The \lstinline{for} keyword, followed by
+\lstinline|var|, an identifier, a colon (or \lstinline|in|), an
+expression and a scope, executes the scope for every element in the
+collection resulting of the evaluation of the expression, with the
+variable named with the identifier referring to the list members.
+
+\begin{urbiscript}
+for (var e : [1, 2, 3]) { echo(e) };
+[00000000] *** 1
+[00000000] *** 2
+[00000000] *** 3
+\end{urbiscript}
+
+\section{switch}
+
+The syntax of the \lstinline|switch| construct is similar to \langC/\Cxx's
+one, except it works on any kind of object, not only integral
+ones. Comparison is done by semantic equality (operator
+\lstinline{==}). Execution will jump out of the
+\lstinline|switch|-block after a case has been executed (no need to
+\lstinline{break}).  Also, contrary to \Cxx, the whole construct has a
+value: that of the matching \lstinline{case}.
+
+\begin{urbiscript}
+switch ("bar")
+{
+  case "foo":  0;
+  case "bar":  1;
+  case "baz":  2;
+  case "qux":  3;
+};
+[00000000] 1
+\end{urbiscript}
+
+\section{do}
+\label{sec:constructs:do}
+
+A \lstinline|do| scope is a shorthand to perform several actions on an
+object.
+
+\begin{urbiscript}
+var o1 = Object.clone;
+[00000000] Object_0x423a0708
+var o1.one = 1;
+[00000000] 1
+var o1.two = 2;
+[00000000] 2
+echo(o1.uid);
+[00000000] *** 0x423a0708
+\end{urbiscript}
+
+The same result can be obtained with a short \lstinline|do| scope,
+that redirect method calls to their target, as in the listing
+below. This is similar to the \Pascal
+``\lstinline[language=Pascal]{with}'' construct.  The value of the
+\lstinline{do}-block is the target itself.
+
+\begin{urbiscript}
+var o2 = Object.clone;
+[00000000] Object_0x42339e08
+// All the message in this scope are destined to o.
+do (o2)
+{
+  var one = 1; // var is a shortcut for the setSlot
+  var two = 2; // message, so it applies on obj too.
+  echo(uid);
+};
+[00000000] *** 0x42339e08
+[00000000] Object_0x42339e08
+\end{urbiscript}
+
+
+%\section{Conclusion} FIXME?
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

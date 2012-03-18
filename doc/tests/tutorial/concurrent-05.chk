@@ -1,0 +1,20 @@
+syncline << "doc/tutorial/concurrent.tex:200";
+[01234567:#] "doc/tutorial/concurrent.tex:200"
+//#line 200 "doc/tutorial/concurrent.tex"
+// Launch in background (using the comma) code that prints "ping"
+// every second.  Tag it to keep control over it.
+mytag:
+  every (1s)
+    echo("ping"),
+sleep(2.5s);
+[00000000] *** ping
+[00001000] *** ping
+[00002000] *** ping
+// Suspend execution
+mytag.freeze;
+// No printing anymore
+sleep(1s);
+// Resume execution
+mytag.unfreeze;
+sleep(1s);
+[00007000] *** ping

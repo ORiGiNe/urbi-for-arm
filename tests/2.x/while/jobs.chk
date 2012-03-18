@@ -1,0 +1,6 @@
+// Regression: Make sure we don't leak jobs with "while,".
+t:while,({sleep(100ms) | true}) clog << aliveJobs,
+sleep(2s);
+// Shows 10 jobs at the time the test was written.
+assert(aliveJobs < 20);
+t.stop;

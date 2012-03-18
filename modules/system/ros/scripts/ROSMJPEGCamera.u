@@ -1,0 +1,38 @@
+/*
+ * Copyright (C) 2010-2011, Gostai S.A.S.
+ *
+ * This software is provided "as is" without warranty of any kind,
+ * either expressed or implied, including but not limited to the
+ * implied warranties of fitness for a particular purpose.
+ *
+ * See the LICENSE file for more information.
+ */
+
+load("scripts/ROSInit.u");
+
+/*********************************************************
+ *           mjpeg image camera viewer
+ *
+ * Requirements:
+ *   - roscore
+ *   - rosrun usb_cam usb_cam_node (from bosch_drivers)
+ *
+ * Result viewable with:
+ *   urbi-image
+ *
+ **********************************************************/
+
+var Global.camera = Object.new;
+UVar.new(camera, "val");
+
+var camera.topic = Ros.Topic.new("/usb_cam/image_raw/compressed");
+
+cam:
+at(camera.topic.onMessage?(var m))
+{
+  m["data"].keywords = m["format"] + " 640 480" |
+  camera.val = m["data"]
+};
+
+camera.topic.subscribe;
+

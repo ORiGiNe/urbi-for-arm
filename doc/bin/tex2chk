@@ -1,0 +1,410 @@
+#! /usr/bin/perl -w
+
+=head1 NAME
+
+  tex2chk - extract urbiscript test files from the LaTeX documentation.
+
+=head1 SYNOPSIS
+
+  tex2chk [OPTIONS...] FILE...
+
+=head1 DESCRIPTION
+
+Read LaTeX files, and extract chk files for each urbiscript
+environment listing.  The C<name> attribute (if given to the
+lstlisting environment) is used to name the created chk file.
+Otherwise a simple counter is used.
+
+lstlisting has a notion of split listing, using the attribute "name"
+to decide how pieces must be glued together (this is used when
+numbering).  Listings with the same "name" are glued togeter.  This is
+especially needed when a listing uses objects defined in earlier
+listings.
+
+Unnamed snippets are merged by default, unless the (second one) has
+the attribute [firstnumber=1].
+
+=head1 OPTIONS
+
+General options:
+
+=over 4
+
+=item B<-l>, B<--no-lines>
+
+Don't generate the special //#line lines.
+
+=item B<-q>, B<--quiet>
+
+Be less verbose.  Accumulates.
+
+=item B<-v>, B<--verbose>
+
+Be more verbose.  Accumulates.
+
+=back
+
+=cut
+
+BEGIN
+{
+  use File::Basename;
+  unshift @INC, dirname($0) . '/../../build-aux/lib/perl';
+}
+
+use strict;
+use File::Basename;
+use BuildAux::FileUtils;
+use BuildAux::Verbose;
+use BuildAux::XFile;
+
+# Tests with a name.
+my %by_name;
+
+# All the tests, by label.  A test is a hash defined as:
+#
+#  label     => the LaTeX label, if specified.
+#  _contents => the body of the test.
+#  _location => location in the LaTeX sources.
+#  name      => the LaTeX name if specified, otherwise a counter.
+#
+# and also key => value for all the [key=value] entries given to the
+# lstlisting environment.
+my %chk;
+
+# The file number, if not named.
+my $count = 0;
+
+# move-if-changed.
+my $move_if_change = $ENV{move_if_change} || "move-if-change";
+
+# Reference to the previous test.
+my $previous_test = undef;
+
+# Whether we should generate the synclines.
+my $synclines = 1;
+
+=head1 FUNCTIONS
+
+=over 4
+
+=item C<line(\%lst)>
+
+Issue an urbiscript //#line for test $lst.
+
+=cut
+
+sub lineno (\%)
+{
+  my ($lst) = @_;
+  my $line = $$lst{_line};
+  my $file = $$lst{_file};
+  "syncline << \"$file:$line\";\n"
+  . "[01234567:#] \"$file:$line\"\n"
+  . ($synclines ? "//#line $line \"$file\"\n" : "")
+}
+
+
+=item C<register($file, $line, \%lst)>
+
+Register a listing.  I.e., glue it to the previous one if needed, put
+it in C<%chk> and C<%by_name>.
+
+=cut
+
+sub register ($$\%)
+{
+  my ($file, $line, $lst) = @_;
+  verbose 3, "$file:$line: register {{ $lst->{_contents} }}";
+  # If this listing has a name which is already used, append to
+  # this existing listing.
+  my $name = $$lst{name};
+  if ($name)
+  {
+    if ($by_name{$name})
+    {
+      $by_name{$name}{_contents} .=
+        "\n\n"
+        . lineno(%$lst)
+        . $$lst{_contents};
+      return;
+    }
+    else
+    {
+      $by_name{$name} = $lst;
+    }
+  }
+
+  # By default, fuse the test cases.  Unless we use "[firstnumber=1]"
+  # and there is a preceding one.
+  if (defined $previous_test
+      && (!exists $lst->{firstnumber}
+          || $lst->{firstnumber} ne "1"))
+  {
+    verbose 3, "$file:$line: appended test case";
+    # Extension of the previous listing.
+    $previous_test->{_contents} .= "\n";
+
+    # Do not issue a syncline if the content to append starts with a
+    # result.  This happens for instance in slides where the input
+    # is on lhs, and the result on rhs.  In which case, our
+    # (verbose) synclines would insert an intermediate output (the
+    # syncline) that would cause some misaligned results.
+    $previous_test->{_contents} .= ("\n"
+                                    . lineno(%$lst))
+      unless $lst->{_contents} =~ /^\n*\[\d{8}\]/s;
+
+    $previous_test->{_contents} .= $lst->{_contents};
+  }
+  else
+  {
+    verbose 3, "$file:$line: new test case";
+    my $name = sprintf "%02d", $count++;
+    $lst->{name} = $name;
+    $chk{$name} = $lst;
+    $previous_test = $lst;
+  }
+}
+
+=item C<process_listing($file, $line, $lst)>
+
+Process the lstlisting environment C<$lst>, which was found in
+C<$file> at C<$line>.  C<$lst> is the full environment, from its
+C<\begin> to its C<\end>.
+
+=cut
+
+sub process_listing ($$$)
+{
+  my ($file, $line, $lst) = @_;
+
+  my $loc = sprintf "%s:%04d", $file, $line;
+  verbose 3, "$file:$line: processing";
+  my %res;
+  $res{'_file'} = $file;
+  $res{'_line'} = $line;
+  $res{'_location'} = $loc;
+
+  $lst =~
+     /
+       \\begin{(\w+)}            # $1 environment type.
+       (?:\[((?:[^\[\]]|\[[^\]]*\])*)\])?  # $2 optional options.
+                    # Optional argument may include `[...]'.
+       \n
+       (.*)\n                 # $3 contents
+       \\end{\w+}
+     /xs;
+
+  my $env = $1;
+  my $options = $2;
+  my $content = $3;
+
+  $res{'_contents'} =
+    ($env eq 'urbiassert') ? "assert {\n$content\n};" : "$content";
+
+  # Decode and normalize the options.
+  if ($options)
+  {
+    foreach my $opt (split (/\s*,\s*/, $options))
+    {
+      $opt =~ /(\w+)\s*=\s*(.*)/;
+      $res{$1} = $2;
+    }
+  }
+
+  # escapeinside: meta-character to tell lstlisting to delegate the
+  # processing to LaTeX.  Must be ignored for test extraction.
+  if (defined $res{escapeinside})
+  {
+    $res{'_contents'} =~ s/[$res{escapeinside}]//g;
+  }
+
+  # Clean up the contents.
+  $res{_contents} =~ s/:hide\]/\]/g;
+
+  return %res;
+}
+
+
+=item C<process_file($file)>
+
+C<$file> is a complete path, including the C<$ENV{srcdir}> part.
+
+=cut
+
+sub process_file ($)
+{
+  my ($file) = @_;
+  my $in = new BuildAux::XFile $file;
+
+  # The last part of the file name, i.e., without the $ENV{srcdir}
+  # part.  (../../doc/tests/specs/boolean/boolean-24.chk ->
+  # doc/tests/specs/boolean/boolean-24.chk with srcdir = ../../doc).
+  my $base = $file;
+  $base =~ s,^$ENV{srcdir}/*,doc/,
+    if defined $ENV{srcdir};
+  verbose 3, "BASE=$base from FILE=$file";
+
+  local $_;
+  my $test;
+  my $line;
+  # The current environment: urbiassert or urbicomment or urbiscript
+  # or undef.
+  my $environment;
+  while ($_ = $in->getline)
+  {
+    if (!defined $environment
+        && /^\\begin{(urbi(?:assert|comment|script))}/)
+      {
+        $environment = $1;
+        # Issue a #line for the first line of Urbi, not the LaTeX line.
+        $line = $in->input_line_number + 1;
+        $test = $_;
+      }
+    elsif (defined $environment
+           && /^\\end{$environment}/)
+      {
+       $test .= $_;
+        my %res = process_listing $base, $line, $test;
+        register ($base, $line, %res);
+        $environment = undef;
+      }
+    elsif (defined $environment)
+      {
+        $test .= $_;
+      }
+  }
+}
+
+
+=item C<dump_chk($prefix)>
+
+Generate all the *chk files and their associated test.mk.  Remove the
+old test files that remain from C<$prefix>.  Remove them *after* having
+generated the new ones: removing them all beforehand kills the
+timestamps and will rerun test cases uselessly.
+
+C<$prefix> is used as a prefix for the generated files: C<$prefix-00.chk>,
+C<$prefix-01.chk>, etc.
+
+=cut
+
+sub dump_chk ($)
+{
+  my ($prefix) = @_;
+
+  # The test files that currently exist.
+  my %old_file = map { $_ => 1 } <$prefix-[0-9][0-9].chk>;
+
+  # The created test files.
+  my %file;
+
+  # Generate the files.
+  for my $k (keys %chk)
+  {
+    my %c = %{$chk{$k}};
+    my $file = "$prefix-$c{name}.chk";
+    $file{$file} = 1;
+    my $out = new BuildAux::XFile ">$file.tmp";
+    print $out lineno(%c);
+    print $out "$c{_contents}\n";
+    system ("$move_if_change --color -I '^//' $file.tmp $file") == 0
+      or die "$move_if_change failed: $?";
+  }
+
+  # Remove the old test files.
+  if (my @old = grep { !$file{$_} } keys %old_file)
+  {
+    verbose 1, "remove obsolete files from $prefix: @old";
+    unlink @old;
+  }
+
+  # Generate the Makefile.
+  my $local_mk = "$prefix-test.mk";
+  my $mk = new BuildAux::XFile ">$local_mk";
+
+  my @file = keys %file;
+  # Do not include the ../.. stuff in the Makefile.
+  map { s,^$ENV{srcdir}/,, } @file
+    if defined $ENV{srcdir};
+
+  # Output in order.  It would be nice to have a combinaison between
+  # alphabetical and numerical, so that abc-2 < abc-10.
+  @file = sort @file;
+  print $mk join ("\t\\\n  ", "TESTS += ", @file), "\n";
+}
+
+
+=item C<translate($input)>
+
+Read the LaTeX file C<$input>, and generate the corresponding
+directory (*.chk files, and test.mk).
+
+=cut
+
+sub translate ($)
+{
+  my ($input) = @_;
+  process_file $input;
+  # The file base name we output the tests in.
+  my $base = $input;
+  $base =~ s,^$ENV{srcdir},$&/tests,
+    if defined $ENV{srcdir};
+  $base =~ s/\.tex$//;
+
+  ensure_parent_dir $base;
+  dump_chk $base;
+
+  # If there is a $prefix.u, install it as test.u in the right
+  # directory.
+  my $u = $input;
+  $u =~ s/\.tex$/.u/;
+  if (-f $u)
+  {
+    verbose 2, "installing $u\n";
+    my $dir = dirname($base);
+    file_symlink($u, "$dir/test.u");
+  }
+}
+
+
+=item C<getopt()>
+
+Process the command line options.
+
+=cut
+
+sub getopt ()
+{
+  use BuildAux::Getopt qw($message);
+  $message = "Generate Urbi *.chk files from LaTeX files";
+  BuildAux::Getopt::getopt
+    (
+     "l|no-lines" => sub { $synclines = 0 },
+    );
+}
+
+## ------ ##
+## Main.  ##
+## ------ ##
+
+getopt;
+map { translate $_; } @ARGV;
+
+
+### Setup "Gostai" style for perl-mode and cperl-mode.
+## Local Variables:
+## perl-indent-level: 2
+## perl-continued-statement-offset: 2
+## perl-continued-brace-offset: -2
+## perl-brace-offset: 0
+## perl-brace-imaginary-offset: 0
+## perl-label-offset: -2
+## cperl-indent-level: 2
+## cperl-brace-offset: 0
+## cperl-continued-brace-offset: -2
+## cperl-label-offset: -2
+## cperl-extra-newline-before-brace: t
+## cperl-merge-trailing-else: nil
+## cperl-continued-statement-offset: 2
+## End:

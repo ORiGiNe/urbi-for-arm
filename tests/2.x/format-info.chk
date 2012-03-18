@@ -1,0 +1,45 @@
+FormatInfo.new("fgh");
+[00000001:error] !!! input.u:@.1-21: new: format: pattern "fgh" doesn't begin with %
+
+FormatInfo.new("%mgh");
+[00000002:error] !!! input.u:@.1-22: new: format: "m" is not a valid conversion type character
+
+FormatInfo.new("%");
+[00000003:error] !!! input.u:@.1-19: new: format: trailing `%'
+
+try { FormatInfo.new("%||") | {} }
+catch {echo("%||");};
+
+var f = FormatInfo.new("%|D|");
+[00000004] %|D|
+
+f.uppercase;
+[00000005] 1
+
+f = FormatInfo.new("%+'=#06.12X");
+[00000006] %+'=#06.12X
+
+f.width;
+[00000007] 6
+f.precision;
+[00000008] 12
+f.alt;
+[00000009] true
+f.prefix;
+[00000010] "+"
+f.alignment;
+[00000011] 0
+f.group;
+[00000012] " "
+f.pad;
+[00000013] "0"
+f.uppercase;
+[00000014] 1
+f.spec;
+[00000015] "x"
+
+f = FormatInfo.new("%|d|");
+[00000016] %|d|
+
+f.uppercase;
+[00000017] -1

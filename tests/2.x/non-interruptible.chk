@@ -1,0 +1,35 @@
+// Check nonInterruptible behaviour
+{ nonInterruptible; 1 };
+[00000001] 1
+{ nonInterruptible; sleep (1s); 1 };
+[00000002:error] !!! input.u:@.21-30: attempt to sleep in non-interruptible code
+{ nonInterruptible; { sleep (1s); 1 }};
+[00000003:error] !!! input.u:@.23-32: attempt to sleep in non-interruptible code
+{
+  nonInterruptible;
+  var c = cycle;
+  1;
+  2;
+  echo (cycle - c);
+  {
+    // Since the parent scope cannot be interrupted, this one cannot either
+    1;
+    2;
+    echo (cycle - c);
+  };
+  echo (cycle - c)
+};
+[00000004] *** 0
+[00000005] *** 0
+[00000006] *** 0
+{
+  1,
+  2
+};
+[00000007] 2
+{
+  nonInterruptible;
+  1,
+  2
+};
+[00000008:error] !!! input.u:31.3-33.3: dependency on other task in non-interruptible code

@@ -1,0 +1,47 @@
+## Copyright (C) 2010-2011, Gostai S.A.S.
+##
+## This software is provided "as is" without warranty of any kind,
+## either expressed or implied, including but not limited to the
+## implied warranties of fitness for a particular purpose.
+##
+## See the LICENSE file for more information.
+
+for loop in once
+do
+  if test -z "$ROS_ROOT"; then
+    URBI_MODULE_DISABLE([ROS_ROOT undefined])
+    break
+  fi
+
+  if test ! -d "$ROS_ROOT"; then
+    URBI_MODULE_DISABLE([ROS_ROOT is not a directory: $ROS_ROOT])
+    break
+  fi
+
+  AC_SUBST([ROS_PREFIX], [$(dirname "$ROS_ROOT")])dnl
+  AC_SUBST([ROS_SETUP], [$ROS_PREFIX/setup.sh])dnl
+  if ! test -s "$ROS_SETUP" -a -r "$ROS_SETUP"; then
+    URBI_MODULE_DISABLE([ROS_SETUP is not a readable file: $ROS_SETUP])
+    break
+  fi
+
+  urbi_enable_module=true
+  # Be sure to run the right rosversion etc.  Beware that $ROS_SETUP
+  # is meant for AC_CONFIG, so here it still have '${ROS_ROOT}'
+  # unexpanded.
+  . $ROS_SETUP
+  AC_SUBST([ROS_ROOT])dnl
+  AC_SUBST([ROS_VERSION], [$(rosversion ros)])dnl
+
+  AC_SUBST([ROS_RPATH],
+           [$(rospack find roscpp)/lib])dnl
+  AC_SUBST([ROS_CPPFLAGS],
+           [$(rospack cflags-only-I roscpp | sed -e 's/^/-I/;s/ / -I/g')])dnl
+  AC_SUBST([ROS_LDFLAGS],
+           ["-Wl,-rpath,$ROS_RPATH $(rospack libs-only-L roscpp | sed -e 's/^/-L/;s/ / -L/g')"])dnl
+  AC_SUBST([ROS_LIBS], [-lros])dnl
+done
+
+## Local Variables:
+## mode: autoconf
+## End:

@@ -1,0 +1,573 @@
+%% Copyright (C) 2009-2011, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\newcommand{\naoqi}{NaoQi\xspace}
+
+\chapter{Aldebaran Nao}
+\label{sec:nao}
+
+\section{Introduction}
+
+The \dfn{Nao} is a 60 centimeters tall humanoid robot built by
+\dfn{Aldebaran} Robotics.  It has an onboard Geode processor running
+Linux, 25 degrees of freedom, two onboard cameras, speakers,
+microphones, accelerometers, ultrasound and IR sensors...
+
+\section{Starting up}
+
+Nao comes with an installed version of \urbi.
+
+On some versions of Nao, \urbi is not automatically started upon start-up.
+If this is the case, you must take the following steps to activate \urbi:
+
+\begin{itemize}
+\item Log in to your Nao using ssh: \lstinline|ssh nao@myNao|
+\item Add a line containing \lstinline|urbistarter| to
+  \file{/opt/naoqi/preferences/autoload.ini}.
+\item Restart your Nao.
+\end{itemize}
+
+Those lines might already be present but commented out.
+
+You should be able to connect to your Nao on the port 54000 and send it \us:
+
+\begin{urbiunchecked}
+tts.say("Hello, I am Nao."),
+// Activate right arm.
+armR.load = 1;
+// Wave the arm: put it in position
+shoulderRollR.val = -0.3 time: 0.5s |
+shoulderPitchR.val = -1 speed: 0.9 |
+// Wave it
+timeout(6s) shoulderRollR.val = -0.4 sin:2s ampli:0.4;
+// And put it back down, using the uncompressed name this time
+robot.body.arm[right].shoulder.pitch.val = 2 speed:0.9;
+// Activate all motors.
+motors.on;
+// Stand
+motion.walkTo(0.1,0,0);
+// Start walking...
+tag: robot.walk(1),
+// ... and interrupt the movement
+sleep(2s) | tag.stop;
+// Get the list of all devices and the interfaces they implement:
+robot.dump;
+\end{urbiunchecked}
+
+\section{Accessing joints}
+All the Nao joints are accessible through their standard Nao and \urbi names,
+and respect the \urbi standard specifications for servo motors: Basically each
+motor has a \var{load} field that is linked to the motor stiffness, and a
+\var{val} field that can be used to read or write the motor position.
+
+Some motor groups are also provided: they can be used exactly as joints,
+but any action performed on a group is sent to all the joints that are a
+member of this group.
+
+\begin{urbiunchecked}
+// Activate all motors
+motors.load = 1;
+// Or only all the head motors
+head.load = 1;
+// Move headYaw to 0.8 in one seconds. Since this commands takes
+// one second to execute, terminate with a comma to be able
+// to send other commands while it executes.
+headYaw.val = 0.8 time: 1s,
+// Move headPitch to -0.5 as fast as possible.
+headPitch.val = -0.5;
+// Move headYaw continuously in a sinusoidal trajectory...
+tag: headYaw.val = 0 sin:2s ampli:0.5,
+// ...and stop the movement
+tag.stop;
+\end{urbiunchecked}
+
+The two hands are purposefully not included in the 'motors' group.
+Although you can control them using the \var{val} slot, it is recommended that
+you use the \var{open()} and \var{close()} methods, since they stop the motors
+once the movement is finished.
+
+\subsection{Advanced parameters}
+
+\subsubsection{Trajectory generator period}
+
+The trajectory generators will issue write command at a period given by the
+\refSlot[System]{period} variable. The default is 10ms which is the native
+period of \naoqi.
+
+\subsubsection{Motor back-end method}
+
+\urbi can use two different methods to send the joint commands:
+\lstinline|DCM::send()|, or \lstinline|ALMotor::setAngle()|.
+The mode can be changed by calling \lstinline|motor.setDCMWrite(bool)|.
+
+In \lstinline|setAngle()| mode, each write operation to a joint will
+synchronously call the \command{setAngle()} \naoqi method.
+
+In DCM mode, \urbi will set a hook on the DCM update, and send all
+commands in this hook using the \command{send()} method.  \urbi will
+send commands S milliseconds in the future. S defaults to 50ms, and
+can be changed by calling \lstinline|ALMotor.setDCMShift(shiftValue)|.
+
+\subsubsection{Motor command debugging}
+
+The motors implements a debugging mode that can be activated by
+calling \lstinline|ALMotor::setTrace(1)|. While activated, it will
+write all sent commands to the file \file{/tmp/traj.log}. Each line will
+contain the motor number, the command timestamp, and the command
+position.  Be careful not to let this feature active while not using
+it, as it would quickly fill-up the memory.
+
+\section{Leds}
+
+All Nao's leds and led groups, as defined by \naoqi, are available as
+objects in \us. You can set the led values by writing to the slots
+\var{val} (intensity between 0 and 1), \var{r}, \var{g}, \var{b}
+(color intensity between 0 and 1) or \var{rgb} (RGB value, one byte
+each, i.e. 0xFF0000 is red).
+
+\section{Camera}
+
+The Nao camera object is instantiated by default, under the standard name
+\var{camera}. It is deactivated by default, set its \var{load} field to 1 to
+activate. The default frame-rate is only 4fps, so you might want to increase it
+before activating the camera.
+
+If you wish to use RTP instead of TCP to receive the camera image, you must:
+\begin{itemize}
+\item load the RTP module in the engine by typing:
+\begin{urbiunchecked}
+loadModule("urbi/rtp");
+\end{urbiunchecked}
+\item also load the RTP module with your remote UObject by adding it to your
+urbi-launch command line.
+\end{itemize}
+RTP will then be used automatically.
+
+\subsection{Slots}
+\begin{itemize}
+\item \lstinline|format| \\
+  Set the image format: 1 for a jpeg-compressed image, 0 for raw yuv.
+\item \lstinline|formatDetail| \\
+  Set the image format, providing more options:
+  \begin{itemize}
+  \item \lstinline|1| raw RGB.
+  \item \lstinline|2| raw YUV.
+  \item \lstinline|3| JPEG.
+  \item \lstinline|4| RGB with a PPM header.
+  \item \lstinline|5| YUV422:  YUYV, 2 bytes/pixel.
+  \item \lstinline|6| Grey8: gray image, 1 byte/pixel.
+  \item \lstinline|7| Grey4: gray image 4 bits/pixel.
+  \end{itemize}
+  JPEG mode gives the smallest images and uses less bandwidth to access the
+  images remotely, but uses more CPU power.
+\item \lstinline|quality| \\
+  Set JPEG compression quality, from 0 to 100.
+\item \lstinline|rate| \\
+  Set image frame rate in Hz.
+\item \lstinline|resolution| \\
+  Set image resolution.  0 gives the max resolution (640x380), 1 divides each
+  dimension by two(320x240), 2 divides by four(160x120), 3 by eight(80x60).
+\item \lstinline|width| \\
+  Image width. Read-only.
+\item \lstinline|height| \\
+  Image height. Read-only.
+\item \lstinline|threaded| \\
+  Set to 1 to activate threaded mode, and to 0 to deactivate. This must be set
+  before switching load to 1 for the first time. Defaults to 1.
+\end{itemize}
+
+\section{Whole body motion}
+
+The whole body motion component of the \naoqi can be activated by reading and
+writing to the \lstinline|pos| slot of both hands. This sets a target
+position in Cartesian space for the hand. The \naoqi will use its whole body
+to try to reach it. Be careful to only ask for reachable positions.
+
+\section{Other sensors}
+
+The following sensors are available through a \us variable.
+Reading the variable will give the latest available sensor value.
+
+\begin{itemize}
+\item \lstinline|sonarL.val|, \lstinline|sonarR.val| \\
+    last left and right value from the Sonar module.
+\item \lstinline|footTouchL.val|, \lstinline|footTouchR.val| \\
+    Foot bumper, can be 0 or 1.
+\item \lstinline|headTouchR.val, headTouchM.val, headTouchF.val| \\
+    Head touch sensor segments.
+\item \lstinline|accelX.val, accelY.val, accelZ.val| \\
+    Accelerometer values.
+\item \lstinline|gyroX.val, gyroY.val| \\
+    Gyroscope values.
+\item \lstinline|battery.voltage, battery.current| \\
+    Current battery voltage and current usage.
+\item \lstinline|fsr.val, fsr.left, fsr.right| \\
+    1 if both, the left and the right foot are touching the ground, respectively.
+\item \lstinline|fsr.leftFootTotalWeight, fsr.rightFootTotalWeight| \\
+    Weight under each feet.
+\end{itemize}
+
+\section{Interfacing with \naoqi}
+
+\subsection{Accessing the \naoqi shared memory region}
+
+Many \naoqi modules communicate through a shared hash table handled by
+the \lstinline|ALMemory| module. This module is available under the
+\lstinline|stm| name in \urbi, and has the following slots:
+
+\begin{itemize}
+\item \lstinline|get(\var{name})| \\
+  Return the value of memory location \var{name}.
+\item \lstinline|set(\var{name}, \var{value})| \\
+  Set memory location \var{name} to \var{value}.
+\item \lstinline|bindRenameVariable(\var{memoryName}, \var{variableName})| \\
+  Create a \us slot named \var{variableName}, and synchronize it with memory
+  location \var{memoryName}. Only read support is available.
+  \var{variableName} can be of the form "a.b", in which case it will create
+  variable "b" in object "a", or of the form "b", in which case variable "b"
+  will be created in object "stm".
+\end{itemize}
+
+\subsection{Accessing standard \naoqi modules}
+
+All standard \naoqi modules (ALMemory, ALLogger, ALMotion, ALFrameManager,
+ALTextToSpeech, ALAudioPlayer...) are available in \urbi. You can call all
+their methods directly.
+
+\subsection{Binding new \naoqi modules in Urbi}
+
+You can create a proxy on every \naoqi module, local or remote. The function
+\lstinline|ALProxy| can be used to ease the process:
+
+Here is an example with red ball detection and tracking module:
+\begin{urbiunchecked}
+// Instantiate a proxy to RedBallDetection
+var Global.redBallDetection = ALProxy("RedBallDetection", [], []);
+// Instantiate a proxy to RedBallTracker
+var Global.redBallTracker = ALProxy("RedBallTracker", [], []);
+// Enable nao head motors
+robot.body.head.load = 1;
+// Launch the red ball tracking
+redBallTracker.startTracker ();
+sleep(60s);
+// Stop red ball tracking
+redBallTracker.stopTracker ();
+// reset head position
+headYaw.val = 0 speed: 0.8 & headPitch.val = 0 speed: 0.8;
+\end{urbiunchecked}
+
+Another example with the vision toolbox module:
+\begin{urbiunchecked}
+var vision = ALProxy("VisionToolbox", [], ["isItDark",
+  "takePicture", "takePictureRegularly", "setWhiteBalance",
+  "startVideoRecord", "startVideoRecord_adv" ]);
+switch(vision.isItDark)
+{
+  case var x if x <= 4:
+    echo("We are outdoor");
+  case var x if x <= 100:
+    echo("We are indoor, it's bright");
+  case var x if x > 100:
+    echo("Here is a shadowed place");
+};
+\end{urbiunchecked}
+
+The first argument to \lstinline|ALProxy| is the name of the module without
+the "AL". The second argument is a list of alternate names for the module.
+The third argument is a list of method names that must be called asynchronously.
+You must pass in this list all the functions that takes a long(more than a few
+milliseconds) time to execute. Synchronous calls have less overhead, but will freeze the \us interpreter for the duration of the call.
+
+Most of the standard modules are loaded by the initialization script
+\file{URBI.INI}.
+
+\subsection{Writing \naoqi modules in \urbi}
+
+You can create independent modules capable of answering requests and
+services from other \naoqi modules, written in \Cxx, \us or
+ruby. Let's see an example:
+
+\begin{urbiunchecked}
+// ----------------------------------
+// Simple module creation samples
+// ----------------------------------
+// the name of your variable and of the module must be the SAME!
+var urbiHelloWorld = ALModule.new("urbiHelloWorld");
+
+// create a new method doing some interesting things
+function urbiHelloWorld.sayHello()
+{
+  // Use ALTextToSpeech, instantiated by URBI.INI
+  tts.say("Hello");
+};
+
+// inform the world that there's a new method, and what it's doing
+urbiHelloWorld.bindUrbiMethod("sayHello", "Nao will say 'Hello'", [], []);
+
+// to test it outside of Urbi, you can for example type in a browser:
+// http://<Nao's IP>:9559/?eval=urbiHelloWorld.version(); or
+// http://<Nao's IP>:9559/?eval=urbiHelloWorld.ping(); and more naturally
+// http://<Nao's IP>:9559/?eval=urbiHelloWorld.sayHello();
+
+// ----------------------------------
+// another module example
+// ----------------------------------
+var mathematics = ALModule.new("mathematics");
+
+function mathematics.add(a, b)
+{
+  var res = a + b;
+  echo("mathematics.add => " + res);
+  return res;
+};
+
+mathematics.setModuleDescription(
+  "A powerful module to make remote computing in urbiscript :)");
+mathematics.bindUrbiMethod("add", "Compute the sum of two numbers",
+[["a",   "first number of the addition"],
+ ["b",   "second number of the addition"]],
+ ["sum", "the sum of the addition"] );
+
+// to test it outside of urbi, you can for example enter in a browser:
+// http://<Nao's IP>:9559/?eval=mathematics.add(2,3)
+\end{urbiunchecked}
+
+
+\subsection{More examples}
+
+Here is an example that shows how to declare in \us a callback called by a
+NaoQi module:
+
+\begin{urbiunchecked}
+// Instantiate a proxy to RedBallDetection
+var redBallDetection = ALProxy("RedBallDetection", [], []);
+// Instantiate a proxy to RedBallTracker
+var redBallTracker = ALProxy("RedBallTracker", [], []);
+// Create an urbi ALModule that contains a callback function
+var urbiRedBall = do (ALModule.new("urbiRedBall"))
+{
+  function ballDetected(varName, value, message) {
+    echo("BallDetected was triggered. Got: %s, %s, %s" % [varName, value, message]);
+  };
+  bindUrbiMethod("ballDetected", "called when ball is detected", [], []);
+};
+// Trigger the callback function whenever a ball is detected.
+memory.subscribeToMicroEvent("redBallDetected", "urbiRedBall",
+                             "ballisdetected", "ballDetected");
+// Launch the red ball tracking
+redBallTracker.startTracker ();
+\end{urbiunchecked}
+
+Playing in \us with nao eyes:
+\begin{urbiunchecked}
+class Global.EyeLeds
+{
+  function rotate(var inc, var r, var g, var b,
+                  var frequency = 80ms, var duration = 3)
+  {
+    var eye_ = this.led.asList;
+    var i = 0; var p = -inc; var j = inc;
+    timeout (duration)
+      every (frequency)
+      {
+        i = (i+inc)%8; p = (p+inc)%8; j = (j+inc)%8;
+        eye_[p].val = 0;
+        eye_[i].r = r; eye_[i].g = g; eye_[i].b = b;
+        eye_[j].r = r; eye_[j].g = g; eye_[j].b = b;
+      };
+  };
+
+  function redRotate()   { rotate(1, 1, 0, 0); };
+  function greenRotate() { rotate(1, 0, 1, 0); };
+  function blueRotate()  { rotate(1, 0, 0, 1); };
+
+  function randomize(var duration = 3)
+  {
+    timeout(duration)
+      loop
+      {
+        led.r = random(100)/100;
+        led.g = random(100)/100;
+        led.b = random(100)/100;
+      };
+  };
+
+  function redBlink(var duration = 3) {
+    timeout(duration) led.r = 0.5 sin:1s ampli:0.5;
+  };
+  function greenBlink(var duration = 3) {
+    timeout(duration) led.g = 0.5 sin:1s ampli:0.5;
+  };
+  function blueBlink(var duration = 3) {
+    timeout(duration) led.b = 0.5 sin:1s ampli:0.5;
+  };
+
+  function color(var r, var g, var b) {
+    led.r = r; led.g = g; led.b = b;
+  };
+
+  function red()   { color(1, 0, 0); };
+  function green() { color(0, 1, 0); };
+  function blue()  { color(0, 0, 1); };
+  function black() { color(0, 0, 0); };
+
+  function __unit(slot)
+  {
+    eyeR.black & eyeL.black;
+    voice.say(slot) &
+    eyeR.getSlot(slot).apply([eyeR]) &
+    eyeL.getSlot(slot).apply([eyeL]);
+  };
+
+  function __test()
+  {
+    voice.say("Eyes test procedure");
+    __unit("red");
+    __unit("green");
+    __unit("blue");
+    __unit("redBlink");
+    __unit("greenBlink");
+    __unit("blueBlink");
+    eye.black;
+    voice.say("blink yellow") &
+    eyeL.greenBlink & eyeL.redBlink &
+    eyeR.greenBlink & eyeR.redBlink;
+    __unit("randomize");
+    __unit("redRotate");
+    __unit("greenRotate");
+    __unit("blueRotate");
+    eye.black;
+  };
+};
+
+do (eyeL)
+{
+  addProto(EyeLeds);
+
+  function rotateRight(var r, var g, var b, var frequency = 50ms,
+                       var duration = 1s) {
+    rotate(-1, r, g, b, frequency, duration)
+  };
+
+  function rotateLeft(var r, var g, var b, var frequency = 50ms,
+                      var duration = 1s) {
+    rotate(1, r, g, b, frequency, duration)
+  };
+};
+
+do (eyeR)
+{
+  addProto(EyeLeds);
+
+  function rotateRight(var r, var g, var b, var frequency = 50ms,
+                       var duration = 1s) {
+    rotate(1, r, g, b, frequency, duration)
+  };
+
+  function rotateLeft(var r, var g, var b, var frequency = 50ms,
+                      var duration = 1s) {
+    rotate(-1, r, g, b, frequency, duration)
+  };
+};
+
+EyeLeds.__test;
+\end{urbiunchecked}
+
+This example shows how to to set nao into it's initial standing pose:
+
+\begin{urbiunchecked}
+var HeadYawAngle       = 0;
+var HeadPitchAngle     = 0;
+var ShoulderPitchAngle = 80;
+var ShoulderRollAngle  = 20;
+var ElbowYawAngle      = -80;
+var ElbowRollAngle     = -60;
+var WristYawAngle      = 0;
+var HandAngle          = 0;
+var HipYawPitchAngle   = 0;
+var HipRollAngle       = 0;
+var HipPitchAngle      = -25;
+var KneePitchAngle     = 40;
+var AnklePitchAngle    = -20;
+var AnkleRollAngle     = 0;
+var Head = [];
+var LeftArm = [];
+var RightArm = [];
+var LeftLeg = [];
+var RightLeg = [];
+
+switch (ALMotion.getRobotConfig[1][0])
+{
+  case "naoAcademics":
+    Head     = [HeadYawAngle, HeadPitchAngle];
+    LeftArm  = [ShoulderPitchAngle, +ShoulderRollAngle,
+                +ElbowYawAngle, +ElbowRollAngle, WristYawAngle, HandAngle];
+    RightArm = [ShoulderPitchAngle, -ShoulderRollAngle,
+                -ElbowYawAngle, -ElbowRollAngle, WristYawAngle, HandAngle];
+    LeftLeg  = [HipYawPitchAngle, +HipRollAngle,
+                HipPitchAngle, KneePitchAngle, AnklePitchAngle, +AnkleRollAngle];
+    RightLeg = [HipYawPitchAngle, -HipRollAngle,
+                HipPitchAngle, KneePitchAngle, AnklePitchAngle, -AnkleRollAngle]
+
+  case "naoRobocup":
+    Head     = [HeadYawAngle, HeadPitchAngle];
+    LeftArm  = [ShoulderPitchAngle, +ShoulderRollAngle,
+                +ElbowYawAngle, +ElbowRollAngle];
+    RightArm = [ShoulderPitchAngle, -ShoulderRollAngle,
+                -ElbowYawAngle, -ElbowRollAngle];
+    LeftLeg  = [HipYawPitchAngle, +HipRollAngle,
+                HipPitchAngle, KneePitchAngle, AnklePitchAngle, +AnkleRollAngle];
+    RightLeg = [HipYawPitchAngle, -HipRollAngle,
+                HipPitchAngle, KneePitchAngle, AnklePitchAngle, -AnkleRollAngle];
+
+  case "naoT14":
+    Head     = [HeadYawAngle, HeadPitchAngle];
+    LeftArm  = [ShoulderPitchAngle, +ShoulderRollAngle,
+                +ElbowYawAngle, +ElbowRollAngle, WristYawAngle, HandAngle];
+    RightArm = [ShoulderPitchAngle, -ShoulderRollAngle,
+                -ElbowYawAngle, -ElbowRollAngle, WristYawAngle, HandAngle];
+
+  case "naoT2":
+    Head     = [HeadYawAngle, HeadPitchAngle];
+};
+
+// Gather the joints together
+var pTargetAngles = Head + LeftArm + LeftLeg + RightLeg + RightArm;
+// Convert to radians
+pTargetAngles = pTargetAngles.map(function(x) {x*motion.TO_RAD});
+
+
+// ------------------------------ send the commands ---------------------------
+// We use the "Body" name to denote the collection of all joints.
+var pNames = "Body";
+// We set the fraction of max speed
+var pMaxSpeedFraction = 0.2;
+
+ALProxy("RobotPose");
+switch(ALRobotPose.getActualPoseAndTime)
+{
+  case "crouch":
+    // Ask motion to do this with a blocking call
+    ALMotion.angleInterpolationWithSpeed(pNames, pTargetAngles, pMaxSpeedFraction);
+  case "stand":
+    // Ask motion to do this with a blocking call
+    ALMotion.angleInterpolationWithSpeed(pNames, pTargetAngles, pMaxSpeedFraction);
+  default:
+    voice.setLanguage("english");
+    voice.say("Please first stand me up");
+};
+\end{urbiunchecked}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

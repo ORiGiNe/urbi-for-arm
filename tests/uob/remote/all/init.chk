@@ -1,0 +1,18 @@
+//#uobject test/all
+
+var a = remall.new(0)|;
+a.initCalled;
+[00000001] 1
+
+var b = a.new(0)|;
+b.initCalled;
+[00000002] 1
+
+var c = remall.new(1);
+[00000003:error] !!! input.u:@.9-21: new: all construction failed: init returned 1.
+
+var d = remall.new(2);
+[00000004:error] !!! input.u:@.9-21: new: Exception while calling remote bound method: KABOOOM
+
+remall.getDestructionCount;
+[00000005] 2

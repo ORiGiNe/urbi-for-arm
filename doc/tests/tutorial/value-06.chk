@@ -1,0 +1,16 @@
+syncline << "doc/tutorial/value.tex:481";
+[01234567:#] "doc/tutorial/value.tex:481"
+//#line 481 "doc/tutorial/value.tex"
+function test(arg)
+{
+  // Updates the local variable arg to refer 1.
+  // Does not affect the referred value, nor the actual external argument.
+  arg = 1;
+} |;
+var x = 0;
+[00000000] 0
+test(x);
+[00000000] 1
+// x wasn't modified
+x;
+[00000000] 0

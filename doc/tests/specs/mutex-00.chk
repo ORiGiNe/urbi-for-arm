@@ -1,0 +1,5 @@
+syncline << "doc/specs/mutex.tex:22";
+[01234567:#] "doc/specs/mutex.tex:22"
+//#line 22 "doc/specs/mutex.tex"
+var m = Mutex.new;
+[00000000] Mutex_0x964ed40

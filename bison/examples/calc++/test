@@ -1,0 +1,79 @@
+#! /bin/sh
+
+test -z "$VERBOSE" && {
+   exec > /dev/null 2>&1
+   set -x
+}
+
+me=`basename $0`
+
+# Number of the current test.
+number=1
+
+# Exit status of this script.
+exit=true
+
+# run EXPECTED-EXIT-STATUS EXPECTED-OUTPUT [PARSER-OPTIONS]
+# ---------------------------------------------------------
+run ()
+{
+  # Effective and expected exit status.
+  local sta_exp=$1
+  shift
+  local out_exp=$1
+  shift
+  ./calc++ "$@" input >out_eff
+  local sta_eff=$?
+  local out_eff=`cat out_eff`
+  if test $sta_eff -eq $sta_exp; then
+    if test "$out_eff" = "$out_exp"; then
+      printf "$me: PASS: %2d\n" $number
+    else
+      printf "$me: FAIL: %2d (expected output: %s, effective: %s\n" \
+          $number "$out_exp" "$out_eff"
+      exit=false
+    fi
+  else
+    printf "$me: FAIL: %2d (expected status: %d, effective: %d\n" \
+        $number $sta_exp $sta_eff
+    exit=false
+  fi
+  number=`expr $number + 1`
+}
+
+cat >input <<EOF
+a := 1
+b := 2
+c := 3
+d := a + b * c
+d
+EOF
+run 0 7
+run 0 7 -p
+
+
+cat >input <<EOF
+a := 1
+b := 2
+c := 3
+d := (a + b) * c
+d
+EOF
+run 0 9
+
+
+cat >input <<EOF
+a := 1
+d := a + b * c
+EOF
+run 1 '' input
+
+
+cat >input <<EOF
+toto := 1
+toto
+EOF
+run 0 1 -s
+
+rm input out_eff
+$exit

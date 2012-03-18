@@ -1,0 +1,18 @@
+//#roscore
+//#plug urbi/ros
+
+assert { Ros.checkMaster };
+
+var s = Ros.Service.new("/rosout/get_loggers", false)|
+waituntil(s.initialized);
+clog << "s.initialized";
+
+var resp = s.request([=>])|
+for (var e: resp["loggers"])
+  echo(e);
+
+[00000001] *** ["level" => "INFO", "name" => "ros"]
+[00000002] *** ["level" => "INFO", "name" => "ros.roscpp"]
+[00000004] *** ["level" => "INFO", "name" => "ros.roscpp.roscpp_internal"]
+[00000003] *** ["level" => "WARN", "name" => "ros.roscpp.superdebug"]
+

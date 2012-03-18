@@ -1,0 +1,424 @@
+%% Copyright (C) 2009-2011, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Dictionary}
+
+A \dfn{dictionary} is an \dfn{associative array}, also known as a \dfn{hash}
+in some programming languages.  They are arrays whose indexes are arbitrary
+objects.
+
+\subsection{Example}
+
+The following session demonstrates the features of the Dictionary objects.
+
+\begin{urbiscript}[firstnumber=1]
+var d = ["one" => 1, "two" => 2];
+[00000001] ["one" => 1, "two" => 2]
+
+for (var p : d)
+  echo (p.first + " => " + p.second);
+[00000003] *** one => 1
+[00000002] *** two => 2
+
+"three" in d;
+[00000004] false
+d["three"];
+[00000005:error] !!! missing key: three
+d["three"] = d["one"] + d["two"] | {};
+"three" in d;
+[00000006] true
+d.getWithDefault("four", 4);
+[00000007] 4
+\end{urbiscript}
+
+\subsection{Hash values}
+\label{sec:dictionary:hash}
+
+Arbitrary objects can be used as dictionary keys. To map to the same cell,
+two objects used as keys must have equal hashes (retrieved with the
+\refSlot[Object]{hash} method) and be equal to each other (in the
+\refSlot[Object]{'=='} sense).
+
+This means that two different objects may have the same hash: the equality
+operator (\refSlot[Object]{'=='}) is checked in addition to the hash, to
+handle such collision.  However a good hash algorithm should avoid this
+case, since it hinders performances.
+
+See \refSlot[Object]{hash} for more detail on how to override hash
+values. Most standard value-based classes implement a reasonable hash
+function: see \refSlot[Float]{hash}, \refSlot[String]{hash},
+\refSlot[List]{hash}, \ldots
+
+\subsection{Prototypes}
+
+\begin{refObjects}
+\item[Comparable]
+\item[Container]
+\item[Object]
+\item[RangeIterable]
+\end{refObjects}
+
+\subsection{Construction}
+
+The Dictionary constructor takes arguments by pair (key, value).
+
+\begin{urbiscript}
+Dictionary.new("one", 1, "two", 2);
+[00000000] ["one" => 1, "two" => 2]
+Dictionary.new;
+[00000000] [ => ]
+\end{urbiscript}
+
+There must be an even number of arguments.
+
+\begin{urbiscript}
+Dictionary.new("1", 2, "3");
+[00000001:error] !!! new: odd number of arguments
+\end{urbiscript}
+
+You are encouraged to use the specific syntax for Dictionary literals:
+
+\begin{urbiscript}
+["one" => 1, "two" => 2];
+[00000000] ["one" => 1, "two" => 2]
+[=>];
+[00000000] [ => ]
+\end{urbiscript}
+
+An extra comma can be added at the end of the list.
+
+\begin{urbiscript}
+[
+  "one" => 1,
+  "two" => 2,
+];
+[00000000] ["one" => 1, "two" => 2]
+\end{urbiscript}
+
+It is guaranteed that the pairs to insert are evaluated left-to-write, key
+first, the value.
+
+\begin{urbiassert}
+   ["a".fresh => "b".fresh, "c".fresh => "d".fresh]
+== ["a_5"     => "b_6",     "c_7"     => "d_8"];
+\end{urbiassert}
+
+\subsection{Slots}
+
+\begin{urbiscriptapi}
+\item['=='](<that>)%
+  Whether \this equals \var{that}.  This suppose that elements
+  contained inside the dictionary are \lstinline|Comparable|.
+\begin{urbiassert}
+[ => ] == [ => ];
+["a" => 1, "b" => 2] == ["b" => 2, "a" => 1];
+\end{urbiassert}
+
+
+\item|'[]'|(<key>)%
+  Syntactic sugar for \lstinline|get(\var{key})|.
+
+\begin{urbiscript}
+assert (["one" => 1]["one"] == 1);
+["one" => 1]["two"];
+[00000012:error] !!! missing key: two
+\end{urbiscript}
+
+
+\item|'[]='|(<key>, <value>)%
+  Syntactic sugar for \lstinline|set(\var{key}, \var{value})|, but returns
+  \var{value}.
+
+\begin{urbiscript}
+{
+  var d = ["one" =>"2"];
+  assert
+  {
+    (d["one"] = 1) == 1;
+    d["one"] == 1;
+  };
+};
+\end{urbiscript}
+
+
+\item[asBool]
+  Negation of \refSlot{empty}.
+\begin{urbiassert}
+[=>].asBool == false;
+["key" => "value"].asBool == true;
+\end{urbiassert}
+
+
+\item[asList]%
+  The contents of the dictionary as a \refObject{Pair} list (\var{key},
+  \var{value}).
+
+\begin{urbiassert}
+["one" => 1, "two" => 2].asList == [("one", 1), ("two", 2)];
+\end{urbiassert}
+
+  \noindent
+  Since Dictionary derives from \refObject{RangeIterable}, it is easy
+  to iterate over a Dictionary using a range-\lstinline|for|
+  (\autoref{sec:lang:for:each}).  No particular order is ensured.
+\begin{urbiscript}
+{
+  var res = [];
+  for| (var entry: ["one" => 1, "two" => 2])
+    res << entry.second;
+  assert(res == [1, 2]);
+};
+\end{urbiscript}
+
+
+\item[asString] A string representing the dictionary.  There is no guarantee
+  on the order of the output.
+\begin{urbiassert}
+                [=>].asString == "[ => ]";
+["a" => 1, "b" => 2].asString == "[\"a\" => 1, \"b\" => 2]";
+\end{urbiassert}
+
+\item[elementAdded] An event emitted each time a new element is added to
+  the Dictionary.
+
+\item[elementChanged] An event emitted each time the value associated to a
+  key of the Dictionary is changed.
+
+\item[elementRemoved] An event emitted each time an element is removed from
+  the Dictionary.
+
+\begin{urbiscript}
+d = [ => ] |;
+at(d.elementAdded?) echo ("added");
+at(d.elementChanged?) echo ("changed");
+at(d.elementRemoved?) echo ("removed");
+
+d["key1"] = "value1";
+[00000001] "value1"
+[00000001] *** added
+
+d["key2"] = "value2";
+[00000001] "value2"
+[00000001] *** added
+
+d["key2"] = "value3";
+[00000001] "value3"
+[00000001] *** changed
+
+d.erase("key2");
+[00000002] ["key1" => "value1"]
+[00000001] *** removed
+
+d.clear;
+[00000003] [ => ]
+[00000001] *** removed
+
+d.clear;
+[00000003] [ => ]
+\end{urbiscript}
+
+\item[clear]
+  Empty the dictionary.
+
+\begin{urbiassert}
+["one" => 1].clear.empty;
+\end{urbiassert}
+
+
+\item[empty]
+  Whether the dictionary is empty.
+
+\begin{urbiassert}
+[=>].empty == true;
+["key" => "value"].empty == false;
+\end{urbiassert}
+
+
+\item[erase](<key>) Remove the mapping for \var{key}.
+\begin{urbicomment}
+removeSlot("d")|;
+\end{urbicomment}
+\begin{urbiscript}
+{
+  var d = ["one" => 1, "two" => 2];
+  assert
+  {
+    d.erase("two") === d;
+    d == ["one" => 1];
+  };
+
+  try
+  {
+    ["one" => 1, "two" => 2].erase("three");
+    echo("never reached");
+  }
+  catch (var e if e.isA(Dictionary.KeyError))
+  {
+    assert(e.key == "three")
+  };
+};
+\end{urbiscript}
+
+%% commented until a consensus is reached.
+%%
+%% \item[extend](<ext>)
+%%   Extend with the dictionary \var{ext}.
+%%   Return the value of the new dictionary.
+%% \begin{urbiscript}
+%% d = ["one" => 1, "two" => 2];
+%% [00000001] ["one" => 1, "two" => 2]
+%% d.extend(["one" => 0, "three" => 3]);
+%% [00000002] ["one" => 0, "three" => 3, "two" => 2]
+%% \end{urbiscript}
+
+\item[get](<key>)%
+  The value associated to \var{key}.  A \lstinline|Dictionary.KeyError|
+  exception is thrown if the key is missing.
+  % FIXME: the following exception test should be rewritten when (if)
+  % we introduce the throw assertion.
+\begin{urbiscript}
+var d = ["one" => 1, "two" => 2]|;
+
+assert(d.get("one") == 1);
+["one" => 1, "two" => 2].get("three");
+[00000010:error] !!! missing key: three
+
+try
+{
+  d.get("three");
+  echo("never reached");
+}
+catch (var e if e.isA(Dictionary.KeyError))
+{
+  assert(e.key == "three")
+};
+\end{urbiscript}
+
+
+\item[getWithDefault](<key>, <defaultValue>)%
+  The value associated to \var{key} if it exists, \var{defaultValue}
+  otherwise.
+
+\begin{urbiscript}
+{
+  var d = ["one" => 1, "two" => 2];
+  assert
+  {
+    d.getWithDefault("one",  -1) == 1;
+    d.getWithDefault("three", 3) == 3;
+  };
+}|;
+\end{urbiscript}
+
+
+\item[has](<key>)%
+  Whether the dictionary has a mapping for \var{key}.
+
+\begin{urbiscript}
+{
+  var d = ["one" => 1];
+  assert
+  {
+    d.has("one");
+    !d.has("zero");
+  };
+}|;
+\end{urbiscript}
+
+  The infix operators \lstinline|in| and \lstinline|not in| use
+  \lstinline|has| (see \autoref{sec:lang:operators:containers}).
+
+\begin{urbiassert}
+"one" in     ["one" => 1];
+"two" not in ["one" => 1];
+\end{urbiassert}
+
+
+\item[init](<key1>, <value1>, ...)%
+  Insert the mapping from \var{key1} to \var{value1} and so forth.
+
+\begin{urbiscript}
+Dictionary.clone.init("one", 1, "two", 2);
+[00000000] ["one" => 1, "two" => 2]
+\end{urbiscript}
+
+
+\item[keys]%
+  The list of all the keys.  No particular order is ensured.  Since
+  \refObject{List} features the same function, uniform iteration over
+  a List or a Dictionary is possible.
+\begin{urbiscript}
+{
+  var d = ["one" => 1, "two" => 2];
+  assert(d.keys == ["one", "two"]);
+  assert({
+           var res = [];
+           for (var k: d.keys)
+             res << d[k];
+           res
+         }
+         == [1, 2]);
+};
+\end{urbiscript}
+
+
+\item[matchAgainst](<handler>, <pattern>)
+  Pattern matching on members.  See \refObject{Pattern}.
+
+\begin{urbiscript}
+{
+  // Match a subset of the dictionary.
+  ["a" => var a] = ["a" => 1, "b" => 2];
+  // get the matched value.
+  assert(a == 1);
+};
+\end{urbiscript}
+
+
+\item[set](<key>, <value>)%
+  Map \var{key} to \var{value} and return \this so that invocations to
+  \refSlot{set} can be chained.  The possibly existing previous mapping is
+  overridden.
+
+\begin{urbiscript}
+[=>].set("one", 2)
+    .set("two", 2)
+    .set("one", 1);
+[00000000] ["one" => 1, "two" => 2]
+\end{urbiscript}
+
+
+\item[size]
+  Number of element in the dictionary.
+
+\begin{urbiscript}
+{
+  var d = [=>];
+  assert(d.size == 0);
+  d["a"] = 0;
+  assert(d.size == 1);
+  d["b"] = 1;
+  assert(d.size == 2);
+  d["a"] = 2;
+  assert(d.size == 2);
+};
+\end{urbiscript}
+
+
+
+\end{urbiscriptapi}
+
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

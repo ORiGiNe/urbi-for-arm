@@ -1,0 +1,65 @@
+syncline << "doc/specs/binary.tex:27";
+[01234567:#] "doc/specs/binary.tex:27"
+//#line 27 "doc/specs/binary.tex"
+Binary.new("my header", "my content");
+[00000001] BIN 10 my header
+[:]my content
+
+syncline << "doc/specs/binary.tex:43";
+[01234567:#] "doc/specs/binary.tex:43"
+//#line 43 "doc/specs/binary.tex"
+assert {
+Binary.new("0", "0") + Binary.new("1", "1")
+       == Binary.new("0", "01");
+Binary.new("", "0") + Binary.new("1", "1")
+       == Binary.new("1", "01");
+};
+
+syncline << "doc/specs/binary.tex:52";
+[01234567:#] "doc/specs/binary.tex:52"
+//#line 52 "doc/specs/binary.tex"
+assert {
+Binary.new("0", "0") == Binary.new("0", "0");
+Binary.new("0", "0") != Binary.new("0", "1");
+Binary.new("0", "0") != Binary.new("1", "0");
+};
+
+syncline << "doc/specs/binary.tex:62";
+[01234567:#] "doc/specs/binary.tex:62"
+//#line 62 "doc/specs/binary.tex"
+assert(Binary.new("head", "content").asString
+       == "BIN 7 head\ncontent");
+var b = BIN 7 header;content;
+[00000002] BIN 7 header
+[:]content
+assert(b == Binary.new("header", "content"));
+
+syncline << "doc/specs/binary.tex:76";
+[01234567:#] "doc/specs/binary.tex:76"
+//#line 76 "doc/specs/binary.tex"
+assert {
+Binary.new("head", "\B(7)(content)").asString
+       == "BIN 7 head\ncontent";
+};
+
+syncline << "doc/specs/binary.tex:84";
+[01234567:#] "doc/specs/binary.tex:84"
+//#line 84 "doc/specs/binary.tex"
+assert {
+Binary.new("head", "content").data == "content";
+};
+
+syncline << "doc/specs/binary.tex:90";
+[01234567:#] "doc/specs/binary.tex:90"
+//#line 90 "doc/specs/binary.tex"
+assert {
+Binary.new("head", "").empty;
+!Binary.new("head", "content").empty;
+};
+
+syncline << "doc/specs/binary.tex:97";
+[01234567:#] "doc/specs/binary.tex:97"
+//#line 97 "doc/specs/binary.tex"
+assert {
+Binary.new("head", "content").keywords == "head";
+};

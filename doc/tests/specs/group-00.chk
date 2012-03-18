@@ -1,0 +1,52 @@
+syncline << "doc/specs/group.tex:20";
+[01234567:#] "doc/specs/group.tex:20"
+//#line 20 "doc/specs/group.tex"
+class Sample
+{
+  var value = 0;
+  function init(v) { value = v; };
+  function asString() { "<" + value.asString + ">"; };
+  function timesTen() { new(value * 10); };
+  function plusTwo()  { new(value + 2); };
+};
+[00000000] <0>
+
+var group = Group.new(Sample.new(1), Sample.new(2));
+[00000000] Group [<1>, <2>]
+group << Sample.new(3);
+[00000000] Group [<1>, <2>, <3>]
+group.timesTen.plusTwo;
+[00000000] Group [<12>, <22>, <32>]
+
+// Bouncing getSlot and updateSlot.
+group.value;
+[00000000] Group [1, 2, 3]
+group.value = 10;
+[00000000] Group [10, 10, 10]
+
+// Bouncing to each&.
+var sum = 0|
+for& (var v : group)
+  sum += v.value;
+sum;
+[00000000] 30
+
+syncline << "doc/specs/group.tex:63";
+[01234567:#] "doc/specs/group.tex:63"
+//#line 63 "doc/specs/group.tex"
+Group.new;
+[00000000] Group []
+Group.new(1, "two");
+[00000000] Group [1, "two"]
+
+syncline << "doc/specs/group.tex:109";
+[01234567:#] "doc/specs/group.tex:109"
+//#line 109 "doc/specs/group.tex"
+var g = Group.new(1, 2);
+[00000000] Group [1, 2]
+g.hasSlot("foo");
+[00000000] false
+g.hasSlot("+");
+[00000000] true
+g + 1;
+[00000000] Group [2, 3]

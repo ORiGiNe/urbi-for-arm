@@ -1,0 +1,9 @@
+//#uobject test/all
+
+timeout(1s)
+  every(100ms)
+  {
+    var t = time;
+    remall.writeByName("remall.v", 42);
+    assert(t - remall.v->timestamp < 0.1);
+  };

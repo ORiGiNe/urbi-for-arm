@@ -1,0 +1,14 @@
+42.asFloat;
+[00000001] 42
+42.as(Float);
+[00000002] 42
+var Float2 = Float;
+[00000003] 0
+42.as(Float2);
+[00000004] 42
+"foo".asString;
+[00000005] "foo"
+class C {};
+[00000006] C
+C.new.asC;
+[00000007] C_0xADDR

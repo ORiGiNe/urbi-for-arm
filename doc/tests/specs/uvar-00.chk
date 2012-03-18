@@ -1,0 +1,43 @@
+syncline << "doc/specs/uvar.tex:25";
+[01234567:#] "doc/specs/uvar.tex:25"
+//#line 25 "doc/specs/uvar.tex"
+UVar.new(Global, "x")|
+Global.x = 5;
+[000000001] 5
+x;
+[000000002] 5
+
+syncline << "doc/specs/uvar.tex:67";
+[01234567:#] "doc/specs/uvar.tex:67"
+//#line 67 "doc/specs/uvar.tex"
+var Global.counter = 0|
+UVar.new(Global, "access")|
+var accessHandle = &access.notifyAccess(closure() {
+  Global.access = Global.counter += 1
+})|
+assert
+{
+  access == 1;
+  access == 2;
+  access == 3;
+};
+&access.removeNotifyAccess(accessHandle)|;
+assert
+{
+  access == 3;
+  access == 3;
+};
+
+syncline << "doc/specs/uvar.tex:94";
+[01234567:#] "doc/specs/uvar.tex:94"
+//#line 94 "doc/specs/uvar.tex"
+UVar.new(Global, "y")|
+var handle = Global.&y.notifyChange(closure() {
+  echo("The value is now " + Global.y)
+})|
+Global.y = 12;
+[00000001] *** The value is now 12
+[00000002] 12
+Global.&y.removeNotifyChange(handle)|;
+Global.y = 13;
+[00000003] 13

@@ -1,0 +1,239 @@
+/*
+ * Copyright (C) 2010-2011, Gostai S.A.S.
+ *
+ * This software is provided "as is" without warranty of any kind,
+ * either expressed or implied, including but not limited to the
+ * implied warranties of fitness for a particular purpose.
+ *
+ * See the LICENSE file for more information.
+ */
+
+#include <libport/containers.hh>
+#include <libport/preproc.hh>
+#include <libport/unit-test.hh>
+
+using libport::test_suite;
+
+/*
+print '#define LIST LIBPORT_LIST(%s)' % ' '.join(map(lambda i: '%s,' % i + 1, range(0, 31)))
+*/
+#define LIST LIBPORT_LIST(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,)
+
+static void
+arity()
+{
+/*
+for i in range(0, 32):
+  print 'BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(%s)), %s);' %   \
+      (', '.join(map(str, range(i))), i)
+*/
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST()), 0);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0,)), 1);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1,)), 2);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2,)), 3);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3,)), 4);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4,)), 5);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5,)), 6);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6,)), 7);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7,)), 8);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8,)), 9);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9,)), 10);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,)), 11);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,)), 12);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,)), 13);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,)), 14);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,)), 15);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,)), 16);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,)), 17);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,)), 18);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,)), 19);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,)), 20);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,)), 21);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,)), 22);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,)), 23);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,)), 24);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,)), 25);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,)), 26);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,)), 27);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,)), 28);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,)), 29);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,)), 30);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_SIZE(LIBPORT_LIST(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,)), 31);
+}
+
+#define HEAD_TAIL_LIST LIBPORT_LIST(42, 51, 69,)
+static void
+head_tail()
+{
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_HEAD(HEAD_TAIL_LIST), 42);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_HEAD(LIBPORT_LIST_TAIL(LIBPORT_LIST_TAIL(HEAD_TAIL_LIST))), 69);
+}
+
+#define MAP_MACRO(X) (X * X)
+#define MAP_LIST LIBPORT_LIST_MAP(MAP_MACRO, LIST)
+
+static void
+map()
+{
+/*
+for i in range(0, 31):
+  print '  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(%s, MAP_LIST), %s);' % (i, (i+1) * (i+1))
+*/
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(0, MAP_LIST), 1);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(1, MAP_LIST), 4);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(2, MAP_LIST), 9);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(3, MAP_LIST), 16);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(4, MAP_LIST), 25);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(5, MAP_LIST), 36);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(6, MAP_LIST), 49);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(7, MAP_LIST), 64);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(8, MAP_LIST), 81);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(9, MAP_LIST), 100);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(10, MAP_LIST), 121);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(11, MAP_LIST), 144);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(12, MAP_LIST), 169);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(13, MAP_LIST), 196);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(14, MAP_LIST), 225);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(15, MAP_LIST), 256);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(16, MAP_LIST), 289);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(17, MAP_LIST), 324);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(18, MAP_LIST), 361);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(19, MAP_LIST), 400);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(20, MAP_LIST), 441);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(21, MAP_LIST), 484);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(22, MAP_LIST), 529);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(23, MAP_LIST), 576);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(24, MAP_LIST), 625);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(25, MAP_LIST), 676);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(26, MAP_LIST), 729);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(27, MAP_LIST), 784);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(28, MAP_LIST), 841);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(29, MAP_LIST), 900);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(30, MAP_LIST), 961);
+}
+
+static void
+nth()
+{
+/*
+for i in range(0, 31):
+  print '  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(%s, LIST), %s);' % (i, i+1)
+*/
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(0, LIST), 1);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(1, LIST), 2);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(2, LIST), 3);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(3, LIST), 4);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(4, LIST), 5);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(5, LIST), 6);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(6, LIST), 7);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(7, LIST), 8);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(8, LIST), 9);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(9, LIST), 10);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(10, LIST), 11);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(11, LIST), 12);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(12, LIST), 13);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(13, LIST), 14);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(14, LIST), 15);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(15, LIST), 16);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(16, LIST), 17);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(17, LIST), 18);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(18, LIST), 19);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(19, LIST), 20);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(20, LIST), 21);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(21, LIST), 22);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(22, LIST), 23);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(23, LIST), 24);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(24, LIST), 25);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(25, LIST), 26);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(26, LIST), 27);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(27, LIST), 28);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(28, LIST), 29);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(29, LIST), 30);
+  BOOST_CHECK_EQUAL(LIBPORT_LIST_NTH(30, LIST), 31);
+}
+
+static void
+flatten()
+{
+  std::vector<int> expected;
+  expected.push_back(0);
+  expected.push_back(1);
+  expected.push_back(2);
+  std::vector<int> effective;
+  LIBPORT_LIST_FLATTEN(LIBPORT_LIST(effective.push_back(0);, effective.push_back(1);, effective.push_back(2);, ));
+  BOOST_CHECK_EQUAL(effective, expected);
+}
+
+#define APPLY_MACRO(X) effective.push_back(X);
+static void
+apply()
+{
+  std::vector<int> expected;
+  expected.push_back(0);
+  expected.push_back(1);
+  expected.push_back(2);
+  std::vector<int> effective;
+  LIBPORT_LIST_APPLY(APPLY_MACRO, LIBPORT_LIST(0, 1, 2,));
+  BOOST_CHECK_EQUAL(effective, expected);
+}
+
+static int arg_f(int a, int b, int c) { return (a + b) * c; };
+static void
+arg()
+{
+  BOOST_CHECK_EQUAL(42, LIBPORT_LIST_ARG(arg_f, LIBPORT_LIST(10, 11, 2,)));
+}
+
+static void
+apply_vaargs()
+{
+  // Test the backend
+  #define CAT(r, data, elem) data elem
+  const char* val = LIBPORT_VAARGS_APPLY(CAT, "a", "a", "b", "c", "d");
+  // Evaling VAARGS_APPLY inside the CHECK_EQUAL results in "a" "b" "c" "d" != "abdc". Don't ask...
+  BOOST_CHECK_EQUAL(val, "aaabacad");
+
+  // Test it the way it will be used
+  #define USERMACRO_HELPER(r, data, elem) s= s*10 + data + elem;
+  #define USERMACRO(a, ...) LIBPORT_VAARGS_APPLY(USERMACRO_HELPER, a, __VA_ARGS__)
+  int s = 0;
+  USERMACRO(2, 1, 2, 3, 4);
+  BOOST_CHECK_EQUAL(s, 3456);
+  #undef USERMACRO
+  #undef USERMACRO_HELPER
+  #undef CAT
+}
+
+static void
+enum_()
+{
+  BOOST_CHECK_EQUAL(LIBPORT_ENUM(("foo")("bar")("baz"), " - "), "foo - bar - baz");
+  BOOST_CHECK_EQUAL(LIBPORT_ENUM(("foo")("bar")       , " - "), "foo - bar");
+  BOOST_CHECK_EQUAL(LIBPORT_ENUM(("foo")              , " - "), "foo");
+}
+
+static void
+enum_pretty()
+{
+  BOOST_CHECK_EQUAL(LIBPORT_ENUM_PRETTY_SEVERAL(("foo")("bar")("baz"), ", ", " and "), "foo, bar and baz");
+  BOOST_CHECK_EQUAL(LIBPORT_ENUM_PRETTY(("foo")("bar")("baz"), ", ", " and "), "foo, bar and baz");
+  BOOST_CHECK_EQUAL(LIBPORT_ENUM_PRETTY(("foo")("bar")       , ", ", " and "), "foo and bar");
+  BOOST_CHECK_EQUAL(LIBPORT_ENUM_PRETTY(("foo")              , ", ", " and "), "foo");
+}
+
+test_suite*
+init_test_suite()
+{
+  test_suite* suite = BOOST_TEST_SUITE("libport::preproc test suite");
+  suite->add(BOOST_TEST_CASE(arity));
+  suite->add(BOOST_TEST_CASE(head_tail));
+  suite->add(BOOST_TEST_CASE(map));
+  suite->add(BOOST_TEST_CASE(nth));
+  suite->add(BOOST_TEST_CASE(flatten));
+  suite->add(BOOST_TEST_CASE(apply));
+  suite->add(BOOST_TEST_CASE(arg));
+  suite->add(BOOST_TEST_CASE(apply_vaargs));
+  suite->add(BOOST_TEST_CASE(enum_));
+  suite->add(BOOST_TEST_CASE(enum_pretty));
+  return suite;
+}

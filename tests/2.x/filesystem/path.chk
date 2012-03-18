@@ -1,0 +1,71 @@
+//! mkdir -p root/good
+//! mkdir root/bad
+//! chmod 0 root/bad
+//! touch root/good/file
+//$ chmod 700 root/bad
+//$ rm -rf root
+skipIfRoot;
+
+Path.cwd;
+[00000002] Path("%CWD%")
+
+Path.new("root/pouf").cd;
+[00000003:error] !!! input.u:@.1-24: cd: No such file or directory: root/pouf
+Path.new("root/bad").cd;
+[00000004:error] !!! input.u:@.1-23: cd: Permission denied: root/bad
+
+Path.new("root/good").cd;
+[00000005] Path("%CWD%/root/good")
+Path.cwd;
+[00000005] Path("%CWD%/root/good")
+Path.new("../..").cd;
+[00000006] Path("%CWD%")
+
+var pouf = Path.new("root/pouf") |
+var bad = Path.new("root/bad") |
+var good = Path.new("root/good") |
+
+pouf.isDir;
+[00000007:error] !!! input.u:@.1-10: isDir: No such file or directory: root/pouf
+pouf.isReg;
+[00000008:error] !!! input.u:@.1-10: isReg: No such file or directory: root/pouf
+Path.new("root/bad/pif").exists;
+[00000009:error] !!! input.u:@.1-31: exists: Permission denied: root/bad/pif
+
+assert
+{
+  !pouf.exists;
+  !Path.new("root/paf").exists;
+  bad.exists;
+  good.exists;
+}|
+
+
+assert
+{
+  bad.isDir;
+  !bad.isReg;
+  good.isDir;
+  !good.isReg;
+  !Path.new("root/good/file").isDir;
+  Path.new("root/good/file").isReg;
+  good.readable;
+  good.writable;
+}|
+
+if (System.Platform.isWindows)
+{
+  Path.readable->constant = false;
+  Path.readable = false;
+  Path.writable->constant = false;
+  Path.writable = false;
+} | {};
+assert
+{
+  !bad.readable;
+  !bad.writable;
+
+  searchFile("urbi/urbi.u").isA(Path);
+
+  searchFile(Path.new("urbi") / "urbi.u").isA(Path);
+};

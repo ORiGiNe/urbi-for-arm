@@ -1,0 +1,24 @@
+{
+  var x = 0;
+  timeout (990ms)
+    every(125ms)
+    {
+      x++;
+      sleep(250ms);
+    };
+  x;
+};
+[00000001] 8
+
+
+{
+  var x = 0;
+  timeout (990ms)
+    every|(125ms)
+    {
+      x++;
+      sleep(250ms);
+    };
+  x;
+};
+[00000002] 4

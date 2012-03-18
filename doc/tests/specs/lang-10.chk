@@ -1,0 +1,11 @@
+syncline << "doc/specs/lang.tex:3702";
+[01234567:#] "doc/specs/lang.tex:3702"
+//#line 3702 "doc/specs/lang.tex"
+var x = 0;
+[00000000] 0
+at (watch(x)?(var value))
+  echo("x = %s" % value);
+// This is considered as a change, although the new float value is also 0.
+x = 0;
+[00000000] 0
+[00000000] *** x = 0

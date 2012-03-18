@@ -1,0 +1,99 @@
+//#roscore
+//#no-fast
+//#plug urbi/ros
+
+var pub = Ros.Topic.new("/utests/play")|;
+pub.advertise("utopics/ComplexStructure")|;
+pub.structure["coords"];
+pub.structure["messages"];
+pub.structure["name"];
+pub.structure["nodes"];
+pub.structure["port"];
+pub.structure["robots"];
+
+[00000001] [["a" => 0, "b" => 0], ["a" => 0, "b" => 0]]
+[00000002] []
+[00000003] ""
+[00000004] []
+[00000005] 0
+[00000006] ["", "", ""]
+
+var message = pub.structure.clone|;
+var connected = false|;
+con: at(pub.onConnect?) {connected = true};
+
+var p = Process.new("rosrun", ["utopics", "complexReplay"])|;
+p.run;
+
+var sub = Ros.Topic.new("/utests/replay")|;
+replay: at(sub.onMessage?(var msg)) { lobby.send((message == msg).asString) };
+
+waituntil(connected);
+sub.subscribe;
+
+sleep(500ms);
+
+message["coords"][0] = ["a" => 42, "b" => 51]|;
+message["coords"][1] = ["a" => -65, "b" => 4]|;
+message["messages"] << "Hey there"|;
+message["messages"] << "Hoaï"|;
+message["name"] = "complex test"|;
+message["port"] = 9807|;
+message["robots"] << "coin"|;
+
+
+try {
+  pub << message
+}
+catch (var e) {
+  lobby.send(e.message.split(":")[1]);
+};
+[00000007]  Got a list of 4 items, expected 3
+
+
+message["robots"] = ["coin", 42, "meuh"]|;
+try {
+  pub << message
+}
+catch (var e) {
+  lobby.send(e.message.split(":")[1]);
+};
+[00000008]  Found key but not a string as expected.
+
+
+message["robots"] = ["coin", "meuh", "pwet"]|;
+message["port"] = "aaa"|;
+try {
+  pub << message
+}
+catch (var e) {
+  lobby.send(e.message.split(":")[1]);
+};
+[00000009]  Found key port but not a float as expected.
+
+
+message["port"] = 4242|;
+pub << message;
+[00000010] true
+
+// Race condition, let time to ROS replay node to respond.
+sleep(1s);
+message["nodes"] << [=>]|;
+try {
+  pub << message;
+}
+catch (var e) {
+  lobby.send(e.message.split(":")[1]);
+};
+[00000011]  Item name doesn't exist in dictionary.
+
+var n = ["name" => "a", "port" => 1, "stuff" => ["1st"], "position" => [1, 2, 3]]|;
+message["nodes"] = [n.clone]|;
+n["name"] = "b"|;
+message["nodes"] << n.clone|;
+pub << message;
+[00000012] true
+
+// Wait a bit to receive the events properly.
+sleep(2s);
+

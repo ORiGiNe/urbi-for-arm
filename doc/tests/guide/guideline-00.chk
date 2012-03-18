@@ -1,0 +1,47 @@
+syncline << "doc/guide/guideline.tex:51";
+[01234567:#] "doc/guide/guideline.tex:51"
+//#line 51 "doc/guide/guideline.tex"
+function inBounds1(var x, var low, var high)
+{
+  if (x < low)
+    return false;
+  if (high < x)
+    return false;
+  return true;
+}|;
+assert
+{
+  inBounds1(1, 0, 2);    inBounds1(0, 0, 2);  inBounds1(2, 0, 2);
+  !inBounds1(0, 1, 2);  !inBounds1(3, 0, 2);
+};
+
+syncline << "doc/guide/guideline.tex:70";
+[01234567:#] "doc/guide/guideline.tex:70"
+//#line 70 "doc/guide/guideline.tex"
+function inBounds2(var x, var low, var high)
+{
+  if (x < low)
+    false
+  else if (high < x)
+    false
+  else
+    true;
+}|;
+assert
+{
+  inBounds2(1, 0, 2);    inBounds2(0, 0, 2);  inBounds2(2, 0, 2);
+  !inBounds2(0, 1, 2);  !inBounds2(3, 0, 2);
+};
+
+syncline << "doc/guide/guideline.tex:93";
+[01234567:#] "doc/guide/guideline.tex:93"
+//#line 93 "doc/guide/guideline.tex"
+function inBounds3(var x, var low, var high)
+{
+  low <= x && x <= high
+}|;
+assert
+{
+  inBounds3(1, 0, 2);    inBounds3(0, 0, 2);  inBounds3(2, 0, 2);
+  !inBounds3(0, 1, 2);  !inBounds3(3, 0, 2);
+};

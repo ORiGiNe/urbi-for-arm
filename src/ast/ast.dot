@@ -1,0 +1,90 @@
+/*<<-*/
+/* Generated, do not edit by hand.  */
+/*->>*/
+/* Abstract Syntax Tree graph.  */
+digraph Tasks {
+  graph [ordering=out, rankdir=BT, ratio=0.4]
+  node [shape=box, fontsize=14]
+
+  /* Abstract classes. */
+  {
+    node [fontname="Times-Italic"];
+    "Ast";
+    "Composite";
+    "Exp";
+    "Flavored";
+    "LValue";
+    "LValueArgs";
+    "LocalWrite";
+    "PropertyAction";
+    "Unary";
+    "Write";
+  }
+
+  /* Help Graphviz with the placement of top classes.  */
+  { rank = same; "Ast" "Escapable" ; "Typable" ; "TypeConstructor" }
+
+  /* Relation of generalization.  */
+  "And" -> { "Composite" }
+  "Assign" -> { "Exp" }
+  "Assignment" -> { "Write" }
+  "Ast"
+  "At" -> { "Flavored" }
+  "Binding" -> { "LValue" }
+  "Break" -> { "Exp" }
+  "Call" -> { "LValueArgs" }
+  "CallMsg" -> { "Exp" }
+  "Catch" -> { "Exp" }
+  "Class" -> { "Exp" }
+  "Composite" -> { "Exp" }
+  "Continue" -> { "Exp" }
+  "Declaration" -> { "Write" }
+  "Decrementation" -> { "Unary" }
+  "Dictionary" -> { "Exp" }
+  "Do" -> { "Scope" }
+  "Emit" -> { "Exp" }
+  "Event" -> { "Exp" }
+  "Exp" -> { "Ast" }
+  "Finally" -> { "Exp" }
+  "Flavored" -> { "Exp" }
+  "Float" -> { "Exp" }
+  "Foreach" -> { "Flavored" }
+  "If" -> { "Exp" }
+  "Implicit" -> { "Exp" }
+  "Incrementation" -> { "Unary" }
+  "LValue" -> { "Exp" }
+  "LValueArgs" -> { "LValue" }
+  "List" -> { "Exp" }
+  "Local" -> { "Exp" }
+  "LocalAssignment" -> { "LocalWrite" }
+  "LocalDeclaration" -> { "LocalWrite" }
+  "LocalWrite" -> { "Exp" }
+  "Match" -> { "Ast" }
+  "MetaArgs" -> { "LValue" }
+  "MetaCall" -> { "LValueArgs" }
+  "MetaExp" -> { "Exp" }
+  "MetaId" -> { "LValueArgs" }
+  "MetaLValue" -> { "LValueArgs" }
+  "Nary" -> { "Exp" }
+  "Noop" -> { "Scope" }
+  "OpAssignment" -> { "Write" }
+  "Pipe" -> { "Composite" }
+  "Property" -> { "PropertyAction" }
+  "PropertyAction" -> { "LValue" }
+  "PropertyWrite" -> { "PropertyAction" }
+  "Return" -> { "Exp" }
+  "Routine" -> { "Exp" }
+  "Scope" -> { "Exp" }
+  "Stmt" -> { "Flavored" }
+  "String" -> { "Exp" }
+  "Subscript" -> { "LValueArgs" }
+  "TaggedStmt" -> { "Exp" }
+  "This" -> { "Exp" }
+  "Throw" -> { "Exp" }
+  "Try" -> { "Exp" }
+  "Unary" -> { "Exp" }
+  "Unscope" -> { "Exp" }
+  "Watch" -> { "Exp" }
+  "While" -> { "Flavored" }
+  "Write" -> { "Exp" }
+}

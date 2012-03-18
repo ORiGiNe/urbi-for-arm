@@ -1,0 +1,111 @@
+syncline << "doc/specs/channel.tex:25";
+[01234567:#] "doc/specs/channel.tex:25"
+//#line 25 "doc/specs/channel.tex"
+var ch1 = Channel.new("my_label");
+[00000201] Channel_0x7985810
+
+ch1 << 1;
+[00000201:my_label] 1
+
+var ch2 = ch1;
+[00000201] Channel_0x7985810
+
+ch2 << 1/2;
+[00000201:my_label] 0.5
+
+syncline << "doc/specs/channel.tex:45";
+[01234567:#] "doc/specs/channel.tex:45"
+//#line 45 "doc/specs/channel.tex"
+Channel.new("label") << 42;
+[00000000:label] 42
+
+Channel.new("") << 51;
+[00000000] 51
+
+syncline << "doc/specs/channel.tex:57";
+[01234567:#] "doc/specs/channel.tex:57"
+//#line 57 "doc/specs/channel.tex"
+Channel.new("label").echo(42);
+[00000000:label] *** 42
+
+Channel.new("").echo("Foo");
+[00000000] *** Foo
+
+syncline << "doc/specs/channel.tex:67";
+[01234567:#] "doc/specs/channel.tex:67"
+//#line 67 "doc/specs/channel.tex"
+var c = Channel.new("")|;
+
+c << "enabled";
+[00000000] "enabled"
+
+c.enabled = false|;
+c << "disabled";
+
+c.enabled = true|;
+c << "enabled";
+[00000000] "enabled"
+
+syncline << "doc/specs/channel.tex:87";
+[01234567:#] "doc/specs/channel.tex:87"
+//#line 87 "doc/specs/channel.tex"
+// Use a filtering channel on our lobby output.
+topLevel = Channel.Filter.new("")|;
+// liburbi knows about List, Dictionary, String and Float, so standard display.
+[1, "foo", ["test" => 5]];
+[00000001] [1, "foo", ["test" => 5]]
+// liburbi does not know 'lobby', so it is escaped with echo:
+lobby;
+[00000002] *** Lobby_0xADDR
+// The following list contains a function which is not handled by liburbi, so
+// it gets escaped too.
+[1, function () {}];
+[00000003] *** [1, function () {}]
+// Restore default display to see the difference.
+topLevel = Channel.topLevel|;
+// The echo is now gone.
+[1, function () {}];
+[00001758] [1, function () {}]
+
+syncline << "doc/specs/channel.tex:109";
+[01234567:#] "doc/specs/channel.tex:109"
+//#line 109 "doc/specs/channel.tex"
+var d = Channel.new("")|;
+
+assert(d.enabled);
+d << "A \"String\"";
+[00000000] "A \"String\""
+
+d.quote = false|;
+d << "A \"String\"";
+[00000000] A "String"
+
+syncline << "doc/specs/channel.tex:122";
+[01234567:#] "doc/specs/channel.tex:122"
+//#line 122 "doc/specs/channel.tex"
+assert
+{
+  Channel.new("").name == "";
+  Channel.new("foo").name == "foo";
+};
+
+syncline << "doc/specs/channel.tex:132";
+[01234567:#] "doc/specs/channel.tex:132"
+//#line 132 "doc/specs/channel.tex"
+Channel.null << "Message";
+
+syncline << "doc/specs/channel.tex:139";
+[01234567:#] "doc/specs/channel.tex:139"
+//#line 139 "doc/specs/channel.tex"
+Channel.topLevel << "Message";
+[00015895] "Message"
+Channel.topLevel << "\"quote\"";
+[00015895] "\"quote\""
+
+syncline << "doc/specs/channel.tex:148";
+[01234567:#] "doc/specs/channel.tex:148"
+//#line 148 "doc/specs/channel.tex"
+Channel.warning << "Message";
+[00015895:warning] Message
+Channel.warning << "\"quote\"";
+[00015895:warning] "quote"

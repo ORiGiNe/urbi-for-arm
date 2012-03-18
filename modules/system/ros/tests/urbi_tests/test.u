@@ -1,0 +1,36 @@
+/*
+ * Copyright (C) 2010-2011, Gostai S.A.S.
+ *
+ * This software is provided "as is" without warranty of any kind,
+ * either expressed or implied, including but not limited to the
+ * implied warranties of fitness for a particular purpose.
+ *
+ * See the LICENSE file for more information.
+ */
+
+var rosPath =
+{
+  if (System.hasLocalSlot("env"))
+    System.env["ROS_PACKAGE_PATH"] +=
+      ":%s//modules/system/ros/tests" % System.env["top_builddir"]
+  else
+    System.setenv("ROS_PACKAGE_PATH",
+      "%s:%s//modules/system/ros/tests"
+        % [System.getenv("ROS_PACKAGE_PATH"), System.getenv("top_builddir")]);
+}|;
+clog << "Setting ROS_PACKAGE_PATH to " + rosPath;
+
+if ("ros" not in Platform.enabledModules)
+  testSkip("ROS support not compiled");
+
+timeout(5s)
+  waituntil(Ros.checkMaster);
+
+if (!Ros.checkMaster)
+  testFail("ROSCore doesn't seem to be launched");
+
+function Ros.waitForTopic(var name)
+{
+  while (name not in Ros.topics)
+    sleep(500ms)
+}|;

@@ -1,0 +1,15 @@
+// Deletion
+"foo".distance("fozo");
+[00000001] 1
+// Insertion
+"fozo".distance("foo");
+[00000002] 1
+// Transposition
+"ofzo".distance("fozo");
+[00000003] 1
+// Substitution
+"fpzo".distance("fozo");
+[00000004] 1
+// Substitution and insertion
+"fpzzo".distance("fozo");
+[00000005] 2

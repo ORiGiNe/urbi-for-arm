@@ -1,0 +1,14 @@
+Contributors to Urbi:
+
+ - Adam Oleksy <adam.oleksy@pwr.wroc.pl>
+ - Alexandre Morgand
+ - Bastien Saltel
+ - Benoît Sigoure
+ - Clément Moussu
+ - Guillaume Deslandes
+ - Jeremy W. Sherman <jeremyw.sherman@gmail.com>
+ - Nicolas Pierron
+ - Romain Bezut
+ - Samuel Tardieu
+ - Simon Nivault
+ - Thomas Moulard

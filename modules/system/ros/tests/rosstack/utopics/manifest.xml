@@ -1,0 +1,15 @@
+<package>
+  <description brief="counter">
+
+     counter
+
+  </description>
+  <author>Romain BEZUT</author>
+  <license>see LICENSE</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/counter</url>
+  <depend package="roscpp"/>
+
+</package>
+
+

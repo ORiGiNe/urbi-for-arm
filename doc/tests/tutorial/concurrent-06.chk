@@ -1,0 +1,21 @@
+syncline << "doc/tutorial/concurrent.tex:220";
+[01234567:#] "doc/tutorial/concurrent.tex:220"
+//#line 220 "doc/tutorial/concurrent.tex"
+// Now, we print out a message when we get out of the tag.
+{
+  mytag:
+    every (1s)
+      echo("ping");
+  // Execution flow jumps here if mytag is stopped.
+  echo("Background job stopped")|
+},
+sleep(2.5s);
+[00000000] *** ping
+[00001000] *** ping
+[00002000] *** ping
+// Stop the tag
+mytag.stop;
+[00002500] *** Background job stopped
+// Our background job finished.
+// Unfreezing the tag has no effect.
+mytag.unfreeze;

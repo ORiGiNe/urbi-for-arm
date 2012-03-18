@@ -1,0 +1,314 @@
+#! /usr/bin/env python
+
+import string
+import sys, os, os.path
+import ast, tools
+
+if len(sys.argv) != 2:
+  tools.error("Usage: .. SRCDIR")
+srcdir = sys.argv[1]
+
+loader = ast.Loader ()
+nodes, ast_params = loader.load (sys.stdin)
+# Concrete classes.
+concrete = ast.concrete(nodes)
+
+dec_subclasses = ast.subclasses(nodes, 'Dec')
+
+clonerlib = ast_params['clonerlib'];
+guard = tools.define_id(clonerlib + "/cloner.hh")
+
+## Abstract syntax tree C++ clone visitor - header ----------------------------
+
+cloner_hh = file("cloner.hh.tmp", "w")
+sys.stdout = cloner_hh
+
+print tools.banner(ast_params,
+                   clonerlib + "/cloner.hh",
+		   "Declaration of " + clonerlib + "::Cloner.") + """
+# include <boost/type_traits/remove_const.hpp>
+# include <boost/optional.hpp>
+
+# include "%(ast_basedir)sdefault-visitor.hh"
+
+namespace %(clonerlib)s
+{
+
+  /// \\brief Duplicate an Ast.
+  class Cloner : public ast::DefaultConstVisitor
+  {
+  public:
+    typedef ast::DefaultConstVisitor super_type;
+
+    /// Create a Cloner.
+    Cloner (bool map = false);
+    /// Destroy a Cloner.
+    virtual ~Cloner ();
+
+    // Return the cloned Ast.
+    ast::rAst result_get ();
+
+    /// Visit entry point
+    virtual void operator() (const Ast* e);
+
+    /// Force the location of the cloned ast
+    void location_set(const ast::loc& loc);
+
+    // Visit methods.
+  public:
+    // Import overloaded virtual functions.
+    using super_type::visit;
+""" % ast_params
+
+print tools.indent(4, ast.visit(concrete, True))
+
+print """\
+
+  protected:
+    template <typename T>
+    libport::intrusive_ptr<T> recurse (libport::intrusive_ptr<const T> t);
+
+    template <typename T>
+    libport::intrusive_ptr<T>
+    recurse (libport::intrusive_ptr<T> t);
+
+    std::pair<ast::rExp, ast::rExp>
+    recurse(const std::pair<ast::rExp, ast::rExp>& p);
+
+    template <typename T>
+    boost::optional<T>
+    recurse(const boost::optional<T>&);
+
+    /** \\brief Clone a collection object.
+
+	Using overloading for this method is tempting, but it would
+	lead to the same prototype than the first \\a recurse method.
+
+	A partial specialization for \\a std::list<T> would work, but is
+	not allowed by C++ standard. As a consequence, we are stuck to
+	using different names.
+     */
+    template <typename CollectionType>
+    CollectionType recurse_collection (const CollectionType& c);
+
+    /** \\brief Clone a collection object if not 0.
+
+        It also returns a newly allocated pointer onto the copied
+	collection.
+    */
+    template <typename CollectionType>
+    CollectionType* maybe_recurse_collection(const CollectionType* c); """
+
+if dec_subclasses:
+  print """
+    template <typename DecsType>
+    /** \\brief Visit a chunk (i.e., a list of Function, Var, and Type decs).
+     **
+     ** It is exactly the same in the three cases, so the code is
+     ** factored via a template method. */
+    void decs_visit (const DecsType& e);
+
+    // As we can't mix template and virtual methods, we have to
+    // duplicate these methods.  That's too bad.  :("""
+  for dec_type in dec_subclasses:
+    print "    virtual void visit (const ast::%ss&);" \
+        % (dec_type.name)
+
+print """
+    /// The cloned Ast.
+    ast::rAst result_;
+
+    /// The potential forced location
+    boost::optional<ast::loc> loc_;
+
+  private:
+    bool use_map_;
+    boost::unordered_map<long, ast::rAst> map_;
+  };
+
+} // namespace ast
+
+#endif // !""" + guard
+
+# Restore stdout and close files
+sys.stdout = sys.__stdout__
+cloner_hh.close ()
+tools.lazy_install(srcdir, "cloner.hh");
+
+
+## Abstract syntax tree C++ clone visitor - implementation --------------------
+def attribute_dup(a):
+  "Return a clone (an expression) of a's value."
+  accessor = "e->" + a.name + "_get ()"
+  # Non visitable attributes.
+  if a.deref_type() in ast_params['non_visitable_types']:
+    type = a.W_type ()
+    get_deref = ""
+    if a.pointer_p() and not a.mandatory:
+      return "%s ? new %s(*%s) : 0" % (accessor, a.deref_type(), accessor)
+    if a.pointer_p ():
+      get_deref = "&"
+    return get_deref + accessor
+
+  # Collection attributes.
+  elif a.root_type () in ast_params['collections']:
+    if a.pointer_p() and not a.mandatory:
+      acc = "*%s" % accessor
+    else:
+      acc = accessor
+    rec = "recurse_collection(%s)" % acc
+    if a.W_type()[-1] == '*':
+      rec = "new %s(%s)" % (a.deref_type(), rec)
+    if not a.mandatory:
+      rec = "maybe_recurse_collection(%s)" % accessor
+    return rec
+
+  # Visitable attributes.
+  else:
+    return "recurse (" + accessor + ")"
+
+
+def attribute_clone(a):
+  "Build a copy of attribute a in a local variable."
+  want_pointer = a.W_type()[-1] == '*'
+  print "    " + a.W_type () + " " + a.name + " = " + \
+	attribute_dup(a) + ";"
+
+def children_clone (node):
+  """Print on stdout the definition of local variables that copy/clone
+  the attributes of node."""
+  # Clone recursively the children of E.
+  for a in (node.all_attributes()):
+    # Attributes with a default value are NOT cloned with the default value.
+    # if a.init:
+    #   continue
+    if (a.name == "original"):
+      continue
+    attribute_clone(a)
+
+def children_copy (node):
+  """Copy the variables which have 'init' set."""
+  for a in (node.all_attributes()):
+    if not a.init or a.name == "original":
+      continue
+    if a.access.find('W') != -1:
+      print "    res->" + a.name + "_set(" + a.name + ");"
+    else:
+      print "    res->" + a.name + "_get() = " + a.name + ";"
+cloner_cc = file("cloner.cc.tmp", "w")
+sys.stdout = cloner_cc
+
+print (tools.banner(ast_params,
+                   "%(clonerlib)s/cloner.cc",
+                   "Implementation of %(clonerlib)s::Cloner.") + """\
+#include "kernel/config.h"
+#include "%(ast_basedir)sall.hh"
+#include "%(clonerlib)s/cloner.hh"
+// This file contains only protected functions, not loading it
+// from cloner.hh saves cycles.
+#include "%(clonerlib)s/cloner.hxx"
+#include "%(auxlib)s/symbol.hh"
+
+namespace %(clonerlib)s
+{
+  using namespace ast;
+
+  Cloner::Cloner (bool map)
+   : use_map_(map)
+  {}
+
+  Cloner::~Cloner ()
+  {}
+
+  rAst
+  Cloner::result_get ()
+  {
+    return result_;
+  }
+
+  void Cloner::location_set(const ast::loc& loc)
+  {
+    loc_ = loc;
+  }
+
+  void Cloner::operator() (const Ast* e)
+  {
+    if (!e)
+      return;
+
+    if (use_map_ && libport::mhas(map_, (long)e))
+    {
+      result_ = map_[(long)e];
+      return;
+    }
+    // We must check e and result_, because cloners may return NULL
+    // in case of errors.
+
+    e->accept(*this);
+# ifndef COMPILATION_MODE_SPACE
+    if (result_ && !result_->original_get())
+      result_->original_set(e->original_get());
+# endif
+    if (loc_)
+      result_->location_set(loc_.get());
+    if (use_map_)
+      map_[(long)e] = result_;
+  }
+
+""") % ast_params
+
+for node in concrete:
+  print "  void"
+  print "  Cloner::visit (const ast::%s* e)" % node.name
+  print "  {"
+  if node.hide:
+    print "    //<<"
+
+  if node.cloner_prologue:
+    print node.cloner_prologue
+
+  if node.clone_by_ref:
+    print "    result_ = ast::r%s(const_cast<ast::%s*>(e));" % \
+	  (node.name, node.name)
+  else:
+    children_clone(node)
+    # Result.
+    args = node.ctor_args (False, False)
+    print "    %s* res = new %s (%s);" % (node.name, node.name, str(args))
+    children_copy(node)
+    # Copy the fields that are not passed as ctor arguments: the hidden
+    # one, and those with an "init" field.
+    for a in node.attributes:
+      if a.hide:
+	print "   //<<-"
+	print "    res->%s_set(%s);" % (a.name, attribute_dup(a))
+	print "   //->>"
+    print "    result_ = res;"
+  if node.hide:
+    print "    //>>"
+  print """  }
+"""
+
+if dec_subclasses:
+  first_decs_type_p = True
+  for dec_type in dec_subclasses:
+    print """
+    void
+    Cloner::visit (const ast::%ss& e)
+    {
+      decs_visit<ast::%ss> (e);
+    }"""  % (dec_type.name, dec_type.name)
+    # Show the visit method for the first instance of decs types, but
+    # hide the others.
+    if first_decs_type_p:
+      first_decs_type_p = False
+      print """
+    //<< Other declarations.""",
+  print "  //>>\n"
+
+print "} // namespace " + clonerlib
+
+# Restore stdout and close files
+sys.stdout = sys.__stdout__
+cloner_cc.close()
+tools.lazy_install(srcdir, "cloner.cc");

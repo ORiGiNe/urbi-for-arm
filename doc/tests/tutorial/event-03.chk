@@ -1,0 +1,30 @@
+syncline << "doc/tutorial/event.tex:96";
+[01234567:#] "doc/tutorial/event.tex:96"
+//#line 96 "doc/tutorial/event.tex"
+var x = false;
+[00002000] false
+whenever (x)
+{
+  echo("ping");
+  sleep(1s);
+}
+else
+{
+  echo("pong");
+  sleep(1s);
+};
+sleep (3s);
+[00000000] *** pong
+[00001000] *** pong
+[00002000] *** pong
+x = true;
+[00003000] true
+sleep (3s);
+[00003000] *** ping
+[00004000] *** ping
+[00005000] *** ping
+x = false;
+[00006000] false
+sleep (2s);
+[00006000] *** pong
+[00007000] *** pong

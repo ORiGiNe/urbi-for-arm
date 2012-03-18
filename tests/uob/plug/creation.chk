@@ -1,0 +1,5 @@
+//#uobject test/generic
+var a1 = generic.new();
+[00000001] generic_0xADDR
+1;
+[00000002] 1

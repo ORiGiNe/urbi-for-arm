@@ -1,0 +1,6 @@
+syncline << "doc/specs/tools.tex:209";
+[01234567:#] "doc/specs/tools.tex:209"
+//#line 209 "doc/specs/tools.tex"
+{ sleep(2s); echo("after") } & { sleep(1s); echo("before") };
+[000000463] *** before
+[000001463] *** after

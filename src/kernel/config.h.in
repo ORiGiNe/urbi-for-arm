@@ -1,0 +1,226 @@
+/* src/kernel/config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* Define to enable Urbi debugging tools. */
+#undef COMPILATION_MODE_DEBUG
+
+/* Define to 1 to optimize for space. */
+#undef COMPILATION_MODE_SPACE
+
+/* Define to 1 to optimize for speed the kernel at the detriment of
+   compilation time. */
+#undef COMPILATION_MODE_SPEED
+
+/* Define to 1 if serialization is enabled. */
+#undef ENABLE_SERIALIZATION
+
+/* Defined if the requested minimum BOOST version is satisfied */
+#undef HAVE_BOOST
+
+/* Define to 1 if you have <boost/date_time/posix_time/posix_time.hpp> */
+#undef HAVE_BOOST_DATE_TIME_POSIX_TIME_POSIX_TIME_HPP
+
+/* Define to 1 if you have <boost/regex.hpp> */
+#undef HAVE_BOOST_REGEX_HPP
+
+/* Define to 1 if you have <boost/system/error_code.hpp> */
+#undef HAVE_BOOST_SYSTEM_ERROR_CODE_HPP
+
+/* Define to 1 if you have <boost/thread.hpp> */
+#undef HAVE_BOOST_THREAD_HPP
+
+/* Define to 1 if you have <boost/tokenizer.hpp> */
+#undef HAVE_BOOST_TOKENIZER_HPP
+
+/* Define to 1 if you have the <direct.h> header file. */
+#undef HAVE_DIRECT_H
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the <jni.h> header file. */
+#undef HAVE_JNI_H
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the `mlockall' function. */
+#undef HAVE_MLOCKALL
+
+/* Define to 1 if the compiler supports `#pragma GCC diagnostic'. */
+#undef HAVE_PRAGMA_GCC_DIAGNOSTIC
+
+/* Define to 1 if you have the <pthread.h> header file. */
+#undef HAVE_PTHREAD_H
+
+/* Define to 1 if you have pthread sources. */
+#undef HAVE_PTHREAD_SOURCES
+
+/* Define to 1 if you have the `round' function. */
+#undef HAVE_ROUND
+
+/* Define to 1 if you have the <sched.h> header file. */
+#undef HAVE_SCHED_H
+
+/* Define to 1 if you have the `sched_setscheduler' function. */
+#undef HAVE_SCHED_SETSCHEDULER
+
+/* Define to 1 if you have the `semget' function. */
+#undef HAVE_SEMGET
+
+/* Define to 1 if you have the `setpriority' function. */
+#undef HAVE_SETPRIORITY
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/inotify.h> header file. */
+#undef HAVE_SYS_INOTIFY_H
+
+/* Define to 1 if you have the <sys/mman.h> header file. */
+#undef HAVE_SYS_MMAN_H
+
+/* Define to 1 if you have the <sys/param.h> header file. */
+#undef HAVE_SYS_PARAM_H
+
+/* Define to 1 if you have the <sys/resource.h> header file. */
+#undef HAVE_SYS_RESOURCE_H
+
+/* Define to 1 if you have the <sys/soundcard.h> header file. */
+#undef HAVE_SYS_SOUNDCARD_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/times.h> header file. */
+#undef HAVE_SYS_TIMES_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the `times' function. */
+#undef HAVE_TIMES
+
+/* Define to 1 if you have the `trunc' function. */
+#undef HAVE_TRUNC
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the <valgrind/valgrind.h> header file. */
+#undef HAVE_VALGRIND_VALGRIND_H
+
+/* Define to 1 if you have the <windows.h> header file. */
+#undef HAVE_WINDOWS_H
+
+/* Defined to libdir's basename */
+#undef LIBDIRNAME
+
+/* Define to the library suffix. */
+#undef LIBSFX
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the copyright line of this package, including the period. */
+#undef PACKAGE_COPYRIGHT
+
+/* Define to the copyright holder of this package. */
+#undef PACKAGE_COPYRIGHT_HOLDER
+
+/* Define to the copyright years of this package. */
+#undef PACKAGE_COPYRIGHT_YEARS
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Define to necessary symbol if this constant uses a non-standard name on
+   your system. */
+#undef PTHREAD_CREATE_JOINABLE
+
+/* Define to use the OS-thread implementation of coroutines. */
+#undef SCHED_CORO_OSTHREAD
+
+/* Define to 1 if this is a static build. */
+#undef STATIC_BUILD
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Define if Urbi symbols should be precompiled. */
+#undef SYMBOLS_PRECOMPILED
+
+/* Define if compiling for Aibo. */
+#undef URBI_ENV_AIBO
+
+/* Define if compiling generic engine. */
+#undef URBI_ENV_ENGINE
+
+/* Define if compiling for Korebot-based robots. */
+#undef URBI_ENV_KOREBOT
+
+/* Define if compiling for Webots. */
+#undef URBI_ENV_WEBOTS
+
+/* Define as the Urbi host architecture name. */
+#undef URBI_HOST
+
+/* Define as the install prefix. */
+#undef URBI_ROOT
+
+/* Define if ufloats should be doubles. */
+#undef URBI_UFLOAT_DOUBLE
+
+/* Define if ufloats should be floats. */
+#undef URBI_UFLOAT_FLOAT
+
+/* Define if ufloats should be long mantissa, long exponent. */
+#undef URBI_UFLOAT_FLOATING
+
+/* Define if ufloats should be long. */
+#undef URBI_UFLOAT_LONG
+
+/* Define if ufloats should be long long. */
+#undef URBI_UFLOAT_LONG_LONG
+
+/* Define if ufloats should be tabulated. */
+#undef URBI_UFLOAT_TABULATED
+
+/* Version number of package */
+#undef VERSION
+
+/* Whether the host is Windows using VC++. */
+#undef WIN32
+
+/* Define to 1 if the X Window System is missing or not being used. */
+#undef X_DISPLAY_MISSING

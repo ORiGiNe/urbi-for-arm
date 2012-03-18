@@ -1,0 +1,49 @@
+{
+  var i = 42;
+  for (i = 0; i < 3; i += 1)
+    echo (i);
+  echo(i)
+};
+[00000001] *** 0
+[00000002] *** 1
+[00000003] *** 2
+[00000004] *** 3
+
+{
+  var i = 42;
+  for (var i = 0; i < 3; i += 1)
+    echo (i);
+  echo(i);
+};
+[00000005] *** 0
+[00000006] *** 1
+[00000007] *** 2
+[00000008] *** 42
+
+
+// Even if the body is empty, we must run the loop.
+{
+  var i;
+  for (i = 42; i < 51; i++)
+    ;
+  echo(i);
+};
+[00000009:warning] !!! input.u:27.28-27: implicit empty instruction.  Use '{}' to make it explicit.
+[00000010] *** 51
+
+// Check the "duration" of various flavors.
+{
+  var start = cycle |
+  for (var i = 0; i < 3; i += 3)
+    {};
+  cycle - start;
+};
+[00000011] 2
+
+{
+  var start = cycle |
+  for| (var i = 0; i < 3; i += 3)
+    {};
+  cycle - start;
+};
+[00000012] 1

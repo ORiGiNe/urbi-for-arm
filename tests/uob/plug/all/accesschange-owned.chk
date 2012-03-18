@@ -1,0 +1,111 @@
+//#uobject test/all
+
+
+
+all.a = 1;
+[00000001] 1
+var inu = all.setOwned(0);
+[00000002] 0
+all.lastChange = "";
+[00000003] ""
+all.lastAccess = "";
+[00000004] ""
+inu=all.setNotifyChange(0);
+[00000005] 0
+inu=all.setNotifyAccess(0);
+[00000006] 0
+all.lastChange;
+[00000007] ""
+all.lastAccess;
+[00000008] ""
+
+"change from urbi";
+[00000009] "change from urbi"
+all.lastChange = "";
+[00000010] ""
+all.lastAccess = "";
+[00000011] ""
+all.a = 2;
+[00000012] 2
+all.lastChange;
+[00000013] "all.a"
+all.lastAccess;
+[00000014] ""
+
+
+"access from urbi";
+[00000015] "access from urbi"
+all.lastChange = "";
+[00000016] ""
+all.lastAccess = "";
+[00000017] ""
+inu=all.a;
+[00000018] 1
+all.lastChange;
+[00000019] ""
+all.lastAccess;
+[00000020] "all.a"
+
+
+"access from c++";
+[00000021] "access from c++"
+all.lastAccess = "";
+[00000022] ""
+all.lastChange = "";
+[00000023] ""
+inu=all2.readByName("all.a");
+[00000024] 2
+all.lastAccess;
+[00000025] "all.a"
+all.lastChange;
+[00000026] ""
+
+"change from c++";
+[00000027] "change from c++"
+all.lastChange = "";
+[00000028] ""
+all.lastAccess = "";
+[00000029] ""
+inu=all2.writeByName("all.a",1);
+[00000030] 1
+all.lastChange;
+[00000031] "all.a"
+all.lastAccess;
+[00000032] ""
+
+
+
+
+
+
+
+inu=all2.setNotifyChangeByName("all.a");
+[00000033] 0
+
+//uowned notifyaccess should be triggered by nonuowned notifychange every cycle
+{all.lastChange = ""; all.lastAccess = ""; all2.lastChange = "";1};
+[00000034] 1
+sleep(500ms);
+// Test fails because of bogus fast mode without the yield.
+all.yield_for(200000);
+
+[all.lastChange, all.lastAccess, all2.lastChange];
+[00000035] ["", "all.a", "all.a"]
+
+
+
+
+// urbi read to uowned var should not trigger owned notifychange
+{all.lastChange = ""; all.lastAccess = ""; all2.lastChange = "";1};
+[00000036] 1
+{inu = all.a; 0};
+[00000037] 0
+all.yield_for(200000);
+
+[all.lastChange, all.lastAccess, all2.lastChange];
+[00000038] ["", "all.a", "all.a"]
+
+
+
+
+sleep(3s) | shutdown;

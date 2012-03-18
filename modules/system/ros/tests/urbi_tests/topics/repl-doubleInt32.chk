@@ -1,0 +1,76 @@
+//#roscore
+//#no-fast
+//#plug urbi/ros
+//#timeout 2
+
+var pub = Ros.Topic.new("/utests/play")|;
+pub.advertise("utopics/DoubleInt32")|;
+pub.structure;
+[00000001] ["a" => 0, "b" => 0]
+
+at (pub.onConnect?(var name))
+{
+  lobby.send("connect: " + name)|
+  connected = true|;
+}|;
+
+at (pub.onDisconnect?(var name))
+  lobby.send("disconnect: " + name);
+
+var p = Process.new("rosrun", ["utopics", "simpleReplay"])|;
+var connected = false|;
+p.run;
+[00000002] connect: /simpleReplay
+
+var sub = Ros.Topic.new("/utests/replay")|;
+replay: at(sub.onMessage?(var msg))
+  lobby.send(msg.asString);
+
+waituntil (connected);
+sub.subscribe;
+
+sleep(500ms);
+
+try
+{
+  pub << ["b" => 42];
+}
+catch (var e)
+{
+  clog << e;
+  lobby.send("Error while publishing");
+};
+
+[00000003] Error while publishing
+
+
+pub << ["a" => 51, "b" => 42];
+[00000004] ["a" => 51, "b" => 42]
+
+pub << ["a" => 0, "b" => -0.07];
+[00000005] ["a" => 0, "b" => 0]
+
+pub << ["a" => -16, "b" => 69862];
+[00000006] ["a" => -16, "b" => 69862]
+
+pub << ["a" => 1, "b" => 4];
+[00000007] ["a" => 1, "b" => 4]
+
+pub << ["a" => 1.5, "b" => -1.5];
+[00000008] ["a" => 1, "b" => -1]
+
+// Wait a bit to receive the events properly.
+
+p.join;
+pub << ["a" => 1.5, "b" => -1.5];
+pub << ["a" => 1.5, "b" => -1.5];
+pub << ["a" => 1.5, "b" => -1.5];
+
+// Sending a message should disconnect the simpleReplay immediately,
+// and it does with CTurtle.  With Diamondback it happens 60s
+// afterward.  See issue 4304.
+// FIXME: for OSX, 3 messages are needed to have the disconnection/
+// ROS with OSX is slower, I will ask ROS about this issue.
+timeout (1min 30s)
+  waituntil(pub.onDisconnect?);
+[00000009] disconnect: /simpleReplay

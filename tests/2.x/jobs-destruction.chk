@@ -1,0 +1,6 @@
+// Check that we do not leak jobs.
+var njobs = System.aliveJobs | {};
+{
+  for (var i: 10) {1&2&3},
+};
+assert(njobs == System.aliveJobs);

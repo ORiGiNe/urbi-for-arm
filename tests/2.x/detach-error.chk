@@ -1,0 +1,89 @@
+
+// an error must be displayed, wherever it happens
+f;
+[00000001:error] !!! input.u:@.1: lookup failed: f
+f,
+[00000002:error] !!! input.u:@.1: lookup failed: f
+detach(f)|;
+[00000003:error] !!! input.u:@.8: lookup failed: f
+// and it must not impact other top-level tasks
+sleep(500ms) | f,
+sleep(1s) | 1;
+[00000005:error] !!! input.u:10.16: lookup failed: f
+[00000006] 1
+
+// but it must stop parent block ASAP
+var x = 0;
+[00000007] 0
+{ f ; x=1};
+[00000008:error] !!! input.u:@.3: lookup failed: f
+x;
+[00000009] 0
+
+// unless it is detached of course
+{ detach(f) ; sleep(100ms); x=1}; //sleep to have deterministic order
+[00000010:error] !!! input.u:@.10: lookup failed: f
+[00000012] 1
+x;
+[00000013] 1
+
+// try again in detached code to be sure
+x = 0;
+[00000014] 0
+detach({ f ; x=1})|;
+[00000015:error] !!! input.u:@.10: lookup failed: f
+[00000016:error] !!!    called from: input.u:33.8-17: detach
+sleep(500ms);
+x;
+[00000017] 0
+
+detach({ detach(f) ; sleep(100ms); x=1})|; //sleep to have deterministic order
+[00000018:error] !!! input.u:@.17: lookup failed: f
+[00000019:error] !!!    called from: input.u:40.8-39: detach
+sleep(500ms);
+x;
+[00000021] 1
+
+//corner cases
+1 & f,
+[00000022:error] !!! input.u:@.5: lookup failed: f
+sleep(300ms);
+
+f & 1,
+[00000023:error] !!! input.u:@.1: lookup failed: f
+sleep(300ms);
+
+{1 & f} & 1,
+[00000024:error] !!! input.u:@.6: lookup failed: f
+sleep(300ms);
+
+{f & 1} & 1,
+[00000025:error] !!! input.u:@.2: lookup failed: f
+sleep(300ms);
+
+1 & {1 & f},
+[00000026:error] !!! input.u:@.10: lookup failed: f
+sleep(300ms);
+
+1 & {f & 1},
+[00000027:error] !!! input.u:@.6: lookup failed: f
+
+// test that code is realy stopped for & and , nodes
+x=0 | {};
+
+{ f, {x=0;sleep(100ms);x=1}};
+[00000028:error] !!! input.u:@.3: lookup failed: f
+x;
+[00000029] 0
+{ {x=0;sleep(100ms);x=2}, f};
+[00000030:error] !!! input.u:@.27: lookup failed: f
+x;
+[00000031] 0
+{ f& {x=0;x=3}};
+[00000032:error] !!! input.u:@.3: lookup failed: f
+x;
+[00000033] 0
+{ {x=0;x=4}& f};
+[00000034:error] !!! input.u:@.14: lookup failed: f
+x;
+[00000035] 0

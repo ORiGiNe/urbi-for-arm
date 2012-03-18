@@ -1,0 +1,167 @@
+#!/usr/bin/env python
+
+# TODO:
+# - traversal of pointer types.
+# - abstract classes should have a traversal too, let only to provide
+#   it to its subclasses (via super_type::operator()).
+# - subclasses should invoke the traversal of their superclass.
+
+import re
+import sys, os, os.path, filecmp, shutil, stat
+import ast, tools
+
+if len(sys.argv) != 2:
+  tools.error("Usage: .. SRCDIR")
+srcdir = sys.argv[1]
+
+## Abstract syntax tree C++ visitor - header ----------------------------------
+loader = ast.Loader ()
+nodes, ast_params = loader.load (sys.stdin)
+arr = nodes.values ()
+arr.sort (lambda x, y: cmp(x.name, y.name))
+
+## --------------- ##
+## The *.hh file.  ##
+## --------------- ##
+
+visitor_hh = file("default-visitor.hh.tmp", "w")
+
+print >>visitor_hh, tools.banner(ast_params,
+                                 "ast/default-visitor.hh",
+                                 "Definition of ast::DefaultVisitor.") + """
+%(default_visitor_hh_prologue)s
+
+namespace ast
+{
+
+  /** \\brief Just visit the whole Ast tree.
+   **
+   ** GenDefaultVisitor<CONSTNESS-SELECTOR> visits the whole Ast tree,
+   ** but does nothing else. */
+  template < template<typename> class Const >
+  class GenDefaultVisitor : public GenVisitor<Const>
+  {
+  public:
+    /// Super class type.
+    typedef GenVisitor<Const> super_type;
+
+    /** \\name Ctor & dtor.
+     ** \\{ */
+    /// Construct a Default Visitor.
+    GenDefaultVisitor ();
+
+    /// Destroy a Default Visitor.
+    virtual ~GenDefaultVisitor ();
+    /** \\} */
+
+    // Import from super class.
+    using super_type::visit;
+
+  protected:
+    /// \\name Visit nodes.
+    /// \\{
+""" % ast_params
+print  >>visitor_hh, tools.indent(4, ast.visit(arr, "GEN_VISITOR_VISIT_NODES"))
+
+print >>visitor_hh, """    /// \\}
+  };
+
+  /// Shorthand for a const visitor.
+  typedef GenDefaultVisitor<libport::constify_traits> DefaultConstVisitor;
+  /// Shorthand for a non const visitor.
+  typedef GenDefaultVisitor<libport::id_traits> DefaultVisitor;
+
+} // namespace ast
+
+# include <ast/default-visitor.hxx>
+
+#endif // !AST_DEFAULT_VISITOR_HH
+"""
+
+
+## ---------------- ##
+## The *.hxx file.  ##
+## ---------------- ##
+
+visitor_hxx = file("default-visitor.hxx.tmp", "w")
+sys.stdout = visitor_hxx
+
+print >>visitor_hxx, tools.banner(ast_params,
+                                  "ast/default-visitor.hxx",
+				  "Implementation of ast::DefaultVisitor.") + """
+# include <ast/default-visitor.hh>
+# include <ast/all.hh>
+
+namespace ast
+{
+
+  template <template <typename> class Const>
+  GenDefaultVisitor<Const>::GenDefaultVisitor ()
+    : GenVisitor<Const> ()
+  {
+  }
+
+  template <template <typename> class Const>
+  GenDefaultVisitor<Const>::~GenDefaultVisitor ()
+  {
+  }
+
+""" % ast_params
+
+for node in arr:
+  if 'default' in node.__dict__:
+    action = node.default
+  else:
+    action = ""
+    # First iterate over the parent's types.
+    #
+    # This is better than applying the default behavior to
+    # all the children as it allows to implement the behavior for
+    # the parent class, and let the DefaultVisitor bounce to it for
+    # subclasses.
+    #
+    # Call visit, not operator(), since otherwise the latter will call
+    # itself (it relies on the dynamic type, which voids the point of
+    # a static_cast).
+    for super in node.super:
+      if action != '':
+        action += "\n"
+      # G++ fails here with the clean version of this code
+#      action +=  \
+#          "visit(static_cast<boost::shared_ptr<typename Const<%s>::type> >(n));" \
+#          % (super.name)
+      action +=  \
+          "visit((typename Const<%s>::type*) n);" % super.name
+    for attr in node.attributes:
+      if attr.visitable_p():
+        if action != '':
+          action += "\n"
+        if attr.mandatory:
+          action += "this->operator()(n->%s_get().get());" % (attr.name)
+        else:
+          action += "if (n->%s_get())\n" % attr.name
+          action += "  this->operator()(n->%s_get().get());" % (attr.name)
+  if action != '':
+    action = "\n" + tools.indent(4, action) + "\n  "
+    var = ' n'
+  else:
+    var = ''
+  print """\
+  template <template <typename> class Const>
+  void
+  GenDefaultVisitor<Const>::visit (%s_type* %s)
+  {%s}
+""" % (node.name, var, action)
+
+print """} // namespace ast
+#endif // !AST_DEFAULT_VISITOR_HH
+"""
+
+
+# Restore stdout and close files
+sys.stdout = sys.__stdout__
+visitor_hh.close ()
+visitor_hxx.close ()
+
+tools.lazy_install(srcdir, "default-visitor.hh");
+tools.lazy_install(srcdir, "default-visitor.hxx");

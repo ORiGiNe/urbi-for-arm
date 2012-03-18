@@ -1,0 +1,13 @@
+syncline << "doc/specs/system/package-info.tex:21";
+[01234567:#] "doc/specs/system/package-info.tex:21"
+//#line 21 "doc/specs/system/package-info.tex"
+assert {
+System.PackageInfo.copyrightHolder == "Gostai S.A.S.";
+};
+
+syncline << "doc/specs/system/package-info.tex:26";
+[01234567:#] "doc/specs/system/package-info.tex:26"
+//#line 26 "doc/specs/system/package-info.tex"
+assert {
+System.PackageInfo.copyrightYears == "2004-2012";
+};

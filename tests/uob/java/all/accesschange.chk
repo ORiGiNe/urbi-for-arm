@@ -1,0 +1,56 @@
+//#plug test/all
+//#uobject test/all
+
+all.a = 1;
+[00000001] 1
+
+var inu = remall.setNotifyChangeByName("all.a");
+[00000002] 0
+
+sleep(500ms);
+
+// remote notifychange triggered by urbi write
+{
+all.lastChange = ""; all.lastAccess = ""; remall.lastChange = "";
+all.a = 2;
+};
+[00000003] 2
+sleep(500ms);
+[all.lastChange, all.lastAccess, remall.lastChange];
+[00000004] ["", "", "all.a"]
+
+
+// remote notifychange triggered by c++ write
+{all.lastChange = ""; all.lastAccess = ""; remall.lastChange = "";
+inu=all.write(0,3);
+};
+[00000005] 3
+sleep(500ms);
+[all.lastChange, all.lastAccess, remall.lastChange];
+[00000006] ["", "", "all.a"]
+
+
+
+
+{
+inu=all.setOwned(0);
+
+inu=all.setNotifyChange(0);
+inu=all.setNotifyAccess(0);
+};
+[00000007] 0
+
+//uowned notifyaccess should be triggered by nonuowned notifychange every cycle
+{all.lastChange = ""; all.lastAccess = ""; remall.lastChange = "";};
+[00000008] ""
+sleep(500ms);
+[all.lastChange, all.lastAccess, remall.lastChange];
+[00000009] ["", "all.a", "all.a"]
+
+{all.lastChange = ""; all.lastAccess = ""; remall.lastChange = "";};
+[00000010] ""
+inu=remall.writeByName("all.a",3);
+[00000011] 3
+sleep(500ms);
+[all.lastChange, all.lastAccess, remall.lastChange];
+[00000012] ["all.a", "all.a", "all.a"]

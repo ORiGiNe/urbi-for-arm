@@ -1,0 +1,603 @@
+syncline << "doc/specs/object.tex:26";
+[01234567:#] "doc/specs/object.tex:26"
+//#line 26 "doc/specs/object.tex"
+Object.new;
+[00000421] Object_0x00000000
+
+syncline << "doc/specs/object.tex:35";
+[01234567:#] "doc/specs/object.tex:35"
+//#line 35 "doc/specs/object.tex"
+{
+  class Foo
+  {
+    var attr = 23;
+  };
+  assert
+  {
+    Foo.localSlotNames == ["asFoo", "attr", "type"];
+    Foo.asFoo === Foo;
+    Foo.attr == 23;
+    Foo.type == "Foo";
+  };
+};
+
+syncline << "doc/specs/object.tex:57";
+[01234567:#] "doc/specs/object.tex:57"
+//#line 57 "doc/specs/object.tex"
+{
+  var o = Object.new;
+  assert(o.acceptVoid === o);
+};
+
+syncline << "doc/specs/object.tex:67";
+[01234567:#] "doc/specs/object.tex:67"
+//#line 67 "doc/specs/object.tex"
+do (Object.new)
+{
+  assert
+  {
+    addProto(Orderable) === this;
+    protos == [Orderable, Object];
+  };
+}|;
+
+syncline << "doc/specs/object.tex:80";
+[01234567:#] "doc/specs/object.tex:80"
+//#line 80 "doc/specs/object.tex"
+assert {
+123.allProtos.size == 12;
+};
+
+syncline << "doc/specs/object.tex:86";
+[01234567:#] "doc/specs/object.tex:86"
+//#line 86 "doc/specs/object.tex"
+assert {
+Object.allSlotNames == Object.slotNames;
+};
+
+syncline << "doc/specs/object.tex:94";
+[01234567:#] "doc/specs/object.tex:94"
+//#line 94 "doc/specs/object.tex"
+assert {
+Object.apply([this]) === Object;
+Object.apply([1])    === Object;
+};
+
+syncline << "doc/specs/object.tex:103";
+[01234567:#] "doc/specs/object.tex:103"
+//#line 103 "doc/specs/object.tex"
+assert {
+     12.as(Float) == 12;
+   "12".as(Float) == 12;
+    12.as(String) == "12";
+Object.as(Object) === Object;
+};
+
+syncline << "doc/specs/object.tex:112";
+[01234567:#] "doc/specs/object.tex:112"
+//#line 112 "doc/specs/object.tex"
+assert
+{
+  Global.asBool == true;
+  nil.asBool ==    false;
+};
+void.asBool;
+[00000421:error] !!! unexpected void
+
+syncline << "doc/specs/object.tex:127";
+[01234567:#] "doc/specs/object.tex:127"
+//#line 127 "doc/specs/object.tex"
+assert {
+{ var myCos = Object.bounce("cos"); myCos(0) }    == 0.cos;
+{ var myType = bounce("type"); myType(Object); } == "Object";
+{ var myType = bounce("type"); myType(3.14); }   == "Float";
+};
+
+syncline << "doc/specs/object.tex:154";
+[01234567:#] "doc/specs/object.tex:154"
+//#line 154 "doc/specs/object.tex"
+assert {
+Object.clone.protos == [Object];
+Object.clone.localSlotNames == [];
+};
+
+syncline << "doc/specs/object.tex:163";
+[01234567:#] "doc/specs/object.tex:163"
+//#line 163 "doc/specs/object.tex"
+var foo = Object.new |;
+cloneSlot("foo", "bar") |;
+assert(!(foo === bar));
+
+syncline << "doc/specs/object.tex:172";
+[01234567:#] "doc/specs/object.tex:172"
+//#line 172 "doc/specs/object.tex"
+var moo = Object.new |;
+cloneSlot("moo", "loo") |;
+assert(!(moo === loo));
+
+syncline << "doc/specs/object.tex:182";
+[01234567:#] "doc/specs/object.tex:182"
+//#line 182 "doc/specs/object.tex"
+do (Object.new)
+{
+  assert(!hasLocalSlot("foo"));
+  assert(createSlot("foo").isVoid);
+  assert(hasLocalSlot("foo"));
+}|;
+
+syncline << "doc/specs/object.tex:197";
+[01234567:#] "doc/specs/object.tex:197"
+//#line 197 "doc/specs/object.tex"
+do (2) { var this.attr = "foo"; this.attr->prop = "bar" }.dump(0);
+[00015137] *** Float_0x240550 {
+[00015137] ***   /* Special slots */
+[00015137] ***   protos = Float
+[00015137] ***   value = 2
+[00015137] ***   /* Slots */
+[00015137] ***   attr = String_0x23a750 <...>
+[00015137] ***     /* Properties */
+[00015137] ***     prop = String_0x23a7a0 <...>
+[00015137] ***   }
+do (2) { var this.attr = "foo"; this.attr->prop = "bar" }.dump(1);
+[00020505] *** Float_0x240550 {
+[00020505] ***   /* Special slots */
+[00020505] ***   protos = Float
+[00020505] ***   value = 2
+[00020505] ***   /* Slots */
+[00020505] ***   attr = String_0x23a750 {
+[00020505] ***     /* Special slots */
+[00020505] ***     protos = String
+[00020505] ***     /* Slots */
+[00020505] ***     }
+[00020505] ***     /* Properties */
+[00020505] ***     prop = String_0x239330 {
+[00020505] ***       /* Special slots */
+[00020505] ***       protos = String
+[00020505] ***       /* Slots */
+[00020505] ***       }
+[00020505] ***   }
+
+syncline << "doc/specs/object.tex:234";
+[01234567:#] "doc/specs/object.tex:234"
+//#line 234 "doc/specs/object.tex"
+const var myPi = 3.14|;
+assert (getProperty("myPi", "constant"));
+
+getProperty("myPi", "foobar");
+[00000045:error] !!! property lookup failed: myPi->foobar
+
+syncline << "doc/specs/object.tex:245";
+[01234567:#] "doc/specs/object.tex:245"
+//#line 245 "doc/specs/object.tex"
+var a = Object.new|;
+
+// Local slot.
+var a.slot = 21|;
+assert
+{
+  a.locateSlot("slot") === a;
+  a.getLocalSlot("slot") == 21;
+};
+
+// Inherited slot are not looked-up.
+assert { a.locateSlot("init") == Object };
+a.getLocalSlot("init");
+[00041066:error] !!! lookup failed: init
+
+syncline << "doc/specs/object.tex:266";
+[01234567:#] "doc/specs/object.tex:266"
+//#line 266 "doc/specs/object.tex"
+var b = Object.new|;
+var b.slot = 21|;
+
+assert
+{
+  // Local slot.
+  b.locateSlot("slot") === b;
+  b.getSlot("slot") == 21;
+
+  // Inherited slot.
+  b.locateSlot("init") === Object;
+  b.getSlot("init") == Object.getSlot("init");
+};
+
+// Unknown slot.
+assert { b.locateSlot("ENOENT") == nil; };
+b.getSlot("ENOENT");
+[00041066:error] !!! lookup failed: ENOENT
+
+syncline << "doc/specs/object.tex:297";
+[01234567:#] "doc/specs/object.tex:297"
+//#line 297 "doc/specs/object.tex"
+var o1 = Object.new|
+var o2 = Object.new|
+assert
+{
+  o1.hash == o1.hash;
+  o1.hash != o2.hash;
+};
+
+syncline << "doc/specs/object.tex:310";
+[01234567:#] "doc/specs/object.tex:310"
+//#line 310 "doc/specs/object.tex"
+class Base         { var this.base = 23; } |;
+class Derive: Base { var this.derive = 43 } |;
+assert(Derive.hasLocalSlot("derive"));
+assert(!Derive.hasLocalSlot("base"));
+
+syncline << "doc/specs/object.tex:320";
+[01234567:#] "doc/specs/object.tex:320"
+//#line 320 "doc/specs/object.tex"
+const var halfPi = pi / 2|;
+assert
+{
+  hasProperty("halfPi", "constant");
+  !hasProperty("halfPi", "foobar");
+};
+
+syncline << "doc/specs/object.tex:333";
+[01234567:#] "doc/specs/object.tex:333"
+//#line 333 "doc/specs/object.tex"
+assert {
+Derive.hasSlot("derive");
+Derive.hasSlot("base");
+!Base.hasSlot("derive");
+};
+
+syncline << "doc/specs/object.tex:345";
+[01234567:#] "doc/specs/object.tex:345"
+//#line 345 "doc/specs/object.tex"
+do (2) { var this.attr = "foo"; this.attr->prop = "bar"}.inspect;
+[00001227] *** Inspecting 2
+[00001227] *** ** Prototypes:
+[00001227] ***   0
+[00001227] *** ** Local Slots:
+[00001228] ***   attr : String
+[00001228] ***     Properties:
+[00001228] ***      prop : String = "bar"
+
+syncline << "doc/specs/object.tex:358";
+[01234567:#] "doc/specs/object.tex:358"
+//#line 358 "doc/specs/object.tex"
+assert {
+   Float.isA(Orderable);
+! String.isA(Float);
+};
+
+syncline << "doc/specs/object.tex:365";
+[01234567:#] "doc/specs/object.tex:365"
+//#line 365 "doc/specs/object.tex"
+assert {
+ nil.isNil;
+!  0.isNil;
+};
+
+syncline << "doc/specs/object.tex:372";
+[01234567:#] "doc/specs/object.tex:372"
+//#line 372 "doc/specs/object.tex"
+assert {
+ Float.isProto;
+!   42.isProto;
+};
+
+syncline << "doc/specs/object.tex:379";
+[01234567:#] "doc/specs/object.tex:379"
+//#line 379 "doc/specs/object.tex"
+assert {
+void.isVoid;
+! 42.isVoid;
+};
+
+syncline << "doc/specs/object.tex:387";
+[01234567:#] "doc/specs/object.tex:387"
+//#line 387 "doc/specs/object.tex"
+var top = Object.new|;
+var top.top1 = 1|;
+var top.top2 = 2|;
+var bot = top.new|;
+var bot.bot1 = 10|;
+var bot.bot2 = 20|;
+assert
+{
+  top.localSlotNames == ["top1", "top2"];
+  bot.localSlotNames == ["bot1", "bot2"];
+};
+
+syncline << "doc/specs/object.tex:404";
+[01234567:#] "doc/specs/object.tex:404"
+//#line 404 "doc/specs/object.tex"
+assert {
+locateSlot("locateSlot") == Object;
+locateSlot("doesNotExist").isNil;
+};
+
+syncline << "doc/specs/object.tex:410";
+[01234567:#] "doc/specs/object.tex:410"
+//#line 410 "doc/specs/object.tex"
+1.print;
+[00001228] 1
+[1, "12"].print;
+[00001228] [1, "12"]
+
+syncline << "doc/specs/object.tex:419";
+[01234567:#] "doc/specs/object.tex:419"
+//#line 419 "doc/specs/object.tex"
+assert {
+12.protos == [Float];
+};
+
+syncline << "doc/specs/object.tex:426";
+[01234567:#] "doc/specs/object.tex:426"
+//#line 426 "doc/specs/object.tex"
+2.properties("foo");
+[00238495:error] !!! lookup failed: foo
+do (2) { var foo = "foo" }.properties("foo");
+[00238501] ["constant" => false]
+do (2) { var foo = "foo" ; foo->bar = "bar" }.properties("foo");
+[00238502] ["bar" => "bar", "constant" => false]
+
+syncline << "doc/specs/object.tex:439";
+[01234567:#] "doc/specs/object.tex:439"
+//#line 439 "doc/specs/object.tex"
+var base = Object.new|;
+var base.slot = "base"|;
+
+var derive = Base.new|;
+var derive.slot = "derive"|;
+
+derive.removeLocalSlot("foo");
+[00000080:error] !!! lookup failed: foo
+
+assert
+{
+  derive.removeLocalSlot("slot") === derive;
+  derive.localSlotNames == [];
+  base.slot == "base";
+};
+
+derive.removeLocalSlot("slot");
+[00000090:error] !!! lookup failed: slot
+
+assert
+{
+  base.slot == "base";
+};
+
+syncline << "doc/specs/object.tex:470";
+[01234567:#] "doc/specs/object.tex:470"
+//#line 470 "doc/specs/object.tex"
+var r = Object.new|;
+
+// Non-existing slot.
+r.removeProperty("slot", "property");
+[00000072:error] !!! lookup failed: slot
+
+var r.slot = "slot value"|;
+// Non-existing property.
+r.removeProperty("slot", "property");
+[00000081:warning] !!! no such property: slot->property
+[00000081:warning] !!!    called from: removeProperty
+
+r.slot->property = "property value"|;
+assert
+{
+  r.hasProperty("slot", "property");
+  // Existing property.
+  r.removeProperty("slot", "property") == "property value";
+  ! r.hasProperty("slot", "property");
+};
+
+syncline << "doc/specs/object.tex:496";
+[01234567:#] "doc/specs/object.tex:496"
+//#line 496 "doc/specs/object.tex"
+do (Object.new)
+{
+  assert
+  {
+    addProto(Orderable);
+    removeProto(123) === this;
+    protos == [Orderable, Object];
+    removeProto(Orderable) === this;
+    protos == [Object];
+  };
+}|;
+
+syncline << "doc/specs/object.tex:514";
+[01234567:#] "doc/specs/object.tex:514"
+//#line 514 "doc/specs/object.tex"
+{
+  var base = Object.new;
+  var base.slot = "base";
+
+  var derive = Base.new;
+  var derive.slot = "derive";
+
+  assert
+  {
+    derive.removeSlot("foo") === derive;
+[00000080:warning] !!! no such local slot: foo
+[00000080:warning] !!!    called from: removeSlot
+[00000080:warning] !!!    called from: code
+[00000080:warning] !!!    called from: eval
+[00000080:warning] !!!    called from: value
+[00000080:warning] !!!    called from: assertCall
+
+    derive.removeSlot("slot") === derive;
+    derive.localSlotNames == [];
+    base.slot == "base";
+    derive.removeSlot("slot") === derive;
+[00000099:warning] !!! no such local slot: slot
+[00000099:warning] !!!    called from: removeSlot
+[00000099:warning] !!!    called from: code
+[00000099:warning] !!!    called from: eval
+[00000099:warning] !!!    called from: value
+[00000099:warning] !!!    called from: assertCall
+
+    base.slot == "base";
+  };
+};
+
+syncline << "doc/specs/object.tex:551";
+[01234567:#] "doc/specs/object.tex:551"
+//#line 551 "doc/specs/object.tex"
+assert(setConstSlot("fortyTwo", 42) == 42);
+fortyTwo = 51;
+[00000000:error] !!! cannot modify const slot
+
+syncline << "doc/specs/object.tex:562";
+[01234567:#] "doc/specs/object.tex:562"
+//#line 562 "doc/specs/object.tex"
+do (Object.new)
+{
+  var slot = "slot";
+  var value = "value";
+  assert
+  {
+    setProperty("slot", "prop", value) === value;
+    "prop" in properties("slot");
+    getProperty("slot", "prop") === value;
+    slot->prop === value;
+    setProperty("slot", "noSuchProperty", value) === value;
+  };
+}|;
+setProperty("noSuchSlot", "prop", "12");
+[00000081:error] !!! lookup failed: noSuchSlot
+
+syncline << "doc/specs/object.tex:584";
+[01234567:#] "doc/specs/object.tex:584"
+//#line 584 "doc/specs/object.tex"
+do (Object.new)
+{
+  assert
+  {
+    protos == [Object];
+    setProtos([Orderable, Object]).isVoid;
+    protos == [Orderable, Object];
+  };
+}|;
+
+syncline << "doc/specs/object.tex:600";
+[01234567:#] "doc/specs/object.tex:600"
+//#line 600 "doc/specs/object.tex"
+assert {
+Object.setSlot("theObject", Object) === Object;
+Object.theObject === Object;
+theObject === Object;
+};
+
+syncline << "doc/specs/object.tex:613";
+[01234567:#] "doc/specs/object.tex:613"
+//#line 613 "doc/specs/object.tex"
+assert {
+Object.localSlotNames
+  .subset(Object.slotNames);
+Object.protos.foldl(function (var r, var p) { r + p.localSlotNames },
+                    [])
+  .subset(Object.slotNames);
+};
+
+syncline << "doc/specs/object.tex:626";
+[01234567:#] "doc/specs/object.tex:626"
+//#line 626 "doc/specs/object.tex"
+class Example {};
+[00000081] Example
+assert
+{
+  Example.type == "Example";
+};
+Example.new;
+[00000081] Example_0x6fb2720
+
+syncline << "doc/specs/object.tex:639";
+[01234567:#] "doc/specs/object.tex:639"
+//#line 639 "doc/specs/object.tex"
+{
+  var foo = Object.new;
+  var bar = Object.new;
+  assert
+  {
+    foo.uid == foo.uid;
+    foo.uid != bar.uid;
+  };
+};
+
+syncline << "doc/specs/object.tex:653";
+[01234567:#] "doc/specs/object.tex:653"
+//#line 653 "doc/specs/object.tex"
+{
+  var o = Object.new|
+  assert(o.unacceptVoid === o);
+};
+
+syncline << "doc/specs/object.tex:664";
+[01234567:#] "doc/specs/object.tex:664"
+//#line 664 "doc/specs/object.tex"
+assert {
+Object.setSlot("one", 1)    == 1;
+Object.updateSlot("one", 2) == 2;
+Object.one                  == 2;
+};
+
+syncline << "doc/specs/object.tex:673";
+[01234567:#] "doc/specs/object.tex:673"
+//#line 673 "doc/specs/object.tex"
+assert {
+!1 == false;
+!0 == true;
+
+!"foo" == false;
+!""    == true;
+};
+
+syncline << "doc/specs/object.tex:707";
+[01234567:#] "doc/specs/object.tex:707"
+//#line 707 "doc/specs/object.tex"
+{
+  var o1 = Object.new;
+  var o2 = Object.new;
+  assert
+  {
+      o1 == o1;
+    !(o1 == o2);
+      o1 != o2;
+    !(o1 != o1);
+
+      1  ==  1;
+     "1" == "1";
+     [1] == [1];
+  };
+};
+
+syncline << "doc/specs/object.tex:732";
+[01234567:#] "doc/specs/object.tex:732"
+//#line 732 "doc/specs/object.tex"
+{
+  var o1 = Object.new;
+  var o2 = Object.new;
+  assert
+  {
+      o1 === o1;
+    !(o1 === o2);
+
+    !( 1  ===  1 );
+    !("1" === "1");
+    !([1] === [1]);
+  };
+};
+
+syncline << "doc/specs/object.tex:750";
+[01234567:#] "doc/specs/object.tex:750"
+//#line 750 "doc/specs/object.tex"
+{
+  var o1 = Object.new;
+  var o2 = Object.new;
+  assert
+  {
+      o1 !== o2;
+    !(o1 !== o1);
+
+      1  !==  1;
+     "1" !== "1";
+     [1] !== [1];
+  };
+};

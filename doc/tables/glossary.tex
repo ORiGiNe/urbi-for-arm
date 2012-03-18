@@ -1,0 +1,92 @@
+%% Copyright (C) 2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\chapter{Glossary}
+\label{sec:glossary}
+
+This chapter aggregates the definitions used in the this document.
+
+% \screenshot{FILE-and-LABEL}{CAPTION}
+% ------------------------------------
+\newcommand{\screenshot}[2]
+{
+  \begin{figure}[htp]
+    \centering
+    \includegraphics[width=.8\linewidth]{img/#1}
+    \caption{#2}
+    \label{fig:#1}
+  \end{figure}
+}
+
+\begin{description}
+\item[Bioloid] The Robotis Bioloid is a hobbyist and educational robot kit
+  produced by the Korean robot manufacturer Robotis. The Bioloid platform
+  consists of components and small, modular servomechanisms called
+  Dynamixels, which can be used in a daisy-chained fashion to construct
+  robots of various configurations, such as wheeled, legged, or humanoid
+  robots. The Bioloid system is thus comparable to the LEGO Mindstorms and
+  VEXplorer kits.
+
+\item[Gostai Console] This tool provides a graphical user interface to a
+  remote \urbi server (see \autoref{fig:gostai-console}).  Unix users
+  (GNU/Linux or Mac OS X) can use the traditional \command{telnet} tool.
+  Windows users are invited to use Gostai Console instead.  See
+  \autoref{sec:tut:started}.
+
+  \screenshot{gostai-console}{Gostai Console}
+
+\item[Gostai Editor] Also called UEdit, Gostai \us Editor
+  (\autoref{fig:gostai-editor}) is a lightweight \us source code editor with
+  semantic highlighting. It is available for Windows and GNU/Linux
+  platforms.
+
+  \screenshot{gostai-editor}{Gostai Editor}
+
+\item[Gostai Lab] This tool (see \autoref{fig:gostai-lab}), which
+  includes the features of Gostai Console, allows to build easily
+  elaborate remote controller for robots.  It provides various widgets
+  to visualize data from the robot (including video and sound), and to
+  modify the state of the robot.
+
+  \screenshot{gostai-lab}{Gostai Lab}
+
+\item[Gostai Studio] This tool (see \autoref{fig:gostai-studio}),
+  includes all the features of Gostai Console and Gostai Lab.  It is a
+  high-level Integrated Development Environment for \urbi.  Its
+  formalism is based on \dfn{Hierarchical Finite State Machines}.
+
+  \screenshot{gostai-studio}{Gostai Studio}
+
+\item[RMP] The Segway Robotic Mobility Platform is a robotic platform based
+  on the Segway Personal Transporter.  See \url{http://rmp.segway.com}.
+
+\item[RTP] Real-time Transport Protocol (RFC 3550).  A protocol designed for
+  streaming (for instance audio/video).
+
+\item[ROS] Robot Operating System, \url{http://www.ros.org/}, developed by
+  Willow Garage, \url{http://www.willowgarage.com/}.  It is an abstraction
+  layer on top of the genuine operating system (such as GNU/Linux) that
+  provides hardware abstraction, device control, common algorithms,
+  message-passing between processes, and package management.
+
+\item[Spykee] The Spykee is a WiFi-enabled robot built by Meccano (known as
+  Erector in the United States). It is equipped with a camera, speaker,
+  microphone, and moves using two tracks. See
+  \url{http://www.spykeeworld.com}.
+
+\item[urbi-console] Former name of ``Gostai Console''.  See that item.
+\end{description}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

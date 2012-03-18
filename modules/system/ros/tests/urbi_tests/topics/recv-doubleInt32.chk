@@ -1,0 +1,31 @@
+//#roscore
+//#no-fast
+//#plug urbi/ros
+
+var ready = Ros.Topic.new("/ready") |
+ready.advertise("std_msgs/Bool");
+
+var t = Ros.Topic.new("/utests/doubleInt32")|;
+var p = Process.new("rosrun", ["utopics", "doubleInt32"])|;
+recv: at (t.onMessage?(var m))
+  lobby.send(m.asString);
+
+p.run;
+Ros.waitForTopic("/utests/doubleInt32");
+t.subscribe;
+
+sleep(500ms);
+ready << ["data" => 1] |
+sleep(12s);
+
+[00000001] ["a" => 42, "b" => -2]
+[00000002] ["a" => 51, "b" => -3]
+[00000003] ["a" => 5, "b" => -1]
+[00000004] ["a" => 67, "b" => -3]
+[00000005] ["a" => -1, "b" => -3]
+[00000006] ["a" => 0, "b" => 0]
+[00000007] ["a" => 65536, "b" => 0]
+[00000008] ["a" => 8, "b" => 0]
+[00000009] ["a" => 9, "b" => -1]
+[00000010] ["a" => 10, "b" => -2]
+

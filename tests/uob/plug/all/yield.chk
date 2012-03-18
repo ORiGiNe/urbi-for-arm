@@ -1,0 +1,29 @@
+//#timeout 2
+//#uobject test/all
+//#no-fast
+
+// Make it work even with high load.
+var granularity = 1s |;
+
+// Check that yield blocks flow without blocking the kernel.
+var tag = Tag.new|;
+tag: every (granularity)
+  2.print,
+
+sleep(granularity/2)
+| 3.print
+| all.yield_for(granularity * 2 * 1000000)
+| tag.stop
+| -1;
+[00000001] 2
+[00000002] 3
+[00000003] 2
+[00000004] 2
+[00000005] -1
+
+/* FIXME: test this when it will work.
+var t = time() | {};
+sleep(1s) | 1+1,
+sleep(200ms) | all.yield_until_things_changed() | time-t > 0.5;
+//[00000004] true
+*/

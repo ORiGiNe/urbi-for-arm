@@ -1,0 +1,29 @@
+syncline << "doc/specs/lang.tex:3469";
+[01234567:#] "doc/specs/lang.tex:3469"
+//#line 3469 "doc/specs/lang.tex"
+var e = Event.new;
+[00000001] Event_0xADDR
+
+at (e?)
+{
+  sleep(1s);
+  echo("in");
+}
+onleave
+{
+  sleep(2s);
+  echo("out");
+};
+
+e!;
+// Actions are triggered in the background and won't block
+// the execution flow.
+sleep(500ms);
+echo("Not blocked");
+[00000002] *** Not blocked
+sleep(1s);
+[00000003] *** in
+echo("Not blocked");
+[00000004] *** Not blocked
+sleep(500ms);
+[00000003] *** out

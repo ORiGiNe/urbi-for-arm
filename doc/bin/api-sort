@@ -1,0 +1,272 @@
+#! /usr/bin/perl -w
+
+=head1 NAME
+
+  api-sort - manipulate urbiscriptapi sections
+
+=head1 SYNOPSIS
+
+  api-sort [OPTIONS...] FILE...
+
+=head1 DESCRIPTION
+
+Read LaTeX files, looking for urbiscriptapi environments, and their
+items.  Sort them in a consistent alphabetical order.
+
+At the end, report what slots were documented in the file
+C<documented.txt>.
+
+=head1 OPTIONS
+
+General options:
+
+=over 4
+
+=item B<-n>, B<--dry-run>
+
+Do not modify the input files, just gather the documented slots.
+
+=item B<-q>, B<--quiet>
+
+Be less verbose.  Accumulates.
+
+=item B<-v>, B<--verbose>
+
+Be more verbose.  Accumulates.
+
+=back
+
+=cut
+BEGIN
+{
+  use File::Basename;
+  unshift @INC, dirname($0) . '/../../build-aux/lib/perl';
+}
+
+use strict;
+use File::Basename;
+use BuildAux::FileUtils;
+use BuildAux::Utils;
+use BuildAux::Verbose;
+use BuildAux::XFile;
+
+# Whether not to sort.
+my $dry_run = 0;
+
+
+=item C<getopt()>
+
+Process the command line options.
+
+=cut
+
+sub getopt ()
+{
+  use BuildAux::Getopt qw($message);
+  $message = "Sort urbiscriptapi entries";
+  BuildAux::Getopt::getopt
+    (
+     "n|dry-run" => \$dry_run,
+    );
+}
+
+=item C<getopt()>
+
+Process the command line options.
+
+=cut
+sub normalize($)
+{
+  my ($s) = @_;
+  # Sort "'assert'" as "assert", not at "'".
+  $s =~ s/\A'(.*)'\Z/$1/;
+  # Sort case-insensitively.
+  lc $s
+}
+
+sub slot_cmp
+{
+  my $l = normalize $a;
+  my $r = normalize $b;
+  # letters after symbols.
+  return +1 if $l =~ /\w/ && $r !~ /\w/;
+  return -1 if $l !~ /\w/ && $r =~ /\w/;
+  $l cmp $r
+}
+
+=item C<latex_environment($f, $env)>
+
+Return all the lines until (and including) the matching C<\end{$env}>
+in the IO::File C<$f>.
+
+Takes care of nested environments, it really returns the corresponding
+end, not the first one coming.
+
+=cut
+
+sub latex_environment($$);
+sub latex_environment($$)
+{
+  my ($f, $env) = @_;
+  my $res = '';
+  local $_;
+  while ($_ = $f->getline)
+    {
+      $res .= $_;
+      if (m{\\begin\{(\w+)\}})
+	{
+	  $res .= latex_environment($f, $1);
+	}
+      elsif (m{\\end\{(\w+)\}})
+	{
+          die $f->filename . ":$.: unexpected \\end{$1} in \\begin{$env}"
+            if $1 ne $env;
+	  return $res;
+	}
+    }
+}
+
+my %defined;
+
+=item C<transform($file, \$contents)>
+
+Sort the urbiscriptapi sections.
+
+=cut
+
+sub transform ($)
+{
+  my ($file) = @_;
+  my $f = new BuildAux::XFile($file);
+  my $res = '';
+  # The slot being currently defined.
+  my $object = undef;
+  my $slot = undef;
+  my %slot;
+  local $_;
+  while ($_ = $f->getline)
+  {
+    if (/\\begin\{urbiscriptapi\}/ .. /\\end\{urbiscriptapi\}/)
+    {
+      if (/\\begin\{urbiscriptapi\}/)
+      {
+        verbose 1, "$file:$.: begin{urbiscriptapi}";
+        $res .= $_;
+        %slot = ();
+        $slot = undef;
+      }
+      elsif (/\\end\{urbiscriptapi\}/)
+      {
+        verbose 1, "$file:$.: end{urbiscriptapi}";
+
+        # Trailing spaces;
+        map { s/\s+\z//g } values %slot;
+
+        my @slot = sort slot_cmp keys %slot;
+        verbose 3, map { "$_: <<$slot{$_}>>" } @slot;
+
+        $res .=
+          (join ("\n\n\n", map { "$slot{$_}" } @slot)
+           . "\n"
+           . $_);
+      }
+      elsif (m{^[% ]*\\item
+                (?:\[(?<name>.*?)\]
+                  |\|(?<name>.*?)\|
+                  |\s*\\lstinline(?<quote>[|+])(?<name>.*?)(?:\k{quote}|\()
+                  |\s*\\labelSlot\{(?<name>.*?)\}
+                )
+               }x)
+      {
+        $slot = $+{name};
+        die "multiply defined slot: $slot"
+          if defined $slot{$slot};
+        $defined{"$object.$slot"} = "$file:$."
+          if defined $object;
+        verbose 1, "Slot: $slot";
+        $slot{$slot} = $_;
+      }
+      elsif (m{\\end\{(\w+)\}})
+      {
+        die "$file:$.:unexpected \\end";
+      }
+      else
+      {
+        if (m{\\begin\{(\w+)\}})
+        {
+          $_ .= latex_environment($f, $1);
+        }
+
+        if (defined $slot)
+        {
+          $slot{$slot} .= $_;
+        }
+        # No slot currently being defined, it is certainly right after
+        # the begin{urbiscriptapi}, but before the first \item.
+        # Ignore empty lines, keep the rest (e.g., comments).
+        elsif (!m{^\s*^})
+        {
+          $res .= $_;
+        }
+      }
+    }
+    else
+    {
+      if (/\s*\\(?:section(?:Object)?|subsectionObject)\{(.*)\}/)
+      {
+        $object = $1;
+      }
+      $res .= $_;
+    }
+  }
+
+  $res;
+}
+
+
+=item C<transform_file ($file, &transform)>
+
+Apply C<&transform> on the contents of C<$file>.  If there is no
+difference, or if C<$dry_run>, do nothing.  Otherwise, back-up the
+original C<$file> into C<$file.bak>, save the new contents in
+C<$file>, and show the differences.  Preserve permissions.
+
+=cut
+
+sub transform_file ($$)
+{
+  my ($file, $transform_ref) = @_;
+  my $contents = contents ($file);
+  my $res = $transform_ref->($file);
+  file_update($file, $transform_ref->($file))
+    unless $dry_run;
+}
+
+
+## ------ ##
+## Main.  ##
+## ------ ##
+
+getopt;
+map { transform_file ($_, \&transform); } @ARGV;
+
+my $documented = new BuildAux::XFile(">documented.txt");
+print $documented "$_\n"
+  foreach sort slot_cmp keys %defined;
+
+### Setup "Gostai" style for perl-mode and cperl-mode.
+## Local Variables:
+## perl-indent-level: 2
+## perl-continued-statement-offset: 2
+## perl-continued-brace-offset: -2
+## perl-brace-offset: 0
+## perl-brace-imaginary-offset: 0
+## perl-label-offset: -2
+## cperl-indent-level: 2
+## cperl-brace-offset: 0
+## cperl-continued-brace-offset: -2
+## cperl-label-offset: -2
+## cperl-extra-newline-before-brace: t
+## cperl-merge-trailing-else: nil
+## cperl-continued-statement-offset: 2
+## End:

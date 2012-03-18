@@ -1,0 +1,26 @@
+%% Copyright (C) 2009-2012, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\newcommand{\inputJazz}[1]{%
+  \ifthenelse{\boolean{urbisdk}}{\input{platforms/jazz-#1}}{\input{jazz-#1}}%
+}
+
+\inputJazz{introduction}
+\inputJazz{getting-started}
+\inputJazz{api}
+\inputJazz{troubleshooting}
+\inputJazz{ros}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: t
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "urbi.dict"
+%%% fill-column: 76
+%%% End:

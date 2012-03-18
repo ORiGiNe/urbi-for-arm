@@ -1,0 +1,2 @@
+class X { function asString () { 0 / 0 }};
+[00000001:error] !!! input.u:@.34-38: /: division by 0

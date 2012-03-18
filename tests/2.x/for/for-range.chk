@@ -1,0 +1,47 @@
+// "in" and ":" are the same.
+{
+  var start = cycle |
+  for (var i: [1, 2, 3])
+    echo (i);
+  cycle - start;
+};
+[00000001] *** 1
+[00000002] *** 2
+[00000003] *** 3
+[00000004] 3
+
+{
+  var start = cycle |
+  for (var i in [1, 2, 3])
+    echo(i);
+  cycle - start;
+};
+[00000005] *** 1
+[00000006] *** 2
+[00000007] *** 3
+// This is debatable: 2 would make sense.
+[00000008] 3
+
+// for|
+{
+  var start = cycle |
+  for| (var i in [1, 2, 3])
+    echo(i);
+  cycle - start;
+};
+[00000009] *** 1
+[00000010] *** 2
+[00000011] *** 3
+[00000012] 1
+
+// for&
+{
+  var start = cycle |
+  for& (var i in [1, 2, 3])
+    echo(i);
+  cycle - start;
+};
+[00000013] *** 1
+[00000014] *** 2
+[00000015] *** 3
+[00000016] 2

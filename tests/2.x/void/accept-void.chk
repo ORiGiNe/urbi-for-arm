@@ -1,0 +1,16 @@
+function foo (x) { echo("foo") } | {};
+foo(void);
+[00000001:error] !!! input.u:@.1-9: unexpected void
+foo(echo("bar"));
+[00000002] *** bar
+[00000003:error] !!! input.u:4.1-16: unexpected void
+void.isVoid;
+[00000004] true
+foo(echo("bar").acceptVoid);
+[00000005] *** bar
+[00000006] *** foo
+foo(echo("bar").acceptVoid.unacceptVoid);
+[00000007] *** bar
+[00000008:error] !!! input.u:12.1-40: unexpected void
+foo("foo".unacceptVoid);
+[00000009] *** foo

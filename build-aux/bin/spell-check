@@ -1,0 +1,407 @@
+#! /usr/bin/perl -w
+
+=head1 NAME
+
+spell-check - check the spelling of files in batch mode
+
+=head1 SYNOPSIS
+
+spell-check [OPTIONS...] FILE...
+
+=head1 DESCRIPTION
+
+Check if there are spell-errors, and exit successfully iff there are
+none.  Report the incorrect words on the standard error stream.
+
+There is some support for checking strings in C-like sources (C, C++,
+urbiscript).  It is not satisfying yet, but it works.
+
+=head1 OPTIONS
+
+General options:
+
+=over 4
+
+=item B<-c>, B<--clean>
+
+Clean the personal dictionaries (sort them, so that differences from
+one revision to another are tractable).
+
+=item B<-h>, B<--help>
+
+Display this message and exit.
+
+=item B<-p>, B<--personal>=I<file>
+
+Add I<file> to the list of personal directories to use.
+
+=item B<-q>, B<--quiet>
+
+Be less verbose.  Accumulates.
+
+=item B<-v>, B<--verbose>
+
+Be more verbose.  Accumulates.
+
+=back
+
+=cut
+
+BEGIN
+{
+  use File::Basename;
+  unshift @INC, dirname($0) . '/../lib/perl';
+}
+
+use strict;
+use BuildAux::FileUtils;
+use BuildAux::Verbose;
+use BuildAux::XFile;
+use File::Basename;
+use File::Spec;
+
+# The program to run.
+my $aspell = defined $ENV{ASPELL} ? $ENV{ASPELL} : 'aspell';
+
+# Whether cleaning the personal dictionaries.
+my $clean = 0;
+
+# Personal dictionaries to use.
+my @personal;
+
+# Catching C-like strings.
+my $string_re = '"((?:[^\\\"]|\\.)*)"';
+
+=head1 FUNCTIONS
+
+=over 4
+
+=item C<check_aspell ($file, @aspell-args)>
+
+Return the list of incorrect words in C<$file>.
+
+=cut
+
+sub check_aspell ($@)
+{
+  my ($file, @aspell_args) = @_;
+  my @cmd = ($aspell,
+             '--encoding=utf-8',
+             '-d', 'american',
+             '--use-other-dicts',
+             # Without full path, aspell looks in the user path.
+             (map { "--personal=" . File::Spec->rel2abs($_) } @personal),
+             @aspell_args,
+             'list');
+  my $cmd = join (' ', map { "'$_'" } @cmd);
+  verbose 3, "running $cmd <'$file'";
+  split (/\n/, qx { $cmd <"$file" | sort -u });
+}
+
+=item C<check_c ($file)>
+
+Return the list of incorrect words in the C/Urbi/C++ C<$file>.  Does
+not work well, since in particular in urbiscript, we use a lot Strings
+for slot names and so forth.  Besides, there is a problem with the
+means to report the actually location of the error: we are likely to
+report occurrences that were not in the strings.
+
+=cut
+
+my @c_function = qw(hasLocalSlot load);
+my $c_functions =
+  ('(?:'
+   . join ("|", map { "$_\\s\\(" } @c_function)
+   . '|'
+   . '#\s*include'
+   .
+   ')');
+
+sub check_c ($)
+{
+  my ($file) = @_;
+  # Get all the strings in $file.
+  my $in = BuildAux::XFile->new("$file");
+  my $spch = "$file.spch";
+  my $out = BuildAux::XFile->new(">$spch");
+  while (my $line = $in->getline)
+  {
+    # Skip strings that are obviously not human.
+    $line =~ s{$c_functions\s*$string_re}{}g;
+    while ($line =~ m{$string_re}g)
+    {
+      my $string = $1;
+      # Expand escapes, so that "\tHello" is not understood as
+      # "tHello".
+      $string =~ s/\\[abnrt]|\\x[a-fA-F0-9]{2}/ /g;
+      print $out "$string\n";
+    }
+  }
+  $in->close;
+  $out->close;
+  check_aspell($spch);
+}
+
+=item C<check_latex ($file)>
+
+Return the list of incorrect words in the LaTeX C<$file>.
+
+=cut
+
+my %tex_command =
+  (
+   autoref         => 'p',
+   # This allows to skip the label but not the caption in:
+   # \begin{operatorTable}{tab:boolean}{Boolean Operators}
+   begin           => 'popP',
+   bibliographystyle => 'p',
+   env             => 'p',
+   file            => 'p',
+   href            => 'pp',
+   label           => 'p',
+   lstinline       => 'op',
+   lstinputlisting => 'op',
+   samp            => 'p',
+   setbeamercolor  => 'pp',
+   setkeys         => 'pp',
+   usetheme        => 'p',
+   useoutertheme   => 'p',
+  );
+my @tex_command =
+  map { "--add-tex-command=$_ $tex_command{$_}" } keys %tex_command;
+
+sub check_latex ($)
+{
+  my ($file) = @_;
+  check_aspell($file,
+               '--mode=tex', @tex_command);
+}
+
+=item C<file_type($file)>
+
+Return the type of the C<$file>, based on its extension.
+
+=cut
+
+sub file_type($)
+{
+  my ($file) = @_;
+  my $res = "text";
+  if ($file =~ m{\.(c|h|cc|hh|cpp|hpp|hxx|u)})
+  {
+    $res = "c";
+  }
+  elsif ($file =~ m{\.(tex)})
+  {
+    $res = "latex";
+  }
+  verbose 3, "type($file) = $res";
+  $res;
+}
+
+
+=item C<check ($file)>
+
+Return the list of incorrect words in C<$file>, depending on its type
+(LaTeX etc.).
+
+=cut
+
+sub check ($)
+{
+  my ($file) = @_;
+  my $type = file_type ($file);
+  my %check =
+    (
+     'c'     => \&check_c,
+     'latex' => \&check_latex,
+     'text'  => \&check_aspell,
+    );
+
+  die "$me: invalid type: $type\n"
+    unless exists $check{$type};
+  $check{$type}->($file);
+}
+
+=item C<dictionary_clean ($file)>
+
+Clean the dictionary (i.e., sort it).
+
+=cut
+
+sub dictionary_clean ($)
+{
+  my ($file) = @_;
+  # Do nothing if the file is empty.
+  if (-s $file)
+  {
+    my $f = BuildAux::XFile->new($file);
+    my $first = $f->getline;
+    my @words = sort {lc $a cmp lc $b || $a cmp $b} $f->getlines;
+    $f->close;
+    $f = BuildAux::XFile->new(">$file");
+    print $f $first;
+    print $f @words;
+  }
+}
+
+
+=item C<mark ($string)>
+
+Return C<$string> with marked.
+
+=cut
+
+# Shall we support colors?  Modelled after check.mk.
+my $color
+  = defined $ENV{AM_COLOR_TESTS} && $ENV{AM_COLOR_TESTS} eq 'always'
+  ||
+  ((!defined $ENV{AM_COLOR_TESTS} || $ENV{AM_COLOR_TESTS} ne 'no')
+   && (!defined $ENV{TERM} || $ENV{TERM} ne 'dumb')
+   && !defined $ENV{BUILDFARM_PROJECT}
+   && !defined $ENV{INSIDE_EMACS});
+my $mark_begin = "--->";
+my $mark_end   = "<---";
+if ($color)
+{
+  chomp($mark_begin = qx{tput bold && tput setaf 1});
+  chomp($mark_end   = qx{tput sgr0});
+}
+
+sub mark ($)
+{
+  my ($string) = @_;
+  "$mark_begin$string$mark_end";
+}
+
+=item C<report ($file, \@error)>
+
+Report spelling errors (in C<@error>) about C<$file> in a human
+friendly fashion.
+
+=cut
+
+sub report ($\@)
+{
+  my ($file, $error) = @_;
+
+  # For each error, how many times we reported it.
+  my %error = map { $_ => 0 } @$error;
+
+  # We used to use \b, unfortunately, it is not what aspell and
+  # ispell-buffer do: they consider foo inside 0x0foo0, while \b does
+  # not.
+  my $re = '(?<![[:alpha:]])(' . join ('|', @$error) . ')(?![[:alpha:]])';
+  verbose 2, "$re";
+  my $in = new BuildAux::XFile ($file);
+  my $type = file_type ($file);
+  while (my $line = $in->getline)
+  {
+    my $good = 1;
+    if ($type eq 'c')
+    {
+      $line =~ s{($string_re)}
+      {
+        my $string = $1;
+        $string =~ s{$re}
+        {
+          ++$error{$1};
+          $good = 0;
+          mark($1);
+        }ge;
+        $string;
+      }e;
+    }
+    else
+    {
+      $line =~ s{$re}
+      {
+        ++$error{$1};
+        $good = 0;
+        mark($1);
+      }ge;
+    }
+    if (!$good)
+    {
+      chomp $line;
+      verbose 0, "$file: $.: $line";
+    }
+  }
+
+  # Report the errors we failed to report.  Of course this should not
+  # be needed, but because of subtle differences in parsing, it does
+  # happen.
+  if (my @missed = grep { !$error{$_ } } keys %error)
+  {
+    verbose 0, "$file: " . join(", ", @missed);
+  }
+}
+
+=item C<getopt()>
+
+Process the command line options.
+
+=cut
+
+sub getopt ()
+{
+  use BuildAux::Getopt qw($message);
+  $message = "Spell-check in batch mode";
+  BuildAux::Getopt::getopt
+    (
+     "c|clean"       => \$clean,
+     "p|personal=s"  => \@personal,
+    );
+
+  # Check that personal directories exists.
+  map
+  {
+    -f $_ or die "$me: no such personal directory: $_\n";
+  } @personal;
+
+  exit 176
+    unless qx($aspell --version);
+}
+
+
+## ------ ##
+## Main.  ##
+## ------ ##
+
+my $error = 0;
+getopt;
+if ($clean)
+{
+  map { dictionary_clean($_) } @personal;
+}
+
+for my $file (@ARGV)
+{
+  verbose 2, "checking $file";
+  if (my @error = check $file)
+  {
+    $error += @error;
+    verbose 3, "$file: incorrect words: @error";
+    report ($file, @error);
+  }
+}
+verbose 1, "there were $error spelling errors";
+exit !!$error;
+
+
+### Setup "Gostai" style for perl-mode and cperl-mode.
+## Local Variables:
+## perl-indent-level: 2
+## perl-continued-statement-offset: 2
+## perl-continued-brace-offset: -2
+## perl-brace-offset: 0
+## perl-brace-imaginary-offset: 0
+## perl-label-offset: -2
+## cperl-indent-level: 2
+## cperl-brace-offset: 0
+## cperl-continued-brace-offset: -2
+## cperl-label-offset: -2
+## cperl-extra-newline-before-brace: t
+## cperl-merge-trailing-else: nil
+## cperl-continued-statement-offset: 2
+## End:

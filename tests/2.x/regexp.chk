@@ -1,0 +1,13 @@
+try
+{
+  Regexp.new("(");
+}
+catch (var e)
+{
+  assert
+  {
+    e.routine == "init";
+    // Beware of changes of messages bw Boost versions.
+    e.message[0,41] == "invalid regular expression `(': Unmatched";
+  };
+};

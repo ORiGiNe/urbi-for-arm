@@ -1,0 +1,38 @@
+%% Copyright (C) 2009-2011, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\documentclass[openright,twoside,11pt]{book}
+  \usepackage{urbi-sdk}
+
+\title{The Gostai Standard Robotics API}
+\subtitle{Version \VcsDescription}
+\shorttitle{Gostai Standard Robotics API \packageVersion}
+
+\author{Gostai}
+
+% DOCUMENT
+\begin{document}
+\maketitle
+\tableofcontents
+{
+  \raisesections
+  \let\chapter\section
+  \input{specs/naming-standard}
+}
+\input{document-aux/latex/notation}
+\chapterIndex
+\end{document}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: t
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "urbi.dict"
+%%% fill-column: 76
+%%% End:

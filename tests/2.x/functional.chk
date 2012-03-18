@@ -1,0 +1,14 @@
+[1, 2, 3].map (function (x) { x*2 });
+[00000001] [2, 4, 6]
+
+[1, 2, 3].all (function (x) { x < 5 });
+[00000002] true
+
+[4, 5, 6].all (function (x) { x < 5 });
+[00000003] false
+
+[1, 2, 3].any (function (x) { x == 5 });
+[00000004] false
+
+[4, 5, 6].any (function (x) { x < 5 });
+[00000005] true

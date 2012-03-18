@@ -1,0 +1,2 @@
+Object.dump(1.5);
+[00000001:error] !!! input.u:@.1-16: dump: expected integer, got 1.5

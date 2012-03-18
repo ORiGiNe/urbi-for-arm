@@ -1,0 +1,34 @@
+syncline << "doc/specs/control.tex:33";
+[01234567:#] "doc/specs/control.tex:33"
+//#line 33 "doc/specs/control.tex"
+{
+  var jobs = [];
+  var res = [];
+  for (var i : [0, 1, 2])
+  {
+    jobs << detach({ res << i; res << i }) |
+    if (i == 2)
+      break
+  };
+  assert (res == [0, 1, 0]);
+  jobs
+};
+[00009120] [Job<shell_11>, Job<shell_12>, Job<shell_13>]
+
+syncline << "doc/specs/control.tex:56";
+[01234567:#] "doc/specs/control.tex:56"
+//#line 56 "doc/specs/control.tex"
+{
+  var jobs = [];
+  var res = [];
+  for (var i : [0, 1, 2])
+  {
+    jobs << disown({ res << i; res << i }) |
+    if (i == 2)
+      break
+  };
+  jobs.each (function (var j) { j.waitForTermination });
+  assert (res == [0, 1, 0, 2, 1, 2]);
+  jobs
+};
+[00009120] [Job<shell_14>, Job<shell_15>, Job<shell_16>]

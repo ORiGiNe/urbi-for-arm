@@ -1,0 +1,22 @@
+syncline << "doc/specs/tag.tex:24";
+[01234567:#] "doc/specs/tag.tex:24"
+//#line 24 "doc/specs/tag.tex"
+var t = Tag.new|;
+var t0 = time|;
+t: every(1s) echo("foo"),
+sleep(2.2s);
+[00000158] *** foo
+[00001159] *** foo
+[00002159] *** foo
+
+t.stop;
+// Nothing runs.
+sleep(2.2s);
+
+t: every(1s) echo("bar"),
+sleep(2.2s);
+[00000158] *** bar
+[00001159] *** bar
+[00002159] *** bar
+
+t.stop;

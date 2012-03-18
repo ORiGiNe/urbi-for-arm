@@ -1,0 +1,26 @@
+syncline << "doc/tutorial/object.tex:304";
+[01234567:#] "doc/tutorial/object.tex:304"
+//#line 304 "doc/tutorial/object.tex"
+var MyPair = Object.clone;
+[00000000] Object_0x1
+do (MyPair)
+{
+  var first = nil;
+  var second = nil;
+  function asString ()
+  {
+    "MyPair: " + first + ", " + second
+  };
+}|;
+// We just defined a pair
+MyPair;
+[00000000] MyPair: nil, nil
+// Let's try it out
+var p = MyPair.clone;
+[00000000] MyPair: nil, nil
+p.first = 0;
+[00000000] 0
+p;
+[00000000] MyPair: 0, nil
+MyPair;
+[00000000] MyPair: nil, nil

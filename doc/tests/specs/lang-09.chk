@@ -1,0 +1,17 @@
+syncline << "doc/specs/lang.tex:3679";
+[01234567:#] "doc/specs/lang.tex:3679"
+//#line 3679 "doc/specs/lang.tex"
+var x = 0;
+[00000000] 0
+var y = 0;
+[00000000] 0
+var e = watch(x + y);
+[00000000] Event_0x103a1e978
+at (e?(var value))
+  echo("x + y = %s" % value);
+x = 1;
+[00000000] 1
+[00000000] *** x + y = 1
+y = 2;
+[00000000] 2
+[00000000] *** x + y = 3

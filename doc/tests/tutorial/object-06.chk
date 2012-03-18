@@ -1,0 +1,36 @@
+syncline << "doc/tutorial/object.tex:241";
+[01234567:#] "doc/tutorial/object.tex:241"
+//#line 241 "doc/tutorial/object.tex"
+var proto = Object.clone;
+[00000000] Object_0x1
+var proto.x = 0;
+[00000000] 0
+var o1 = proto.clone;
+[00000000] Object_0x2
+var o2 = proto.clone;
+[00000000] Object_0x3
+// Are we modifying proto's x slot here?
+o1.x = 1;
+[00000000] 1
+// Obviously not
+o2.x;
+[00000000] 0
+proto.x;
+[00000000] 0
+o1.x;
+[00000000] 1
+
+syncline << "doc/tutorial/object.tex:265";
+[01234567:#] "doc/tutorial/object.tex:265"
+//#line 265 "doc/tutorial/object.tex"
+// This is the continuation of previous example.
+
+// As expected, o2 finds "x" in proto
+o2.locateSlot("x") === proto;
+[00000000] true
+// Yet o1 doesn't anymore
+o1.locateSlot("x") === proto;
+[00000000] false
+// Because the slot was duplicated locally
+o1.locateSlot("x") === o1;
+[00000000] true

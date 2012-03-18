@@ -1,0 +1,89 @@
+syncline << "doc/tutorial/flow.tex:25";
+[01234567:#] "doc/tutorial/flow.tex:25"
+//#line 25 "doc/tutorial/flow.tex"
+if (true)
+  echo("ok");
+[00000000] *** ok
+if (false)
+  echo("ko")
+else
+  echo("ok");
+[00000000] *** ok
+
+syncline << "doc/tutorial/flow.tex:38";
+[01234567:#] "doc/tutorial/flow.tex:38"
+//#line 38 "doc/tutorial/flow.tex"
+echo({ if (false) "a" else "b" });
+[00000000] *** b
+
+syncline << "doc/tutorial/flow.tex:52";
+[01234567:#] "doc/tutorial/flow.tex:52"
+//#line 52 "doc/tutorial/flow.tex"
+var x = 2;
+[00000000] 2
+while (x < 40)
+{
+  x += 10;
+  echo(x);
+};
+[00000000] *** 12
+[00000000] *** 22
+[00000000] *** 32
+[00000000] *** 42
+
+syncline << "doc/tutorial/flow.tex:74";
+[01234567:#] "doc/tutorial/flow.tex:74"
+//#line 74 "doc/tutorial/flow.tex"
+for (var x = 2; x < 40; x += 10)
+  echo(x);
+[00000000] *** 2
+[00000000] *** 12
+[00000000] *** 22
+[00000000] *** 32
+
+syncline << "doc/tutorial/flow.tex:90";
+[01234567:#] "doc/tutorial/flow.tex:90"
+//#line 90 "doc/tutorial/flow.tex"
+for (var e : [1, 2, 3]) { echo(e) };
+[00000000] *** 1
+[00000000] *** 2
+[00000000] *** 3
+
+syncline << "doc/tutorial/flow.tex:107";
+[01234567:#] "doc/tutorial/flow.tex:107"
+//#line 107 "doc/tutorial/flow.tex"
+switch ("bar")
+{
+  case "foo":  0;
+  case "bar":  1;
+  case "baz":  2;
+  case "qux":  3;
+};
+[00000000] 1
+
+syncline << "doc/tutorial/flow.tex:124";
+[01234567:#] "doc/tutorial/flow.tex:124"
+//#line 124 "doc/tutorial/flow.tex"
+var o1 = Object.clone;
+[00000000] Object_0x423a0708
+var o1.one = 1;
+[00000000] 1
+var o1.two = 2;
+[00000000] 2
+echo(o1.uid);
+[00000000] *** 0x423a0708
+
+syncline << "doc/tutorial/flow.tex:141";
+[01234567:#] "doc/tutorial/flow.tex:141"
+//#line 141 "doc/tutorial/flow.tex"
+var o2 = Object.clone;
+[00000000] Object_0x42339e08
+// All the message in this scope are destined to o.
+do (o2)
+{
+  var one = 1; // var is a shortcut for the setSlot
+  var two = 2; // message, so it applies on obj too.
+  echo(uid);
+};
+[00000000] *** 0x42339e08
+[00000000] Object_0x42339e08

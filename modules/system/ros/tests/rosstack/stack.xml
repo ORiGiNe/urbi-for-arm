@@ -1,0 +1,12 @@
+<stack>
+  <description brief="urbi_tests">
+    urbi_tests contains packages that test various aspects of ROS
+    with urbi-bridge.
+  </description>
+  <author>Maintained by Gostai SAS</author>
+  <license>see License</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://www.urbiforge.com/index.php/Modules/ROS-Bridge</url>
+  <depend stack="ros" />
+</stack>
+

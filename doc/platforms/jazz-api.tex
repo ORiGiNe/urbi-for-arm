@@ -1,0 +1,823 @@
+%% Copyright (C) 2011, 2012, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\chapter{urbiscript API}
+
+\section{Eye leds}
+
+You can change the color of the leds located in the eyes.
+
+\subsection{robot.body.head.eye}
+\labelObject{jazz.body.head.eye}
+
+\begin{urbiscriptapi}
+\item[b] Blue component (0-255).
+
+
+\item[g] Green component (0-255).
+
+
+\item[r] Red component (0-255).
+\end{urbiscriptapi}
+
+The eyes led objects are available using the \gsrapi compliant name
+\lstinline{robot.body.head.eye[left]} and
+\lstinline{robot.body.head.eye[right]}.
+
+\subsection{Example}
+
+\begin{urbiunchecked}
+// Set the color of the leds in Jazz eyes to green
+function green_eyes()
+{
+  do (robot.body.head)
+  {
+    eye[left].r = 0  & eye[left].g = 255  & eye[left].b = 0 &
+    eye[right].r = 0 & eye[right].g = 255 & eye[right].b = 0
+  };
+}|;
+
+// Call the function: Jazz eyes becomes green
+green_eyes;
+\end{urbiunchecked}
+
+\section{Docking}
+
+Jazz robot have automatic docking to its charging station capabilities. The
+function to launch the algorithm is, of course, \gsrapi compliant. For a
+description of Jazz docking API please refer to \autoref{sec:movement}.
+
+\section{Head Motors}
+
+Jazz's head has two degrees of liberty: horizontal
+(\refSlot[jazz.body.head]{yaw}) and vertical
+(\refSlot[jazz.body.head]{pitch}).
+
+%% FIXME: This is frustrating, \subsectionObject does not work properly for
+%% urbi-sdk-single.htmldir.  I don't want to spend time on this.
+\subsection{robot.body.head}
+\labelObject{jazz.body.head}
+
+\begin{urbiscriptapi}
+\item[pitch] Vertical position of Jazz's head. You can read or set the
+  position using the \lstinline{val} attribute.
+
+
+\item[yaw] Horizontal position of Jazz's head.
+\end{urbiscriptapi}
+
+\subsection{Example}
+
+\begin{urbiunchecked}
+// Makes Jazz head oscillate horizontally, as if it was saying "no".
+// The function stops after the specified duration.
+function sayNo(duration)
+{
+  timeout (duration) {
+    // Here we assign a sinusoidal trajectory to the head yaw motor:
+    robot.body.head.yaw.val = sin:2s ampli:0.7;
+  };
+};
+
+// Make Jazz say "no" for 10 seconds.
+sayNo(10s);
+\end{urbiunchecked}
+
+\section{Microphone}
+
+\subsection{Quickly Record the Audio Stream}
+
+To quickly record your robot audio microphone stream from your computer, you
+can use the command line tool \command{urbi-sound}
+(\ifthenelse{\boolean{urbisdk}}{\autoref{sec:tools:urbi-sound}}{part of
+  \usdk}).
+
+For example to record 20 seconds of audio, ssh on the robot and do:
+
+\begin{shell}
+gostai@A1111FRPA001001:~$ urbi-sound -h
+usage: urbi-sound [options]
+    record and play (or save) sound from a robot
+
+Options:
+  -h, --help               display this message and exit successfully
+      --version            display version information
+  -H, --host=HOST          address to connect to
+  -P, --port=PORT          port to connect to
+      --port-file=FILE     read port number in FILE
+  -d, --device=DEVICE      query sound on DEVICE.val (default: micro)
+  -D, --duration=DURATION  recording duration in seconds
+  -o, --output=FILE        save sound in FILE (/dev/dsp)
+  -n, --no-headers         do not include the headers when saving the sound
+gostai@A1111FRPA001001:~$ urbi-sound -H localhost -D 20 -o sample.wav
+gostai@A1111FRPA001001:~$ aplay sample.wav
+\end{shell}%$
+
+\subsection{robot.body.head.micro}
+
+The microphone device has the following slots:
+
+\begin{urbiscriptapi}
+\item[aec] EchoCanceller (\refObject{uobjects.EchoCanceller}) object.
+\item[agc] AutomaticGainControl (\refInterface{AutomaticGainControl})
+  interface
+\item[alsa] AlsaMicrophone (\refObject{uobjects.AlsaMicrophone}) instance.
+% \item[bufferTime]
+\item[denoise] Denoiser (\refInterface{Denoiser}) interface
+%\item[dereverb.load] Enable or disable Dereverberation
+%\item[gain] Set the micro gain in dB.
+\item[gainPercent] Microphone gain amplification, expressed in percent (0 to
+  100).
+\item[load] Enable or disable the microphone.
+%\item[speaking] true when VAD is enable and speech is detected, false
+%  otherwise
+%\item[vad.load] Enable or disable Voice Activity Detection
+\item[val] Binary value corresponding to the sound captured by the
+  microphone, and processed by AutomaticGainControl and Denoise algorithms
+  (if they are enabled).
+\end{urbiscriptapi}
+
+The microphone object is available using the \gsrapi compliant name
+\lstinline{robot.body.head.micro} or directly typing the shortcut name
+\lstinline{micro}.
+
+\subsection{Example}
+
+\begin{urbiunchecked}
+// Calculate the microphone refresh rate by counting the number of time the
+// microphone value is refreshed during 5 seconds, then dividing this count
+// by 5.
+var count = 0 |
+var lnk = micro.&val.notifyChange(closure (){count++}) |
+sleep(5s) |
+micro.&val.removeNotifyChange(lnk) |
+var refresh_rate = count / 5 |
+// Retrieve sound information in the value header
+var keys = micro.val.keywords.split(" ") |
+// Display all the information
+echo("Micro information:");
+echo(" format: %s" % keys[0]);
+echo(" sample format: %s" % keys[1]);
+echo(" rate: %s" % keys[2]);
+echo(" sample size: %s" % keys[3]);
+echo(" channels: %s" % keys[4]);
+echo(" micro.val is refreshed %s times per second" % refresh_rate);
+[19281072] *** Micro information:
+[19281073] ***  format: raw
+[19281074] ***  sample format: 1
+[19281076] ***  rate: 16000
+[19281077] ***  sample size: 16
+[19281080] ***  channels: 1
+[19281086] ***  micro.val is refreshed 25 times per second
+\end{urbiunchecked}
+
+\begin{urbiunchecked}
+// Let's record 5 seconds of the micro sound:
+// - create the file where we'll save the sound, and open it in an output stream
+var o = OutputStream.new(File.create("/tmp/sound.pcm"));
+// - every time the micro value change, append the sound chunk to the file
+var lnk = micro.&val.notifyChange(closure() { o << micro.val.data ; });
+sleep(5s);
+// - stop recording
+micro.&val.removeNotifyChange(lnk);
+// - close the output stream
+o.close;
+// Now you can play the recorded sound with the shell command:
+//   aplay -f S16_LE -r 16000 -c 1 -t raw /tmp/sound.pcm
+\end{urbiunchecked}
+
+\section{Network}
+
+Network object provides methods and attributes to configure and get
+the current state of the WiFi.
+
+\subsection{robot.network}
+\labelObject{jazz.network}
+
+\begin{urbiscriptapi}
+\item[dnsAddress]
+
+
+\item[essid]
+
+
+\item[gatewayAddress]
+
+
+\item[ipAddress]
+
+
+\item[key]
+
+
+\item[netMask]
+
+
+\item[submit]()
+\end{urbiscriptapi}
+
+\subsection{Example}
+
+To connect your Jazz robot to your LAN, use the web interface as describe in
+the Jazz User Manual. It is also possible to specify the network on which
+Jazz connects. However be careful, Jazz save the network information you
+provide, and will reuse them for all its future connections.  To connect to
+a WiFi network with ESSID \var{myNetwork} and key \var{myHiddenKey}.
+
+\begin{urbiunchecked}[style=varInString]
+network.essid="\var{myNetwork}";
+network.key="\var{myHiddenKey}";
+// Tell network to connect with current parameters and save them.
+network.submit;
+\end{urbiunchecked}
+
+You can also provide a static IP. Let say we want IP 192.168.0.3,
+net-mask 255.255.255.0, DNS and gateway 192.168.0.1.  Using \lstinline{do}
+to factor \lstinline{network}:
+
+\begin{urbiunchecked}[style=varInString]
+do (network)
+{
+  essid="\var{myNetwork}";
+  key="\var{myHiddenKey}";
+  ipAddress="192.168.0.3";
+  netMask="255.255.255.0";
+  dnsAddress="192.168.0.1";
+  gatewayAddress="192.168.0.1";
+  // Tell network to connect with current parameters and save them.
+  submit;
+};
+\end{urbiunchecked}
+
+To reset the robot in ad-hoc mode:
+
+\begin{urbiunchecked}
+// The robot will take IP 192.168.0.1 and start a DHCP server.
+network.setAdHoc;
+\end{urbiunchecked}
+
+\section{Playing Sound}
+
+Jazz can play mp3 files with its speaker. The files must be available on
+Jazz filesystem, or hosted on a web server.
+
+\subsection{Example}
+
+\begin{urbiunchecked}
+mp3.play("/usr/local/stow/jazz/share/mp3/jazz_startup.mp3");
+sleep(1s);
+mp3.stop;
+mp3.play("http://example.com/sound/sound.mp3");
+\end{urbiunchecked}
+
+\section{Text to Speech}
+
+Jazz integrate text to speech. It must be connected to Internet to use
+text to speech).  Only french language is currently supported.
+
+\subsection{Example}
+
+For Jazz to say the sentence: ``Bonjour, je suis Jazz le robot'', run:
+
+\begin{urbiunchecked}
+voice.say("Bonjour, je suis Jazz le robot");
+\end{urbiunchecked}
+
+Note: the function can fail in case Jazz network connection timeout.
+
+\section{Video Camera}
+
+You have access to Jazz video camera device: you can request the raw
+images, and process them using \us/UObject.
+
+\subsection{Visualize the Video Stream}
+
+To quickly visualize your robot video camera stream from your computer, you
+can use Gostai Lab or the command line tool \command{urbi-image}
+(\ifthenelse{\boolean{urbisdk}}{\autoref{sec:tools:urbi-image}}{part of
+  \usdk}).
+
+\command{urbi-image} opens a graphic windows rendering the live stream from
+the video camera. Its usage is:
+
+\begin{shell}
+$ urbi-image -h
+usage: urbi-image [options]
+Display images from an urbi server, or save one image if -o is given
+
+Options:
+  -h, --help                   display this message and exit successfully
+      --version                display version information
+  -H, --host=HOST              address to connect to
+  -P, --port=PORT              port to connect to
+      --port-file=FILE         read port number in FILE
+  -p, --period=PERIOD          query images at given period (in milliseconds)
+  -F, --format=FORMAT          select format of the image (rgb, ycrcb, jpeg, ppm)
+  -r, --reconstruct            use reconstruct mode (for aibo)
+  -j, --jpeg=FACTOR            jpeg compression factor (from 0 to 100, def 70)
+  -d, --device=DEVICE          query image on DEVICE.val (default: camera)
+  -o, --output=FILE            query and save one image to FILE
+  -R, --resolution=RESOLUTION  select resolution of the image (0=biggest)
+  -s, --scale=FACTOR           rescale image with given FACTOR (display only)
+
+transfer Format : jpeg=transfer jpeg, raw=transfer raw
+save     Format : rgb , ycrcb, jpeg, ppm
+$ urbi-image -H A1111FRPA001001
+\end{shell}%$
+
+To visualize the stream with Gostai Lab, connect Gostai Lab to your robot, and
+enter \lstinline{camera.val} in the variable field. The live stream of the
+video camera will automatically get displayed.
+
+\subsection{robot.camera}
+\labelObject{jazz.camera}
+
+The camera device is represented by the \us object whose slots are:
+
+\begin{urbiscriptapi}
+\item[height] Video camera images height. (const)
+
+
+\item[val] Current acquired image (in RGB format).
+
+
+\item[width] Video camera images width. (const)
+\end{urbiscriptapi}
+
+%    var rate;   // acquisition framerate
+% rate is not available with research profile :(
+
+The camera object is available using the \gsrapi compliant name
+\lstinline{robot.body.head.camera} or directly typing the shortcut name
+\lstinline{camera}.
+
+\subsection{Example}
+
+Here some \us example code manipulating the camera object:
+
+\begin{urbiunchecked}
+echo("Acquired image size: %sx%s" % [camera.width, camera.height]);
+[00237095] *** Acquired image size: 320x240
+var e = watch(camera.val);
+var t = Timeout.new(5s);
+try
+{
+  var count = 0 |
+  t:at(e?) count++ &
+  t:every(1s) {
+    echo("camera.val was refreshed %s times" % count);
+    count = 0;
+  };
+}
+catch (var e)
+{
+  echo("timed out");
+};
+[00238639] Event_0xffffffffb4dc3728
+[00238641] Timeout_0xffffffffb4dd8928
+[00238643] *** camera.val was refreshed 0 times
+[00239647] *** camera.val was refreshed 14 times
+[00240647] *** camera.val was refreshed 15 times
+[00241647] *** camera.val was refreshed 15 times
+[00242647] *** camera.val was refreshed 15 times
+[00243647] *** camera.val was refreshed 15 times
+[00243650] *** timed out
+\end{urbiunchecked}
+
+If you want to process the video camera raw image data, you can only do it
+from \Cxx or \Java, using the UObject component API.
+
+\begin{cxx}
+#include <urbi/uobject.hh>
+
+// ProcessCamera is an UObject that does video processing with the
+// camera stream.
+class ProcessCamera : public urbi::UObject
+{
+public:
+  ProcessCamera(const std::string& s)
+    : urbi::UObject(s)
+  {
+    UNotifyChange("camera.val", &ProcessCamera::process);
+  }
+
+  // Each time camera.val urbiscript variable is refreshed, your
+  // function will get called with the new video camera image.
+  void process(urbi::UVar& val)
+  {
+    urbi::UImage i = val;
+    // Do processing. See Urbi SDK documentation to know more about UImage.
+  }
+};
+\end{cxx}
+
+
+\section{Movement}
+
+We provide high level API to move Jazz.
+
+\subsection{\us interface}
+The following slots of the \lstinline{robot} object control the movement.
+\begin{urbiscriptapi}[jazz]
+\item[aborted?](<commandName>, <reason>)%
+  Event emitted when a command (\refSlot{go}, \refSlot{turn},
+  \refSlot{goTo}, \refSlot{goToAbsolute}, \refSlot{turnAbsolute},
+  \refSlot{goToChargingDock}) is aborted (generally because another command
+  has started).
+  \var{commandName} is the string name of the command.
+  \var{reason} gives the reason of the abortion.
+
+\item[finished?](<commandName>)%
+  Event emitted when a command (\refSlot{go}, \refSlot{turn},
+  \refSlot{goTo}, \refSlot{goToAbsolute}, \refSlot{turnAbsolute},
+  \refSlot{goToChargingDock}) finishes successfully.
+  \var{commandName} is the string name of the command.
+
+\item[go](<distance>) Go forward if $\var{distance} > 0$, go backward if
+  $\var{distance} < 0$. Distance is in meter.
+
+
+\item[goTo](<x>, <y>, [<Z>], [<yaw>])%
+  Go to \var{x}, \var{y} in meter.  $\var{x} > 0$ corresponds to the front
+  of robot. $\var{y} > 0$ corresponds to the left of robot. \var{z} is
+  optional and unused. \var{yaw} is optional and is the angle the robot must
+  reach at the end of the motion (yaw = 0 is the direction when the robot
+  receives the command).
+
+
+\item[goToAbsolute](<x>, <y>, [<Z>], [<yaw>])%
+  Go to a position in the absolute initial frame (\var{x} = 0, \var{y} = 0
+  and \var{yaw} = 0 is the initial position).
+
+\item[goToChargingDock] Go to charging dock if available.
+
+\item[leaveChargingDock] Make the robot leave the charging dock. This is
+  the only command allowed if the robot is charging. If not, it has no
+  effects.
+
+\item[moving] Whether the robot is moving.
+
+\item[position] List [x, y, z, yaw] given the absolute position of the robot
+  in the absolute initial frame $x > 0$ corresponds to the front of the
+  robot at initial position $y > 0$ corresponds to the left of the robot at
+  initial position yaw = 0 corresponds to the direction of the robot at
+  initial position.
+
+\item[renunciationInterval] If $\le 0$, renunciation is not used.  if $> 0$,
+  any command stops (the event unreachable is emitted) if no motion are
+  observed during at least the given value (in seconds).
+
+
+\item[started?](<commandName>)%
+  Event emitted when a command (\refSlot{go}, \refSlot{turn},
+  \refSlot{goTo}, \refSlot{goToAbsolute}, \refSlot{turnAbsolute},
+  \refSlot{goToChargingDock}) is sent.  \var{commandName} is the
+  string name of the command.
+
+\item[stop]() Stop all moves.
+
+\item[turn](<angle>) Turn left if $\var{angle} > 0$, turn right if
+  $\var{angle} < 0$. \var{angle} is in radian.
+
+\item[turnAbsolute](<yaw>)%
+  Turn toward a direction in the absolute initial frame (\var{yaw} = 0
+  is the initial direction).
+
+\item[watchdogInterval]%
+  If $\le 0$, watchdog is not used.  If $> 0$, time left for any command to
+  finish before it is aborted by the watchdog.
+
+\item[xSpeed] Linear speed.
+
+\item[yawSpeed] Angular speed ($> 0$ if the robot turns left).
+
+\end{urbiscriptapi}
+
+
+\subsection{Example}
+\begin{urbiunchecked}
+var watchdogGoTag = Tag.new|;
+
+function goDuring(duration, speed)
+{
+  disown({
+    watchdogGoTag.stop |
+    watchdogGoTag:{
+      robot.xSpeed = speed;
+      sleep(duration);
+      robot.stop();
+    };
+  });
+  true;
+}|;
+
+goDuring(2s, 1);
+robot.go(2s);
+\end{urbiunchecked}
+
+
+\section{Screen Display}
+
+The Open Jazz does not provide yet any Urbi API to manage the
+display. However you can launch GNU/Linux graphical commands which will use
+the display.  An X server (Xorg see \url{http://www.x.org/wiki/}) is
+installed in Jazz to manage the display.
+
+\subsection{From \us}
+
+You can launch any GNU/Linux application from \us by using the
+\urbiObject{Process} object. You can try to launch the \command{xeyes}
+application to test the display. To do so, connect to the Urbi runtime and
+create an \command{xeyes} process, then run it.
+
+\begin{urbiunchecked}
+var p = Process.new("xeyes", ["-geometry", "800x500"]);
+[00059674] Process xeyes
+p.run;
+// Two eyes get displayed on the screen.
+sleep(10s);
+p.kill;
+// The two eyes disappeared.
+p.join;
+\end{urbiunchecked}%$
+
+All GNU/Linux graphical application can be launched in the same way.  You
+can also display images using the \command{display} command. First upload
+some image to Jazz filesystem using \command{scp}.
+
+\begin{shell}
+$ scp myimage.jpg gostai@A1111FRPA001001:
+\end{shell}%$
+
+\noindent
+then display the image from \us:
+
+\begin{urbiunchecked}
+var p = Process.new("display",
+                    ["-geometry", "800x480+-1+24", "/home/gostai/myimage.jpg"]);
+[00897748] Process display
+p.run;
+sleep(10s);
+p.kill;
+p.join;
+\end{urbiunchecked}
+
+\subsection{Command Line}
+
+You can also launch graphical commands directly from shell session, but you
+must first set the \env{DISPLAY} environment variable as follow:
+
+\begin{shell}
+gostai@A1111FRPA001001:~$ export DISPLAY=:0.0
+gostai@A1111FRPA001001:~$ xeyes -geometry 800x500
+\end{shell}%$
+
+\section{Sonars}
+
+Jazz robot includes 8 sonars sensors.  are located in front of the robot
+with a constant spacing in order to detect any obstacle. One is located in
+the torso of the robot to detect desk and the last one is located in the
+back of the robot.  You can access those sensors using an array containing
+every values with this order: [left1, left2, left3, torso, right3, right2,
+right1, back]
+
+\subsection{\us Interface}
+
+\begin{urbiunchecked}
+robot.body.sonars.val;
+[00030042] [4.45448, 4.87494, 2.4531, 5.31701, 2.4292, 1.61747, 1.15333, 0.133563]
+\end{urbiunchecked}
+
+\subsection{Example}
+\begin{urbiunchecked}
+/*
+ * Stop the robot when sonar sensor values are less than 45 centimeters.
+ */
+at (watch (robot.body.sonars.val)?)
+{
+  var i = 0;
+  for (var d in robot.body.sonars.val)
+  {
+    if (i <= 6 && d <= 0.45)
+      robot.stop();
+    i++;
+  };
+};
+\end{urbiunchecked}
+
+
+\section{IRs}
+
+The robot includes 4 IR sensors designed specifically to detect desk and
+stairs that it have to avoid. Two of them are pointing to the ground so when
+the distance grow you should be able to know there is a hole in front of the
+robot. And the last two are pointing to the sky so when their value become
+short you can assume that there is an obstacle in front (like a chair or a
+desk that sometimes are too close to be detected with the sonars).
+
+You can access an array containing the 4 sensors' values in this order:
+[upLeft, upRight, floorLeft, floorRight].
+
+\subsection{\us Interface}
+\begin{urbiunchecked}
+robot.body.irs.val;
+[00914315] [0.645662, 0.61491, 1.5, 1.5]
+\end{urbiunchecked}
+
+\subsection{Example}
+\begin{urbiunchecked}
+/*
+ * stop the robot when IR sensors value are above (or under) 1 meter
+ */
+at (watch (robot.body.irs.val)?)
+{
+  var i = 0;
+  for (var d in robot.body.irs.val)
+  {
+    if (i <= 1 && d >= 1
+        || i >= 1 && d <= 1)
+      robot.stop();
+    i++;
+  };
+};
+\end{urbiunchecked}
+
+\section{Laser}
+
+Jazz has an Hokuyo laser (not available in all version of Open Jazz)
+accessible with ``robot.body.laser''.
+
+\subsection{robot.body.laser}
+\labelObject{jazz.body.laser}
+\begin{urbiscriptapi}
+\item[angleMax] the angle of the last ray (in radian)
+
+
+\item[angleMin] the angle of the first ray (in radian)
+
+
+\item[distanceMax] the maximal distance from which obstacles can be detected
+
+
+\item[distanceMin] the minimal distance from which obstacles can be detected
+
+
+\item[resolution] angular step between two consecutive rays (in radian)
+
+
+\item[val] an array of distances (in meter) provided by the laser from right
+  side to left side
+\end{urbiscriptapi}
+
+\chapter{urbiscript Library}
+
+\section{AlsaMicrophone}
+\labelObject{uobjects.AlsaMicrophone}
+
+The AlsaMicrophone uobject is a driver UObject that can be used to
+communicate from \us to the microphone device thanks to the ALSA (Advanced
+Linux Sound Architecture) library.
+The AlsaMicrophone prototype has only one slot available:
+
+\begin{urbiscriptapi}
+\item[new](<device>) Create a new instance of the AlsaMicrophone. Takes the
+  alsa microphone \textit{device} name as parameter.
+\end{urbiscriptapi}
+
+Using \refSlot{new} you create child instances of AlsaMicrophone. These new prototypes have the following slots:
+
+\begin{urbiscriptapi}
+%\item[deviceName]
+\item[val] Binary value corresponding to the sound captured by the
+  microphone.
+%\item[opened]
+%\item[configured]
+% \item[period]
+%\item[bufferTime] Amount of data in the ALSA device buffer not pushed yet to \refSlot{val}.
+\item[setup](<channels>, <rate>, <sampleSize>, <period>) Setup sound format.
+\end{urbiscriptapi}
+
+\section{AlsaSpeaker}
+\labelObject{uobjects.AlsaSpeaker}
+
+The AlsaSpeaker uobject is a driver UObject that can be used to communicate
+from \us to the speaker device thanks to the ALSA (Advanced Linux Sound
+Architecture) library.
+The AlsaSpeaker prototype has only one slot available:
+
+\begin{urbiscriptapi}
+\item[new](<device>) Create a new instance of the AlsaSpeaker. Takes the
+  alsa speaker \textit{device} name as parameter.
+\end{urbiscriptapi}
+
+Using \refSlot{new} you create child instances of AlsaSpeaker. These new prototypes have the following slots:
+
+\begin{urbiscriptapi}
+\item[bufferSize] The maximum buffer size.
+%\item[bufferTime] Amount of data not pushed yet to the ALSA device buffer (meaningfull only after an assignment to \refSlot{val})
+\item[clear](<>) Empty the sound buffer
+\item[closeDelay] Close device if no sound is available for this duration
+% \item[format] Effective format in binary header format.
+\item[latency] Latency (alsa buffer size) in samples.
+\item[pollFD](<>)
+\item[remain] The amount of time remaining to play in the speaker sound
+  buffer (expressed in \textit{ms} as a default unit).
+\item[setup](<channels>, <rate>, <sampleSize>) Setup sound format. If not called, the format of the first received sample is used.
+\item[val] The speaker value, expressed as a binary, in the format given by
+  the binary header during the assignment.
+\end{urbiscriptapi}
+
+\section{EchoCanceller}
+\labelObject{uobjects.EchoCanceller}
+
+This UObject remove the sound signal played by the speaker, from the sound signal captured by the microphone.
+The EchoCanceller prototype has only one slot available:
+
+\begin{urbiscriptapi}
+\item[new](<>) Create a new instance of the EchoCanceller.
+\end{urbiscriptapi}
+
+Using \refSlot{new} you create child instances of EchoCanceller. These new prototypes have the following slots:
+
+\begin{urbiscriptapi}
+\item[aggressive_mode] Boolean specifying if the echo canceller should
+  function in aggressive or moderate mode.
+%\item[buffersize]
+\item[calibrating] Set this boolean to \textit{true} to start \refSlot{delay} calibration.
+\item[delay] Delay estimate for sound card (expressed in \textit{ms}).
+\item[energy_peak] Energy peak used for delay calibration.
+\item[load] Enable or disable echo canceller.
+\item[micro] Input port to branch the microphone \textit{val} slot in.
+\item[speaker] Replace your speaker \textit{val} slot by this slot, so that
+  every sound that need to be played on your system goes through this echo
+  canceller first.
+\item[speakout] Branch this slot to your real speaker \textit{val} slot (so that the sound after going through this uobject, then gets played)
+%\item[toggle]
+\item[val] Binary value corresponding to the sound captured by the
+  microphone, after processing by the echo canceller.
+\end{urbiscriptapi}
+
+%% speaker needs 'load'
+%% micro needs 'load', 'duration'
+
+\chapter{urbiscript Interfaces}
+
+An interface describes some aspects of a type of device, by specifying the
+slots and methods that implementations must provide. Each child node of the
+component hierarchy should implement at least one interface.
+
+In short, interfaces are standard Urbi objects that components can inherit
+from to declare that they have some functionalities.
+
+The following pages describe interfaces defined for Jazz and used by some of
+Jazz objects.
+
+\interface{AutomaticGainControl}
+
+Interface for Automatic Gain Control (AGC) algorithm.
+
+\begin{urbiscriptapi}
+\item[load] Enable or disable Automatic Gain Control
+\item[level] level the sound should reach on average after processing by AGC.
+\item[max_gain] Maximal gain the AGC can apply.
+\item[increment] Maximal gain increase in dB/second.
+\item[decrement] Maximal gain decrease in dB/second.
+\item[gain] Current gain applied by AGC.
+\end{urbiscriptapi}
+
+\interface{Denoiser}
+
+Interface for Denoiser (remove noise from a sound signal) algorithm.
+
+\begin{urbiscriptapi}
+\item[load] Enable or disable denoising
+\item[reduction] Set the level of denoising in dB
+\end{urbiscriptapi}
+
+
+%colormap
+%facetracking
+%speaker: reglage du volume volume
+
+
+% \chapter{Hands on}
+% \section{Running an OpenCV UObject}
+% FIXME, faire l'exemple complet, donner le code, montrer comment le lancer en remote et en pluggue
+
+
+% \chapter{Jazz simulator}
+% FIXME: parler de webots, lancer une fake robot dans webots, jouer avec ca...
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: t
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

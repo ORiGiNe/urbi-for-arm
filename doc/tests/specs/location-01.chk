@@ -1,0 +1,5 @@
+syncline << "doc/specs/location.tex:33";
+[01234567:#] "doc/specs/location.tex:33"
+//#line 33 "doc/specs/location.tex"
+Location.new(Position.new("file.u",14,25));
+[00000001] file.u:14.25

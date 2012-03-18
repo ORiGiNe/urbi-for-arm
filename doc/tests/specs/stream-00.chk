@@ -1,0 +1,16 @@
+syncline << "doc/specs/stream.tex:38";
+[01234567:#] "doc/specs/stream.tex:38"
+//#line 38 "doc/specs/stream.tex"
+{
+  var i = InputStream.new(File.create("file.txt"));
+  assert(i.close.isVoid);
+  i.close;
+};
+[00000001:error] !!! close: stream is closed
+
+{
+  var o = OutputStream.new(File.create("file.txt"));
+  assert(o.close.isVoid);
+  o.close;
+};
+[00000002:error] !!! close: stream is closed

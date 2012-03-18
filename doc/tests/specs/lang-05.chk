@@ -1,0 +1,19 @@
+syncline << "doc/specs/lang.tex:3443";
+[01234567:#] "doc/specs/lang.tex:3443"
+//#line 3443 "doc/specs/lang.tex"
+var x = 0 |
+var x_was_two_for_two_seconds = false |
+at (x == 2 ~ 2s)
+  x_was_two_for_two_seconds = true
+onleave
+  x_was_two_for_two_seconds = false;
+
+x = 2       | assert(!x_was_two_for_two_seconds);
+sleep(1.5s) | assert(!x_was_two_for_two_seconds);
+sleep(1.5s) | assert( x_was_two_for_two_seconds);
+
+x = 3|; sleep(0.1s);  assert(!x_was_two_for_two_seconds);
+
+x = 2       | assert(!x_was_two_for_two_seconds);
+sleep(1.5s) | assert(!x_was_two_for_two_seconds);
+x = 3|; x = 2|; sleep (1s) | assert(!x_was_two_for_two_seconds);

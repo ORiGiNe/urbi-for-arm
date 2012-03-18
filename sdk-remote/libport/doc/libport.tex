@@ -1,0 +1,332 @@
+%% Copyright (C) 2009-2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\documentclass[openright,twoside,11pt]{book}
+  \usepackage{gostai-documentation}
+
+\newenvironment{workaround}{\paragraph{Workaround}}{}
+
+\title{Gostai Libport}
+\subtitle{Version \VcsDescription}
+\author{Gostai}
+
+\begin{document}
+\maketitle
+
+\chapter{Libport}
+\section{Compiler}
+
+\subsection{ATTRIBUTE\_DLLEXPORT, ATTRIBUTE\_DLLIMPORT}
+
+Use these guys to declare what symbols should be exported from the
+shared-object you are building, and what symbols should be imported from the
+shared-object you are using.  Of course, exported symbols at build-time are
+imported symbols at use-time, so the headers should use a single symbol to
+flag exported/imported symbols.  Use a CPP symbol to specify whether you are
+building.  See for instance \file{libport/export.hh}:
+
+\lstinputlisting[language=C++,basicstyle=\ttfamily\footnotesize]{include/libport/export.hh}
+
+Things to know:
+\begin{itemize}
+\item Put it before the declaration of the functions you export:
+\begin{cxx}
+  LIBPORT_API backtrace_type& backtrace(backtrace_type& bt);
+\end{cxx}
+
+\item Put it between \lstinline|class| or \lstinline|struct| and the name of
+  the class.
+\begin{cxx}
+  /// Defines the operator() for the classes get_type, set_type and swap_type.
+  struct LIBPORT_API iomanipulator
+    : public std::unary_function<void, std::ostream>
+  {
+    // ...
+\end{cxx}
+
+\item Also do it for inner classes (required by Visual):
+\begin{cxx}
+  class LIBPORT_API timer
+  {
+  public:
+    // ...
+    class LIBPORT_API time_var
+\end{cxx}
+
+\item Don't do it for (function, class) templates.  Unless of course they
+  are instantiated and compiled in the library.
+\end{itemize}
+
+\chapter{Documentation}
+
+\section{TeX4ht}
+
+TeX4ht works well, but there is a number of limitations you should be
+aware of if you want to stay out of troubles.
+\begin{itemize}
+\item The most detailed introductory documentation I found is
+  \url{http://www.gutenberg.eu.org/pub/GUTenberg/publicationsPDF/37-popineau.pdf}.
+\item The TeX4ht site does contain a complete documentation, it is
+  just hard to realize where the content is.  See
+  \url{http://www.cse.ohio-state.edu/~gurari/TeX4ht/mn11.html#QQ1-11-51}
+  and note that the numbers on the left-hand side are hyperlinks to
+  detailed information.
+\item The author passed away.  The project is now hosted here:
+  \url{https://puszcza.gnu.org.ua/projects/tex4ht}.
+\end{itemize}
+
+\subsection{Known Issues}
+
+\begin{itemize}
+\item Avoid starred sections at sectioning boundaries.  I.e., if you
+  split at sections, you should avoid playing with
+  \lstinline|\section*|.
+
+\item Don't create environments with embed hlines in the close part
+  that do not have their \lstinline|\\| before, it does not compile.
+  It was reported.
+
+  So this is wrong:
+\begin{lstlisting}[language={[LaTeX]TeX}]
+\newenvironment{operatorTable}
+{%
+  \begin{tabular}{|c|c|c|c|c|}%
+  }{%
+    \hline%
+  \end{tabular}%
+}
+
+\begin{operatorTable}
+  a & b & c & d & e\\
+  a & b & c & d & e\\
+\end{operatorTable}
+\end{lstlisting}
+
+  But this works:
+\begin{lstlisting}[language={[LaTeX]TeX}]
+\newenvironment{operatorTable}
+{%
+  \begin{tabular}{|c|c|c|c|c|}%
+    \hline%
+  }{%
+    \\\hline%
+  \end{tabular}%
+}
+
+\begin{operatorTable}
+  a & b & c & d & e\\
+  a & b & c & d & e
+\end{operatorTable}
+\end{lstlisting}
+\end{itemize}
+
+\chapter{Portability issues}
+
+\section{Types}
+\subsection{timeval}
+
+timeval is defined by GNU LibC
+(\url{http://www.gnu.org/s/libc/manual/html_node/Elapsed-Time.html}) and by
+MSVC (\url{http://msdn.microsoft.com/en-us/library/ms740560(VS.85).aspx}) as
+two longs.
+
+OSX plays a different game:
+
+\begin{cxx}
+#define _STRUCT_TIMEVAL         struct timeval
+_STRUCT_TIMEVAL
+{
+        __darwin_time_t         tv_sec;         /* seconds */
+        __darwin_suseconds_t    tv_usec;        /* and microseconds */
+};
+#endif /* _STRUCT_TIMEVAL */
+\end{cxx}
+
+\noindent
+but \file{/usr/include/i386/\_types.h} says:
+
+\begin{cxx}
+typedef long                 __darwin_time_t;        /* time() */
+\end{cxx}
+
+\noindent
+
+so use long.
+
+\section{Mac OS X and Linux}
+
+It seems that in interactive sessions, the flags of stdin, stdout and stderr
+are bound.  If you fcntl one of them, the others will be affected.  See the
+following program.
+
+\lstinputlisting[language=C++,basicstyle=\ttfamily\footnotesize]{fcntl.cc}
+
+\paragraph{Default}
+In an interactive session.  It's the same under Screen.
+\begin{lstlisting}
+$ ./a.out a
+"----------------------": ----------------------
+"Save": Save
+fcntl(STDIN_FILENO, F_GETFL): 2
+(flags = fcntl(STDOUT_FILENO, F_GETFL)): 2
+fcntl(STDERR_FILENO, F_GETFL): 2
+"Set": Set
+(res = fcntl(STDOUT_FILENO, F_SETFL, res)): 0
+fcntl(STDIN_FILENO, F_GETFL): 6
+fcntl(STDOUT_FILENO, F_GETFL): 6
+fcntl(STDERR_FILENO, F_GETFL): 6
+a
+"Restore": Restore
+(res = fcntl(STDOUT_FILENO, F_SETFL, flags)): 0
+fcntl(STDIN_FILENO, F_GETFL): 2
+fcntl(STDOUT_FILENO, F_GETFL): 2
+fcntl(STDERR_FILENO, F_GETFL): 2
+\end{lstlisting}
+
+\paragraph{Redirect stdout}
+This time, stdin and stdout are not correlated.  The same happens if you
+redirect stderr instead: it is detached from the two others.
+
+\begin{lstlisting}
+$ ./a.out a | cat
+"----------------------": ----------------------
+"Save": Save
+fcntl(STDIN_FILENO, F_GETFL): 2
+(flags = fcntl(STDOUT_FILENO, F_GETFL)): 1
+fcntl(STDERR_FILENO, F_GETFL): 2
+"Set": Set
+(res = fcntl(STDOUT_FILENO, F_SETFL, res)): 0
+fcntl(STDIN_FILENO, F_GETFL): 2
+fcntl(STDOUT_FILENO, F_GETFL): 5
+fcntl(STDERR_FILENO, F_GETFL): 2
+"Restore": Restore
+(res = fcntl(STDOUT_FILENO, F_SETFL, flags)): 0
+fcntl(STDIN_FILENO, F_GETFL): 2
+fcntl(STDOUT_FILENO, F_GETFL): 1
+fcntl(STDERR_FILENO, F_GETFL): 2
+a
+\end{lstlisting}
+
+\begin{lstlisting}
+$ ./a.out a >/dev/null
+"----------------------": ----------------------
+"Save": Save
+fcntl(STDIN_FILENO, F_GETFL): 2
+(flags = fcntl(STDOUT_FILENO, F_GETFL)): 1
+fcntl(STDERR_FILENO, F_GETFL): 2
+"Set": Set
+(res = fcntl(STDOUT_FILENO, F_SETFL, res)): 0
+fcntl(STDIN_FILENO, F_GETFL): 2
+fcntl(STDOUT_FILENO, F_GETFL): 5
+fcntl(STDERR_FILENO, F_GETFL): 2
+"Restore": Restore
+(res = fcntl(STDOUT_FILENO, F_SETFL, flags)): 0
+fcntl(STDIN_FILENO, F_GETFL): 2
+fcntl(STDOUT_FILENO, F_GETFL): 1
+fcntl(STDERR_FILENO, F_GETFL): 2
+\end{lstlisting}
+
+\section{Windows}
+
+\subsection{Test suite}
+
+The Libport test suite uses Boost.UnitTest.  While our builds (that
+aim for a static linking of the Boost libraries) rely on the absence
+of the Boost dlls in the library directory, this breaks the UnitTest
+framework.
+
+So we need \file{boost\_unit\_test\_framework-vc*.*} files, not just
+\file{libboost\_unit\_test\_framework-vc.lib}.
+
+\subsection{Killing processes}
+\label{sec:win:kill}
+Beware that the \command{kill} builtin from shells cannot kill Windows
+processes, use \command{/bin/kill}.  Use the following shell function
+for \command{killall}.
+
+\begin{shell}
+killall ()
+{
+  ps -W |
+    perl -ne '
+    BEGIN { $re = join "|", qw ('"$*"'); };
+    /\s*(\d+).*(?:$re)/ && push @res, $1;
+    END { print "@res\n"; print STDERR "$re: @res\n"; };' |
+    xargs /bin/kill -f
+}
+\end{shell}
+
+\subsection{Crashes}
+
+Windows features an ``automatic bug reporting'' system that pops-up a
+window and expects user interaction.  Many such windows can stack up
+and consume resources (and the guilty process is still present).
+
+To prevent such windows:
+
+panneau de config; System; Advanced; Error Report; desactivate +
+disable "But Notify...".
+
+The process that displays the window is \command{dwwin.exe}.  It can
+be killed (\autoref{sec:win:kill}).
+
+\section{MSVC}
+
+\subsection{error C2883}
+MSVC 2005 dies on the following piece of code:
+
+\begin{cxx}
+#include <iostream>
+#define ECHO(S) std::cerr << #S << std::endl
+
+namespace libport
+{
+  struct Top
+  {
+    virtual ~Top() {}
+    virtual void foo(int)    { ECHO(Top::foo(int)); }
+    virtual void foo(double) { ECHO(Top::foo(double)); }
+  };
+}
+
+int
+main ()
+{
+  struct Bot : libport::Top
+  {
+    using Top::foo;
+    virtual ~Bot() {}
+    virtual void foo(double) { ECHO(Bot::foo(double)); }
+  };
+
+  Bot b;
+  b.foo(12);
+  b.foo(1.2);
+}
+\end{cxx}
+
+\begin{shell}
+$ cl.exe using.cc -o using
+using.cc:21: error C2883: 'main::Bot::foo' :
+                           function declaration conflicts with
+                           'libport::Top::foo'
+                           introduced by using-declaration
+using.cc:10: note:         see declaration of 'libport::Top::foo'
+\end{shell}
+
+\begin{workaround}
+  Extract the struct from the function.
+\end{workaround}
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% ispell-dictionary: "american"
+%%% fill-column: 76
+%%% End:

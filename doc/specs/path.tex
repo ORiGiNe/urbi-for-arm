@@ -1,0 +1,181 @@
+%% Copyright (C) 2009-2010, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\section{Path}
+
+A \dfn{Path} points to a file system entity (directory, file and so
+forth).
+
+\subsection{Prototypes}
+\begin{refObjects}
+\item[Comparable]
+\item[Orderable]
+\end{refObjects}
+
+\subsection{Construction}
+
+A \lstinline|Path| is constructed with the string that points to the
+file system entity. This path can be relative or absolute.
+
+\begin{urbiscript}[firstnumber=1]
+Path.new("/path/file.u");
+[00000001] Path("/path/file.u")
+\end{urbiscript}
+
+Some minor simplifications are made, such as stripping useless
+\file{./} occurrences.
+
+\begin{urbiscript}
+Path.new("././///.//foo/");
+[00000002] Path("foo")
+\end{urbiscript}
+
+\subsection{Slots}
+\begin{urbiscriptapi}
+\item[absolute]
+  Whether \this is absolute.
+\begin{urbiassert}
+Path.new("/abs/path").absolute;
+!Path.new("rel/path").absolute;
+\end{urbiassert}
+
+\item[asList]
+  List of names used in path (directories and possibly file), from
+  bottom up. There is no difference between relative path and absolute
+  path.
+\begin{urbiassert}
+Path.new("/path/to/file.u").asList == ["path", "to", "file.u"];
+Path.new("/path").asList           == Path.new("path").asList;
+\end{urbiassert}
+
+\item[asPrintable]
+\begin{urbiassert}
+Path.new("file.txt").asPrintable == "Path(\"file.txt\")";
+\end{urbiassert}
+
+\item[asString]
+  The name of the file.
+\begin{urbiassert}
+Path.new("file.txt").asString == "file.txt";
+\end{urbiassert}
+
+\item[basename]
+  Base name of the path.
+\begin{urbiassert}
+Path.new("/absolute/path/file.u").basename == "file.u";
+Path.new("relative/path/file.u").basename  == "file.u";
+\end{urbiassert}
+
+\item[cd]
+  Change current working directory to \this. Return the new
+  current working directory as a \lstinline|Path|.
+
+\item[cwd]
+  The current working directory.
+% We used to write
+% assert(Path.new("/").cd == Path.new("/"));
+% assert(Path.cwd         == Path.new("/"));
+% which is wrong on Windows, because cwd (like cd) returns Z:/ instead
+% of /.
+\begin{urbiscript}
+{
+  // Save current directory.
+  var pwd = Path.cwd|
+  // Go into ``/''.
+  var root = Path.new("/").cd;
+  // Current working directory is ``/''.
+  assert(Path.cwd == root);
+  // Go back to the directory we were in.
+  assert(pwd.cd == pwd);
+};
+\end{urbiscript}
+
+\item[dirname]
+  Directory name of the path.
+\begin{urbiassert}
+Path.new("/abs/path/file.u").dirname == Path.new("/abs/path");
+Path.new("rel/path/file.u").dirname  == Path.new("rel/path");
+\end{urbiassert}
+
+\item[exists]
+  Whether something (a file, a directory, \ldots) exists where
+  \this points to.
+\begin{urbiassert}
+Path.cwd.exists;
+Path.new("/").exists;
+!Path.new("/this/path/does/not/exists").exists;
+\end{urbiassert}
+
+\item[isDir]
+  Whether \this is a directory.
+\begin{urbiassert}
+Path.cwd.isDir;
+\end{urbiassert}
+
+\item[isReg]
+  Whether \this is a regular file.
+\begin{urbiassert}
+!Path.cwd.isReg;
+\end{urbiassert}
+
+\item[open]
+  Open \this. Return either a \dfn{Directory} or a
+  \dfn{File} according the type of \this. See
+  \refObject{File} and \refObject{Directory}.
+
+\item[readable]
+  Whether \this is readable.  Throw if does not even exist.
+\begin{urbiassert}
+Path.new(".").readable;
+\end{urbiassert}
+
+\item[writable]
+  Whether \this is writable.  Throw if does not even exist.
+\begin{urbiassert}
+Path.new(".").writable;
+\end{urbiassert}
+
+\item['/'](<rhs>)%
+  Create a new \dfn{Path} that is the concatenation of
+  \this and \lstinline|\var{rhs}|. \lstinline|\var{rhs}|
+  can be a \dfn{Path} or a \dfn{String} and cannot be absolute.
+\begin{urbiscript}
+assert(Path.new("/foo/bar") / Path.new("baz/qux/quux")
+       == Path.new("/foo/bar/baz/qux/quux"));
+Path.cwd / Path.new("/tmp/foo");
+[00000003:error] !!! /: Rhs of concatenation is absolute: /tmp/foo
+\end{urbiscript}
+
+\item['=='](<that>)%
+  Same as comparing the string versions of \this and
+  \var{that}.  Beware that two paths may be different and point to the
+  very same location.
+\begin{urbiassert}
+  Path.new("/a")  == Path.new("/a");
+!(Path.new("/a")  == Path.new("a")  );
+\end{urbiassert}
+
+\item['<'](<that>)%
+  Same as comparing the string versions of \this and
+  \var{that}.
+\begin{urbiassert}
+  Path.new("/a")   < Path.new("/a/b");
+!(Path.new("/a/b") < Path.new("/a")  );
+\end{urbiassert}
+
+\end{urbiscriptapi}
+
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

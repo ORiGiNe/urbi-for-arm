@@ -1,0 +1,62 @@
+// Check that notifyChange callbacks causing exceptions do not disrupt the other callbacks.
+
+UVar.new(this, "x")|;
+var calledGood = 0| var calledBad = 0|;
+
+// Put one good before and one after
+&x.notifyChange(closure() { calledGood++;})|;
+&x.notifyChange(closure() { calledBad++; 1/0})|;
+&x.notifyChange(closure() { calledGood++;})|;
+
+x = 12|;
+[00000001:error] !!! Exception caught while processing notify on obj_0xADDR.x:
+[00000002:error] !!! input.u:8.42-44: /: division by 0
+[00000003:error] !!!    called from: input.u:11.1: updateSlot
+
+calledBad;
+[00000004] 1
+calledGood;
+[00000005] 2
+
+x=12|;
+calledBad;
+[00000006] 1
+calledGood;
+[00000007] 4
+
+&x.notifyChange(closure() { calledBad++; 1/0})|;
+&x.eraseThrowingCallbacks = false|;
+
+x = 12|;
+[00000008:error] !!! Exception caught while processing notify on obj_0xADDR.x:
+[00000009:error] !!! input.u:27.42-44: /: division by 0
+[00000010:error] !!!    called from: input.u:30.1: updateSlot
+calledBad;
+[00000011] 2
+calledGood;
+[00000012] 6
+
+x = 12|;
+[00000013:error] !!! Exception caught while processing notify on obj_0xADDR.x:
+[00000014:error] !!! input.u:27.42-44: /: division by 0
+[00000015:error] !!!    called from: input.u:39.1: updateSlot
+calledBad;
+[00000016] 3
+calledGood;
+[00000017] 8
+
+&x.eraseThrowingCallbacks = true|;
+x = 12|;
+[00000018:error] !!! Exception caught while processing notify on obj_0xADDR.x:
+[00000019:error] !!! input.u:27.42-44: /: division by 0
+[00000020:error] !!!    called from: input.u:49.1: updateSlot
+calledBad;
+[00000021] 4
+calledGood;
+[00000022] 10
+
+x = 12|;
+calledBad;
+[00000023] 4
+calledGood;
+[00000024] 12

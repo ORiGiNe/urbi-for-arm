@@ -1,0 +1,101 @@
+syncline << "doc/specs/position.tex:25";
+[01234567:#] "doc/specs/position.tex:25"
+//#line 25 "doc/specs/position.tex"
+Position.new;
+[00000001] 1.1
+
+syncline << "doc/specs/position.tex:33";
+[01234567:#] "doc/specs/position.tex:33"
+//#line 33 "doc/specs/position.tex"
+Position.new(Position.new(2, 3));
+[00000001] 2.3
+
+syncline << "doc/specs/position.tex:41";
+[01234567:#] "doc/specs/position.tex:41"
+//#line 41 "doc/specs/position.tex"
+Position.new(2, 3);
+[00000001] 2.3
+
+syncline << "doc/specs/position.tex:49";
+[01234567:#] "doc/specs/position.tex:49"
+//#line 49 "doc/specs/position.tex"
+Position.new("file.u", 2, 3);
+[00000001] file.u:2.3
+
+syncline << "doc/specs/position.tex:60";
+[01234567:#] "doc/specs/position.tex:60"
+//#line 60 "doc/specs/position.tex"
+assert {
+Position.new(2, 3) + 2 == Position.new(2, 5);
+Position.new(2, 3) + -4 == Position.new(2, 1);
+};
+
+syncline << "doc/specs/position.tex:68";
+[01234567:#] "doc/specs/position.tex:68"
+//#line 68 "doc/specs/position.tex"
+assert {
+Position.new(2, 3) - 1 == Position.new(2, 2);
+Position.new(2, 3) - -4 == Position.new(2, 7);
+};
+
+syncline << "doc/specs/position.tex:75";
+[01234567:#] "doc/specs/position.tex:75"
+//#line 75 "doc/specs/position.tex"
+assert {
+Position.new(2, 3) == Position.new(2, 3);
+Position.new("a.u", 2, 3) == Position.new("b.u", 2, 3);
+Position.new(2, 3) != Position.new(2, 2);
+};
+
+syncline << "doc/specs/position.tex:83";
+[01234567:#] "doc/specs/position.tex:83"
+//#line 83 "doc/specs/position.tex"
+assert {
+Position.new(2, 3) < Position.new(2, 4);
+Position.new(2, 3) < Position.new(3, 1);
+};
+
+syncline << "doc/specs/position.tex:91";
+[01234567:#] "doc/specs/position.tex:91"
+//#line 91 "doc/specs/position.tex"
+assert {
+Position.new("file.u", 2, 3).asString == "file.u:2.3";
+};
+
+syncline << "doc/specs/position.tex:97";
+[01234567:#] "doc/specs/position.tex:97"
+//#line 97 "doc/specs/position.tex"
+assert {
+Position.new(2, 3).column == 3;
+};
+
+syncline << "doc/specs/position.tex:103";
+[01234567:#] "doc/specs/position.tex:103"
+//#line 103 "doc/specs/position.tex"
+assert {
+Position.new(2, 3).columns(2) == Position.new(2, 5);
+Position.new(2, 3).columns(-4) == Position.new(2, 1);
+};
+
+syncline << "doc/specs/position.tex:110";
+[01234567:#] "doc/specs/position.tex:110"
+//#line 110 "doc/specs/position.tex"
+assert {
+Position.new("file.u", 2, 3).file == Path.new("file.u");
+Position.new(2, 3).file == nil;
+};
+
+syncline << "doc/specs/position.tex:117";
+[01234567:#] "doc/specs/position.tex:117"
+//#line 117 "doc/specs/position.tex"
+assert {
+Position.new(2, 3).line == 2;
+};
+
+syncline << "doc/specs/position.tex:123";
+[01234567:#] "doc/specs/position.tex:123"
+//#line 123 "doc/specs/position.tex"
+assert {
+Position.new(2, 3).lines(2) == Position.new(4, 1);
+Position.new(2, 3).lines(-1) == Position.new(1, 1);
+};

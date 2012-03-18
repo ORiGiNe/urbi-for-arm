@@ -1,0 +1,86 @@
+#! /bin/bash
+
+. $(dirname "$0")/msvc-common.sh
+
+# lib.exe pollutes the output with version info, which is
+# troublesome for post-processing.  For instance:
+#
+# bf-4 $ [...]c:/vcxx8/VC/bin/lib.exe /LIST 'libltdl\.libs\libltdlc.lib'
+# Microsoft (R) Library Manager Version 8.00.50727.42
+# Copyright (C) Microsoft Corporation.  All rights reserved.
+#
+# libltdl/loaders/.libs/libltdl_libltdlc_la-preopen.o
+# libltdl/.libs/libltdl_libltdlc_la-lt__alloc.o
+# libltdl/.libs/libltdl_libltdlc_la-lt__debug.o
+# libltdl/.libs/libltdl_libltdlc_la-lt_dlloader.o
+# libltdl/.libs/libltdl_libltdlc_la-lt_error.o
+# libltdl/.libs/libltdl_libltdlc_la-ltdl.o
+# libltdl/.libs/libltdl_libltdlc_la-slist.o
+# libltdl/.libs/argz.o
+# libltdl/.libs/lt__dirent.o
+# libltdl/.libs/lt__strl.o
+# libltdl/.libs/libltdlcS.o
+# libltdl/.libs/libltdlc.lax/loadlibrary.lib/libltdl/loaders/.libs/loadlibrary.o
+run_lib_exe ()
+{
+  stdout=$tmpdir.out
+  stderr=$tmpdir.err
+  run_filter "$lib_exe" "$@"
+}
+
+setup
+PROG=lib.exe
+
+lib_exe=$VCXX_BIN/$PROG
+
+test -x "$lib_exe" ||
+  error 72 "$PROG not found in $VCXX_BIN"
+
+: ${TMPDIR=/tmp}
+tmpdir=$TMPDIR/$me.$$
+case $VERBOSE in
+  (x) ;;
+  (*) trap "exit=\$?; rm -rf $tmpdir; exit \$exit" 0;;
+esac
+mkdir -p $tmpdir
+
+outargs=/nologo
+linkargs=
+
+case $1 in
+  (cru)
+    shift
+    outargs+=" /OUT:$1" ; shift
+    ;;
+  (x)  #gnah, we have to remove them one by one
+    shift
+    lib=$($repath -w $1)
+    for f in $(run_lib_exe /LIST $lib); do
+      mkdir -p $(dirname "$f")
+      run_lib_exe $outargs "/EXTRACT:$f" "/OUT:$f" $lib
+    done
+    exit
+    ;;
+ (t)
+    shift
+    lib=$($repath -w $1)
+    run_lib_exe $outargs /LIST $lib
+    exit
+    ;;
+esac
+
+while ! test -z $1; do
+  larg=
+  carg=
+  case $1 in
+    (-L*)   larg=/LIBPATH:${1#-L} ;;
+    (-l*)   larg=${1#-l}.lib ;;
+    (*.lib) larg=$1;;
+    (*)     carg=$1;;
+  esac
+  outargs+=" $carg"
+  linkargs+=" $larg"
+  shift
+done
+
+run_lib_exe $outargs $linkargs

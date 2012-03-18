@@ -1,0 +1,15 @@
+syncline << "doc/specs/tag.tex:136";
+[01234567:#] "doc/specs/tag.tex:136"
+//#line 136 "doc/specs/tag.tex"
+assert {
+{
+  var t = Tag.new;
+  var res = [];
+  for (3)
+    detach(res << {t: sleep});
+  t.block("foo");
+  res;
+}
+==
+["foo", "foo", "foo"];
+};

@@ -1,0 +1,8 @@
+//#roscore
+//#plug urbi/ros
+if (System.hasLocalSlot("env"))
+  clog << env["ROS_MASTER_URI"]
+else
+  clog << System.getenv("ROS_MASTER_URI");
+Ros.checkMaster;
+[00000001] 1

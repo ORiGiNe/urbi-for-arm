@@ -1,0 +1,27 @@
+syncline << "doc/specs/tag.tex:155";
+[01234567:#] "doc/specs/tag.tex:155"
+//#line 155 "doc/specs/tag.tex"
+var t = Tag.new|;
+var t0 = time|;
+t: every(1s) echo("time   : %.0f" % (time - t0)),
+sleep(2.2s);
+[00000158] *** time   : 0
+[00001159] *** time   : 1
+[00002159] *** time   : 2
+
+t.freeze;
+assert(t.frozen);
+t: every(1s) echo("shifted: %.0f" % (shiftedTime - t0)),
+sleep(2.2s);
+// The tag is frozen, nothing is run.
+
+// Unfreeze the tag: suspended code is resumed.
+// Note the difference between "time" and "shiftedTime".
+t.unfreeze;
+assert(!t.frozen);
+sleep(2.2s);
+[00004559] *** shifted: 2
+[00005361] *** time   : 5
+[00005560] *** shifted: 3
+[00006362] *** time   : 6
+[00006562] *** shifted: 4

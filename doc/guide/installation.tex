@@ -1,0 +1,119 @@
+%% Copyright (C) 2009-2011, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\chapter{Installation}
+\label{sec:installation}
+
+\section{Download}
+
+Various pre-compiled packages are provided.  They are named
+\begin{center}
+\file{urbi-sdk-\var{version}-\var{arch}-\var{os}-\var{compiler}.\var{ext}}
+\end{center}
+where
+\begin{description}
+\item[\var{version}] specifies the exact revision of Urbi that you are
+  using.  It can be simple, \code{2.0}, or more complex,
+  \code{2.0-beta3-137-g28f8880}.  In that case,
+  \begin{description}
+  \item[2.0] is the version of the \urbi Kernel,
+  \item[beta3] designates the third pre-release,
+  \item[137] is the number of changes since beta3 (not counting
+    changes in sub-packages),
+  \item[g28f8880] is a version control identifier, used internally to
+    track the exact version that is being tested by our users.
+  \end{description}
+\item[\var{arch}] describes the architecture, the \acro{cpu}:
+  \code{ARM}, \code{ppc}, or \code{x86}.
+\item[\var{os}] is the operating system: \code{linux} for GNU/Linux,
+  \code{osx} for Mac OS X, or \code{windows} for Microsoft Windows.
+\item[\var{compiler}] is the tool chain used to compile the programs:
+  \code{gcc4} for the GNU Compiler Collection 4.x, \code{vcxx2005} for
+  Microsoft Visual \Cxx 2005, \code{vcxx2008} for Microsoft Visual
+  \Cxx 2008.
+\item[\var{ext}] is the package format extension.  For Unix architectures,
+  \code{tar.bz2}; uncompress them with \command{tar xf \var{tarfile}}.  For
+  Windows hosts, we provide zip files (\file{*.zip}) for both ``release''
+  and ``debug'' flavors, and installers (for instance \file{*.exe}).  You
+  are encouraged to use the installers, since in addition to installing
+  headers and libraries, they also install Visual \Cxx Wizards to create
+  UObjects, they take care of installing the Visual Runtime if needed, and
+  they install Gostai Console and Gostai Editor.
+\end{description}
+
+\section{Install \&{} Check}
+\label{sec:install:install}
+
+The package is \dfn{relocatable}, i.e., it does not need to be put at a
+specific location, nor does it need special environment variables to be set.
+It is not necessary to be a super-user to install it.  The \dfn{root} of the
+package, denoted by \index{urbi-root}\var{urbi-root} hereafter, is the
+absolute name of the directory which contains the package.
+
+After the install, the quickest way to test your installation is to run
+the various programs.
+
+\subsection{GNU/Linux and Mac OS X}
+
+Decompress the package where you want to install it.  If \var{urbi-sdk-2.x}
+denotes the version of Urbi SDK you downloaded (say, \var{urbi-sdk-2.x} is
+\file{urbi-sdk-2.3-linux-x86-gcc4}), run something like:
+
+\begin{shell}
+$ rm -rf \var{urbi-root}
+$ cd /tmp
+$ tar xf \var{path-to}/\var{urbi-sdk-2.x}.tar.bz2
+$ mv \var{urbi-sdk-2.x} \var{urbi-root}
+\end{shell}
+
+This directory, \var{urbi-root}, should contain \file{bin}, \file{FAQ.txt}
+and so forth.  Do not move things around inside this directory.  In order to
+have an easy access to the \urbi programs, set up your \env{PATH}:
+
+\begin{shell}[style=varInString]
+$ export PATH="\var{urbi-root}/bin:$PATH"
+\end{shell}%$
+
+\begin{shell}
+# Check that urbi is properly set up.
+$ urbi --version
+
+# Check that urbi-launch is properly installed.
+$ urbi-launch --version
+# Check that urbi-launch can find its dependencies.
+$ urbi-launch -- --version
+
+# Check that Urbi can compute.
+$ urbi -e '1+2*3; shutdown;'
+[00000175] 7
+\end{shell}%$
+
+\subsection{Windows}
+
+Decompress the zip file wherever you want or execute the installer.
+
+Execute the script \file{urbi.bat}, located at the root of the
+uncompressed package. It should open a terminal with an interactive
+Urbi session.
+
+\begin{cygwin}
+Inputs and outputs of windows native application are buffered under Cygwin.
+Thus, either running the interactive mode of Urbi or watching the output of the
+server under Cygwin is not recommended.
+\end{cygwin}
+
+% FIXME: add a listing with the urbi banner under windows?
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

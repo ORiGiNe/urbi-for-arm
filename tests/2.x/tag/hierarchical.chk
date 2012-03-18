@@ -1,0 +1,37 @@
+a.b:waituntil(false)|echo ("boom"),
+
+sleep(0);
+a.b.stop;
+[00000001] *** boom
+
+a.b:waituntil(false)|echo ("boom"),
+
+sleep(0);
+a.stop;
+[00000002] *** boom
+
+a.b.c.k:waituntil(false)|echo ("boom"),
+
+sleep(0);
+a.stop;
+[00000003] *** boom
+
+a.b.c.k:waituntil(false)|echo ("boom"),
+
+sleep(0);
+a.b.stop;
+[00000004] *** boom
+
+a.b.c.k:waituntil(false)|echo ("boom"),
+
+sleep(0);
+a.b.c.stop;
+[00000005] *** boom
+
+a.b.c.k:waituntil(false)|echo ("boom"),
+
+sleep(0);
+a.b.c.k.stop;
+[00000006] *** boom
+
+sleep(0);

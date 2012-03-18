@@ -1,0 +1,621 @@
+#! /bin/bash
+
+# Copyright (C) 2008-2011, Gostai S.A.S.
+#
+# This software is provided "as is" without warranty of any kind,
+# either expressed or implied, including but not limited to the
+# implied warranties of fitness for a particular purpose.
+#
+# See the LICENSE file for more information.
+
+# Wrapper to use Microsoft compiler and linker under wine with
+# Autotools.
+
+# TODO:
+#
+# - This does not support concurrency, at least I fear it does not
+#   because ndbm does not.
+#
+# - a test suite :(  Many bugs were regularly introduced.
+#
+# - support link.exe -dump -symbols
+#   currenty we do junk.  In other words, merge dumpbin.exe in.
+
+set -e
+
+trace ()
+{
+  case $VERBOSE in (x)
+    set -x;;
+  esac
+}
+
+trace
+
+. $(dirname "$0")/msvc-common.sh
+
+transform ()
+{
+  case $1 in
+    ('') verbose "warning: empty argument passed to transform";;
+    (/*) $repath -w "$1";;
+    (*)  echo "$1";;
+  esac
+}
+
+# handle_lib -lLIB
+# ----------------
+# Convert a cc-like link-option (such a -lboost-date-time) into a library
+# name against which we will link.
+#
+# One issue is whether to link against libLIB.lib or LIB.lib.  It appears
+# that LIB.lib seems to be used for dlls, and libLIB.lib for static libs.
+# So since we now support dlls, if both are present, prefer LIB.lib.
+handle_lib ()
+{
+  local lib=$1
+
+  # This is used to compile against Webots Controller library.
+  if test "$lib" = "-lController"; then
+      handle_lib_res="Controller.lib"
+      return
+  fi
+
+  # If $systemlibs is not defined, set it up.  It saves time (and
+  # traces) to do it only on demand instead of always.
+  system_libs=$medir/system-libs.txt
+  test -f $system_libs ||
+  {
+    # The libs we produce are called libfoo.lib, whereas the system
+    # libs are called foo.lib.
+    # FIXME: Use external variables.  Need to find Boost and the like.
+    local i
+    local libdirs
+    set x
+    for i in                                    \
+      "$HOME/local/usr/lib"                     \
+      "$HOME/local"                             \
+      "$VS_PATH/Lib"                            \
+      "$VCXX_PATH/Lib"                          \
+      "$VCXX_PATH/PlatformSDK/Lib"              \
+      "$VS_PATH/PlatformSDK/Lib"                \
+      "$($repath -u "$LIBPATH")"                \
+      $EXTRA_LIBRARY_PATH
+    do
+      test ! -d "$i" ||
+        set "$@" "$i"
+    done
+    shift
+    verbose "systemlib dirs:" "$@"
+
+    find -L "$@" -iname '*.lib' |
+      # We tried to keep the original case, but it was a PITA, since,
+      # at least in our environment, some libraries (ws2_32) as two
+      # different cases: WS2_32 for Visual, and ws2_32 for mingw.
+      # Keep it stupid simple.
+        tr A-Z a-z |
+        sort -u |
+        tr -d '\r' >$system_libs.tmp
+    mv -f $system_libs.tmp $system_libs
+    verbose "systemlibs:" "$(cat $system_libs)"
+  }
+
+  local base
+  base=$(echo "${lib#-l}.lib" | tr A-Z a-z)
+  local res
+  # If $base is not in $system_libs, prepend "lib".
+  verbose "consulting $system_libs for $base"
+  if grep -q "/$base\$" <$system_libs; then
+    res=$base
+  else
+    res=lib$base
+  fi
+  handle_lib_res=$(transform "$res")
+  verbose "handle_lib: $lib -> $handle_lib_res"
+}
+
+# dll_2_lib ()
+# ------------
+# Return the name of the corresponding *.lib.
+dll_2_lib ()
+{
+  echo "$1" | sed -re 's/(-[0-9]*)?.dll/.lib/'
+}
+
+# all_2_pdb ()
+# ------------
+# Return the PDB name of the corresponding output.
+all_2_pdb ()
+{
+  echo "$1" | sed -re 's/\.[^.]*/.pdb/'
+}
+
+# quote_for_eval_arg ARG
+# ----------------------
+# Aesthetically quote ARG to be evaled later.
+# This function returns two values: QUOTE_FOR_EVAL_RESULT
+# is double-quoted, suitable for a subsequent eval, whereas
+# QUOTE_FOR_EVAL_UNQUOTED_RESULT has merely all characters
+# which are still active within double quotes backslashified.
+#
+# Taken from Libtool.
+quote_for_eval_arg ()
+{
+  case $1 in
+    (*[\\\`\"\$]*)
+      local quote_subst='s/\([`"$\\]\)/\\\1/g'
+      quote_for_eval_arg_unquoted_result=`echo "$1" | sed -e "$quote_subst"`;;
+    (*)
+      quote_for_eval_arg_unquoted_result="$1";;
+  esac
+
+  case $quote_for_eval_arg_unquoted_result in
+    # Double-quote args containing shell metacharacters to delay
+    # word splitting, command substitution and and variable
+    # expansion for a subsequent eval.
+    # Many Bourne shells cannot handle close brackets correctly
+    # in scan sets, so we specify it separately.
+    (*[\[\~\#\^\&\*\(\)\{\}\|\;\<\>\?\'\ \	]* | *]* | "")
+      quote_for_eval_arg_result="\"$quote_for_eval_arg_unquoted_result\"";;
+    (*)
+      quote_for_eval_arg_result="$quote_for_eval_arg_unquoted_result";;
+  esac
+}
+
+# append VARIABLE VALUES...
+# -------------------------
+# Append the VALUES to $VARIABLE, making sure it has all the needed
+# escapes.  Separates with spaces.
+append ()
+{
+  local var="$1"
+  shift
+  local val
+  for val
+  do
+    quote_for_eval_arg "$val"
+    eval "$var=\$$var\${$var:+ }\$quote_for_eval_arg_result"
+  done
+}
+
+# linkargs ARG...
+# ---------------
+# Append to $linkargs.
+linkargs ()
+{
+  append linkargs "$@"
+}
+
+# outargs ARG...
+# --------------
+# Append to $outargs.
+outargs ()
+{
+  append outargs "$@"
+}
+
+usage ()
+{
+   cat <<EOF
+This MSVC++ wrapper presents a CC-like interface.  It adds some options
+of its own.
+
+Options:
+  --help          output this message and that of MSVC and exit
+  --runtime=KIND  specify whether using "debug" or "release" runtime
+                  [$runtime]
+  --version       output the version of this script and that of MSVC and exit
+  --verbose       output debugging information about this script
+
+MSVC help:
+(See also <URL:http://msdn.microsoft.com/en-us/library/fwkeyyhe.aspx>)
+
+EOF
+  "$VCXX_BIN/cl.exe" -help 2>&1 |
+    dos2unix |
+    filter_wine
+  exit 0
+}
+
+# This is mostly to please configure.
+version ()
+{
+  cat <<EOF
+MS VC++ wrapper.
+
+EOF
+  # Simply don't pass /nologo.  The version info is on stderr.
+  "$VCXX_BIN/cl.exe" 2>&1 |
+    # Convert the end of line.  This is actually not gratuitous:
+    # URBI_CXX uses this --version to get the version of the compiler,
+    # and it is pasted in Makefile, which in turn is used to check that
+    # that libport::read_stding works properly.  Unfortunately if we
+    # have a \r\n in the file, then reading binary/text will make a
+    # difference.
+    dos2unix |
+    filter_wine |
+    sed -ne '/./p'
+  exit 0
+}
+
+# handle option -o
+# ----------------
+get_options__o ()
+{
+  output=$1
+  case $mode:$output in
+      (*:/dev/null) output=$tmp/discarded-output;;
+      (:*.o|:*.obj) mode=compile;;
+      (:*.i|:*.ii)  mode=preprocess;;
+  esac
+  # if echo $1 | grep -q .exe; then PROG=link.exe ; fi
+}
+
+get_options ()
+{
+  verbose "arguments: $*"
+  while test $# -ne 0
+  do
+    case $1 in
+    (--help)    usage;;
+    (--version) version;;
+    (--verbose) verbose=true;;
+    (-v)        compiler_verbose=true;;
+    (--runtime=*) runtime=${1#--runtime=};;
+    (--runtime)   runtime=$2             ; shift;;
+    (-Wl,--runtime=*) runtime=${1#-Wl,--runtime=};;
+
+    # Libraries.
+    (-link) ;;
+    (-dll)  linkargs "/DLL";;
+    (-L )   linkargs "-LIBPATH:$(transform "$2")"     ; shift;;
+    (-L*)   linkargs "-LIBPATH:$(transform "${1#-L}")";;
+    (-l*)   handle_lib "$1"
+            linkargs "$handle_lib_res";;
+
+    # Preprocessor options.
+    (-E)          mode=preprocess; outargs "$1";;
+    (-I|-isystem) outargs "-I$2"; shift;;
+    (-I*)         outargs "$1";;
+
+    # Dependencies.
+    # Automake invocations look like:
+    #   $(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $<
+    (-MT) # -MT DEPENDENCY-TARGET.
+          shift
+          deps_target=$1;;
+    (-MD) # -MD triggers the generation of the dependencies.
+          # The documentation says that this goes to stderr.  This is
+          # not accurate: it goes to stderr if stdout is used for
+          # actual output (e.g., -E without -o), otherwise it goes to
+          # stdout.
+          # FIXME: handle this case.
+          outargs -showIncludes;;
+    (-MP) # Add phony target for each dependency other than the main file.
+          deps_phony=true;;
+    (-MF) # -MF DEPENDENCY-FILE.
+          shift
+          deps_file=$1;;
+    (-c)  mode=compile; outargs "$1";;
+    (-o)  get_options__o "$2"; shift;;
+    (-o*) get_options__o "${1#-o}";;
+    (-Wno-unused-parameter)
+         # Flags passed by careless tools, such as Bjam.
+        ;;
+    (-Wno-inline)
+        outargs -wd4710
+        ;;
+    (-g|-ggdb)
+        # Use Z7 option because it store debug information inside the *.obj
+        # file instead of adding information inside a global file.  This
+        # prevent failures of parallel builds.  The 'old-style' correspond
+        # to non-incremental generation of debug symbols which does not
+        # corespond to our usage as we are not using an interactive IDE for
+        # windows builds.
+        outargs "-Z7"
+        ;;
+
+    # Optimizations.
+    (-fno-strict-aliasing);;
+    (-fno-inline);;
+    (-O0) ;;
+    (-O2) outargs "$1";;
+    (-O3) outargs -Ox;;
+
+    # Language selection.
+    (-x) shift
+      case $1 in
+        (c)   outargs "-TC";;
+        (c++) outargs "-TP";;
+      esac;;
+
+    (*.lib) linkargs "$(transform "$1")";;
+    (*.a)   linkargs "$(transform "${1%.a}.lib")";;
+    (*.dll) outargs "$(transform "$(dll_2_lib "$1")")";;
+
+    # Sources.
+    # Using -Tp/-Tc to make explicit the input file has the advantage
+    # that we can use Unix-style paths.  This is sometimes expected
+    # by the sources (e.g., LOCATION_HERE in Urbi SDK), where we
+    # "subtract" SRCDIR (Unix-style) from __FILE__ (which, therefore,
+    # should be Unix style).
+    (-include)  shift;     outargs "-FI$1";;
+    (*.S|*.cc)  source=$1; outargs "-Tp$source";;
+    (*.c)       source=$1; outargs "-Tc$source";;
+    (*.i)       source=$1; outargs "-Tc$(transform "$source")"
+                preprocessed=true;;
+    (*.ii)      source=$1; outargs "-Tp$(transform "$source")"
+                preprocessed=true;;
+    (/dev/null) source=$tmp/null-input
+                touch $source
+                outargs "$(transform "$source")";;
+    # Unknown stuff.
+    (*)        outargs "$1";;
+    esac
+    shift
+  done
+}
+
+dos2unix ()
+{
+  # Sed is easier to use than tr, which works on stdin only.
+  sed -e 's/\r//' "$@"
+}
+
+
+# dump_log FILE
+# -------------
+# Process the $FILE which is the output from cl.exe.  Process the
+# deps_file if requested.  Send to stderr what remains.
+dump_log ()
+{
+  local file="$1"
+  verbose "processing log file $file"
+  perl -e "our \$deps_file = '$deps_file';"              \
+       -e "our \$deps_phony = '$deps_phony';"            \
+       -e "our \$deps_target = '$deps_target';"          \
+       -e "our \$medir = '$medir';"                      \
+       -e "our \$repath = '$repath';"                    \
+       -e "our \$source = '$source';"                    \
+       -e "our \$verbose = '$verbose' eq 'true';"        \
+       -e "require '$(dirname $0)/filter-cl-logs';"      \
+    < $file
+  ! $compiler_verbose ||
+    compiler_verbose_message >&2
+}
+
+
+# The plan here is to help distcc-pump.  It relies on -v to get
+# the list of the include directories.
+#
+# Gcc -v dumps the following:
+#
+# Using built-in specs.
+# Target: i686-apple-darwin9
+# Configured with: /var/tmp/gcc/gcc-5484~1/src/configure --disable-checking -enable-werror --prefix=/usr --mandir=/share/man --enable-languages=c,objc,c++,obj-c++ --program-transform-name=/^[cg][^.-]*$/s/$/-4.0/ --with-gxx-include-dir=/include/c++/4.0.0 --with-slibdir=/usr/lib --build=i686-apple-darwin9 --with-arch=apple --with-tune=generic --host=i686-apple-darwin9 --target=i686-apple-darwin9
+# Thread model: posix
+# gcc version 4.0.1 (Apple Inc. build 5484)
+#  /usr/libexec/gcc/i686-apple-darwin9/4.0.1/cc1plus -quiet -v -D__DYNAMIC__ /dev/null -fPIC -quiet -dumpbase null -mmacosx-version-min=10.5.6 -mtune=generic -march=apple -auxbase-strip /dev/null -version -D__private_extern__=extern -o /var/folders/hy/hy4Qz3qs2RWPcU+8ZQWaqU+++TI/-Tmp-//cczPgOv5.s
+# ignoring nonexistent directory "/usr/lib/gcc/i686-apple-darwin9/4.0.1/../../../../i686-apple-darwin9/include"
+# #include "..." search starts here:
+# #include <...> search starts here:
+#  /usr/include/c++/4.0.0
+#  /usr/include/c++/4.0.0/i686-apple-darwin9
+#  /usr/include/c++/4.0.0/backward
+#  /usr/local/include
+#  /usr/lib/gcc/i686-apple-darwin9/4.0.1/include
+#  /usr/include
+#  /System/Library/Frameworks (framework directory)
+#  /Library/Frameworks (framework directory)
+# End of search list.
+# GNU C++ version 4.0.1 (Apple Inc. build 5484) (i686-apple-darwin9)
+#       compiled by GNU C version 4.0.1 (Apple Inc. build 5484).
+# GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+# Compiler executable checksum: 26a07d3b4fce49bea6ac55e876df1aa9
+#  /usr/libexec/gcc/i686-apple-darwin9/4.0.1/as -arch i386 -force_cpusubtype_ALL -o /dev/null /var/folders/hy/hy4Qz3qs2RWPcU+8ZQWaqU+++TI/-Tmp-//cczPgOv5.s
+#
+# FIXME: support the SQLite DB here too.
+compiler_verbose_message ()
+{
+  perl -e "my \$repath = '$repath';" \
+    -e '
+    print "#include \"...\" search starts here:\n";
+    print "#include <...> search starts here:\n";
+    for my $d (split (";", $ENV{"INCLUDE"}))
+    {
+      print " " . `$repath -u "$d"`;
+    }
+    print "End of search list.\n";
+'
+}
+
+## ------ ##
+## Main.  ##
+## ------ ##
+
+# Compiler verbosity (-v).
+compiler_verbose=false
+# File containing the dependencies.
+deps_file=
+# Target of the dependencies (i.e., lhs in the make rule).
+deps_target=
+deps_phony=false
+linkargs=
+# mode=compile|link|preprocess
+mode=
+# Output file name.
+output=
+# Whether the source was already preprocessed (i.e., *.i or *.ii).
+preprocessed=false
+# The kind of runtime we use: debug|release.
+runtime=release
+# Input file name.
+source=
+# Wrapper verbosity.
+#
+# Do not fire verbosity when VERBOSE=1, as for instance the libport
+# tests set VERBOSE to 1 to get the test logs.  But then the
+# compilation itself becomes verbose and clutters the output, which in
+# turn defeats the use of ccache.
+case " $VERBOSE " in
+  (*" cl.exe "* | *" link.exe "* | *" x "*)  verbose=true;;
+  (*)                                        verbose=false;;
+esac
+
+PROG=$me
+
+# Make it easier use under a regular host.  Process our own options
+# early enough.
+for i
+do
+  case $i in
+    (--verbose) verbose=true;;
+  esac
+done
+
+: ${TMPDIR=/tmp}
+medir=$TMPDIR/$me.dir
+tmp=$medir/$$
+case $VERBOSE in
+  (x) ;;
+  (*) trap "exit=\$?; rm -rf $tmp; exit \$exit" 0;;
+esac
+mkdir -p $tmp
+stdout=$tmp/stdout
+stderr=$tmp/stderr
+
+setup
+
+case $PROG in
+  (cl.exe) outargs "-nologo" "-EHsc";;
+esac
+
+get_options "$@"
+
+case $runtime in
+  (debug)
+    outargs '-MDd'
+    ;;
+  (release) outargs '-MD';;
+  (*) fatal "invalid \$runtime: $runtime";;
+esac
+
+case $mode in
+  (compile)
+    # -c without -o.
+    test -n "$output" ||
+      output=$(basename "$source" | sed -re 's/\.[^.]+$/.obj/')
+    outargs "-Fo$(transform "$output")";;
+  (preprocess)  ;;
+  (*) # Probably linking.
+    mode=link
+    case $PROG in
+      (link.exe) outargs "-OUT:$(transform "$output")";;
+      (*)        outargs "-Fe$(transform "$output")";;
+    esac
+    linkargs "-SUBSYSTEM:console" "-MANIFEST" "Kernel32.Lib"
+    ;;
+esac
+
+case $runtime:$mode in
+  (debug:link)
+    # Produce a pdb file with the name of the library / binary which has
+    # the same name.  The produced PDB file should be in the same
+    # directory as the produced binary.
+    outargs "-Zi" "-Fd$(transform "$(all_2_pdb "$output")")"
+    ;;
+esac
+
+if test "$PROG" = cl.exe && test -n "$linkargs"; then
+#  test -z "$mode"
+#  mode=link
+  outargs "-link"
+  outargs+=" $linkargs"
+  linkargs=
+fi
+
+verbose "mode: $mode"
+
+# Shell tracing must not be activate here, otherwise shell traces
+# will be included in stderr.
+cmd="\"$VCXX_BIN/$PROG\" $outargs $linkargs"
+verbose "Running: $cmd"
+set +x +e
+eval "$cmd" >$stdout 2>$stderr
+status=$?
+trace
+set -e
+
+# If we are fed with a preprocessed input, do not generate the
+# deps_file.  This is needed by ccache, and anyway, this is just
+# logical: it is the preprocessor that knows the #includes, the
+# compiler knows nothing.
+! $preprocessed ||
+  deps_file=
+
+# In cpp mode (/E), vc produces on stdout.  Honor -o.  Beware that
+# output is the output of the script, not of the compiler.  When the
+# compiler outputs to stdout, the logs are in stderr.  Otherwise the
+# logs are on stdout.  Put everything on stderr, this is more
+# Unix-style.
+case $mode:$output in
+  (preprocess:)
+     dump_log $stderr
+     dos2unix <$stdout;;
+  (preprocess:*)
+     dump_log $stderr
+     dos2unix <$stdout >"$(transform "$output")";;
+  (*:)
+     dump_log $stderr
+     dump_log $stdout >&2;;
+  (*:*)
+     dump_log $stderr >&2
+     dump_log $stdout;;
+esac
+
+test $status -eq 0 ||
+  exit $status
+
+#embed manifest
+#if echo $output | egrep -q '(exe|dll)$'; then
+#  $VCXX_BIN/mt.exe -manifest "$(transform $output.manifest)" -outputresource:"$(transform $output);1"
+#  rm "$output.manifest"
+#fi
+
+# embed manifest by compiling it into a resource to avoid mt.exe crash with
+# -outputresource when using Wine
+# Following procedure described at:
+# http://msdn.microsoft.com/fr-fr/library/ms235591.aspx
+case $repath:$output in
+  (winepath:*.exe|winepath:*.dll)
+  #$VCXX_BIN/mt.exe -manifest "$(transform $output).manifest" "-out:$(transform $output).auto.manifest"
+  # Escape quotes
+  sed -e 's/"/""/g' < "$output.manifest" > "$output.escaped.manifest"
+  cat >"$output.auto.rc" <<EOF
+#include <winuser.h>
+1 RT_MANIFEST {"$(cat $output.escaped.manifest)"}
+EOF
+  run_filter "$VCXX_BIN/rc.exe" -r "$(transform $output).auto.rc"
+  cmd="\"$VCXX_BIN/$PROG\" $outargs $linkargs \"$(transform $output).auto.RES\""
+  verbose "Running: $cmd"
+  status=0
+  eval "$cmd" >$stdout 2>$stderr || status=$?
+  dump_log $stderr
+  dump_log $stdout
+  rm -f "$output".{auto.{manifest,rc,RES},{escaped,intermediate}.manifest,manifest}
+  test $status -eq 0 ||
+    error $status "$cmd failed with status = $status"
+  ;;
+esac
+
+# Rename .lib with a versioned name.
+case $output in
+ (*-[0-9.]*.dll)
+  libname=${output%.dll}.lib
+  if test -f "$libname"; then
+    run mv -f $libname $(dll_2_lib "$output")
+  fi
+  ;;
+esac
+
+exit 0

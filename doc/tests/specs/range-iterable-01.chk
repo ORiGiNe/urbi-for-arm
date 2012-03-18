@@ -1,0 +1,32 @@
+syncline << "doc/specs/range-iterable.tex:52";
+[01234567:#] "doc/specs/range-iterable.tex:52"
+//#line 52 "doc/specs/range-iterable.tex"
+class range : RangeIterable
+{
+  var asList = [10, 20, 30];
+}|;
+for (var i : range)
+  echo (i);
+[00000000] *** 10
+[00000000] *** 20
+[00000000] *** 30
+
+syncline << "doc/specs/range-iterable.tex:68";
+[01234567:#] "doc/specs/range-iterable.tex:68"
+//#line 68 "doc/specs/range-iterable.tex"
+{
+  var res = [];
+  for& (var i : range)
+    res << i;
+  assert(res.sort == [10, 20, 30]);
+};
+
+syncline << "doc/specs/range-iterable.tex:80";
+[01234567:#] "doc/specs/range-iterable.tex:80"
+//#line 80 "doc/specs/range-iterable.tex"
+{
+  var res = [];
+  for| (var i : range)
+    res << i;
+  assert(res == [10, 20, 30]);
+};

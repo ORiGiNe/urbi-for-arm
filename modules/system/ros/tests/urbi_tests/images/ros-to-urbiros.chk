@@ -1,0 +1,25 @@
+//#roscore
+//#plug urbi/ros
+//#plug test/all
+
+skipIfUrbi2;
+
+var publisher =
+  Process.new ("rosrun", ["learning_image_transport", "my_publisher", jpg00Path]) |
+publisher.run;
+
+clog << "Publisher is running";
+
+var cameraTopic = Ros.Topic.new("/camera/image/compressed") |
+
+// Waiting for the process to be set up
+Ros.waitForTopic("/camera/image/compressed");
+cameraTopic.subscribe |
+clog << "subscription" |
+
+imgLoop: at (cameraTopic.onMessage?(var imgMsg))
+{
+  // Converting the ROS image to Urbi format.
+  imgMsg["data"].keywords = imgMsg["format"] |
+  assert(all.imageDiff(imgMsg["data"].data, img00.data, "jpeg") == 0);
+};

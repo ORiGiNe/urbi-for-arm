@@ -1,0 +1,12 @@
+// Check that the tags are preserved in "at" conditions and actions
+var t = Tag.new("t")|;
+var e = Event.new|;
+
+t: at (e?)
+{
+  assert(t in currentRunner.tags) |
+  echo(1)
+};
+
+e!;
+[00000001] *** 1

@@ -1,0 +1,15 @@
+syncline << "doc/tutorial/concurrent.tex:149";
+[01234567:#] "doc/tutorial/concurrent.tex:149"
+//#line 149 "doc/tutorial/concurrent.tex"
+// Create a new tag
+var mytag = Tag.new("name");
+[00000000] Tag<name>
+// Tag the evaluation of 42
+mytag: 42;
+[00000000] 42
+// Tag the evaluation of a block.
+mytag: { "foo"; 51 };
+[00000000] 51
+// Tag a function call.
+mytag: echo("tagged");
+[00000000] *** tagged

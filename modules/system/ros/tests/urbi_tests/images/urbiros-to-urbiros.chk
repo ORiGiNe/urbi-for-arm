@@ -1,0 +1,27 @@
+//#roscore
+//#plug urbi/ros
+//#plug test/all
+
+skipIfUrbi2;
+
+var publisher = Ros.Topic.new("/camera/image/compressed") |
+publisher.advertise("learning_image_transport/CompressedImage") |
+
+var Global.img = publisher.structure.new |
+img["data"] = img00 |;
+img["format"] = img00.keywords |;
+
+var cameraTopic = Ros.Topic.new("/camera/image/compressed") |
+
+cameraTopic.subscribe |
+Ros.waitForTopic("/camera/image/compressed") |
+
+imgLoop: at (cameraTopic.onMessage?(var imgLoop))
+{
+  assert(all.imageDiff(imgLoop["data"].data, imgLoop["data"].data, "jpeg") == 0);
+  shutdown |
+  clog << "shutdown" |
+};
+
+every (500ms)
+  publisher << img;

@@ -1,0 +1,7 @@
+syncline << "doc/specs/uobject.tex:33";
+[01234567:#] "doc/specs/uobject.tex:33"
+//#line 33 "doc/specs/uobject.tex"
+assert {
+UObject.searchPath.isA(List);
+UObject.searchPath[0].isA(Path);
+};

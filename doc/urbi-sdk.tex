@@ -1,0 +1,69 @@
+%% Copyright (C) 2009-2011, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\documentclass[openright,twoside,11pt,final]{book}
+  \usepackage{urbi-sdk}
+  \setboolean{urbisdk}{true}
+  \usepackage{multirow}
+
+%% ---------- %%
+%% Document.  %%
+%% ---------- %%
+
+\title{The Urbi Software Development Kit}
+\subtitle{Version \packageVersion}
+\shorttitle{Urbi SDK \packageVersion}
+\date{\VcsDay\\(Revision \VcsDescription)}
+\author{Gostai}
+\abstract
+{
+%%
+  {\Large\urbi} is an open source robotics software platform.  It is
+  cross-platform: it supports several robots (Gostai Jazz, Segway RMP,
+  Pioneer 3-DX, LEGO Mindstorms NXT, Aldebaran Nao\ldots) and simulators
+  (Webots\ldots).  It runs on top of all the major operating systems.  It
+  features a \Cxx/\Java middleware, UObject, to interface components such as
+  motors, cameras, and algorithms; and an innovative scripting language,
+  \us, with built-in support for parallel and event-based programming.  It
+  is compatible with ROS, the Robotic Operating System.
+%%
+}
+
+\begin{document}
+
+\maketitle
+
+\input{introduction}
+
+\tableofcontents
+
+\input{getting-started}
+
+%%% Keep sync with introduction.tex.
+\input{uobject/uobject}
+\input{tutorial/tutorial}
+\input{guide/guide}
+\input{specs/specs}
+\ifthen{\boolean{platforms}}
+{
+  \input{platforms/platforms}
+}
+\input{tables/tables}
+
+
+\end{document}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% coding: utf-8
+%%% TeX-master: t
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "urbi.dict"
+%%% fill-column: 76
+%%% End:

@@ -1,0 +1,24 @@
+syncline << "doc/specs/lang.tex:3502";
+[01234567:#] "doc/specs/lang.tex:3502"
+//#line 3502 "doc/specs/lang.tex"
+var e = Event.new;
+[00000001] Event_0xADDR
+
+at sync (e?)
+{
+  sleep(1s);
+  echo("in");
+}
+onleave
+{
+  sleep(1s);
+  echo("out");
+};
+
+e!;
+// Actions are triggered synchronously, the next line will be executed
+// when they're done.
+echo("Blocked");
+[00000002] *** in
+[00000003] *** out
+[00000004] *** Blocked

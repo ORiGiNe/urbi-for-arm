@@ -1,0 +1,19 @@
+syncline << "doc/specs/range-iterable.tex:30";
+[01234567:#] "doc/specs/range-iterable.tex:30"
+//#line 30 "doc/specs/range-iterable.tex"
+assert {
+// Are all elements positive?
+! [-2, 0, 2, 4].all(function (e) { e > 0 });
+// Are all elements even?
+[-2, 0, 2, 4].all(function (e) { e % 2 == 0 });
+};
+
+syncline << "doc/specs/range-iterable.tex:42";
+[01234567:#] "doc/specs/range-iterable.tex:42"
+//#line 42 "doc/specs/range-iterable.tex"
+assert {
+// Is there any even element?
+! [-3, 1, -1].any(function (e) { e % 2 == 0 });
+// Is there any positive element?
+[-3, 1, -1].any(function (e) { e > 0 });
+};

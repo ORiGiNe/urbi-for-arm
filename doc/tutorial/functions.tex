@@ -1,0 +1,141 @@
+%% Copyright (C) 2009-2012, Gostai S.A.S.
+%%
+%% This software is provided "as is" without warranty of any kind,
+%% either expressed or implied, including but not limited to the
+%% implied warranties of fitness for a particular purpose.
+%%
+%% See the LICENSE file for more information.
+
+\chapter{Advanced Functions and Scoping}
+\label{sec:tut:function}
+
+This section presents advanced uses of functions and scoping, as well as
+their combo: lexical closures, which prove to be a very powerful tool.
+
+\section{Scopes as expressions}
+
+Contrary to other languages from the \langC family, scopes are expressions: they
+can be used where values are expected, just as \lstinline|1 + 1| or
+\lstinline|"foo"|.  They evaluate to the value of their last expression, or
+\lstinline|void| if they are empty. The following listing illustrates the
+use of scopes as expressions. The last semicolon inside a scope is optional.
+
+\begin{urbiscript}[firstnumber=1]
+// Scopes evaluate to the value of their last expression.
+{ 1; 2; 3; };
+[00000000] 3
+// They are expressions.
+echo({1; 2; 3});
+[00000000] *** 3
+\end{urbiscript}
+
+\section{Advanced scoping}
+
+Scopes can be nested. Variables can be redefined in nested scopes. In this
+case, the inner variables hide the outer ones, as illustrated below.
+
+\begin{urbiscript}
+var x = 0;   // Define the outer x.
+[00000000] 0
+{
+  var x = 1; // Define an inner x.
+  x = 2;     // These refer to
+  echo(x);   // the inner x
+};
+[00000000] *** 2
+x;           // This is the outer x again.
+[00000000] 0
+{
+  x = 3;     // This is still the outer x.
+  echo(x);
+};
+[00000000] *** 3
+x;
+[00000000] 3
+\end{urbiscript}
+
+\section{Local functions}
+
+Functions can be defined anywhere local variables can --- that is, about
+anywhere. These functions' visibility are limited to the scope they're
+defined in, like variables. This enables for instance to write local helper
+functions like \lstinline{max2} in the example below.
+
+\begin{urbiscript}
+function max3(a, b, c) // Max of three values
+{
+  function max2(a, b)
+  {
+    if (a > b)
+      a
+    else
+      b
+  };
+  max2(a, max2(b, c));
+}|;
+\end{urbiscript}
+
+\section{Lexical closures}
+
+A \dfn{closure} is the capture by a function of a variable external to this
+function. \us supports lexical closure: functions can refer to outer
+local variables, as long as they are visible (in scope) from where
+the function is defined.
+
+\begin{urbiscript}
+function printSalaries(var rate)
+{
+  var charges = 100;
+  function computeSalary(var hours)
+  {
+    // rate and charges are captured from the environment by closure.
+    rate * hours - charges
+  };
+
+  echo("Alice's salary is " + computeSalary(35));
+  echo("Bob's salary is " + computeSalary(30));
+}|;
+printSalaries(15);
+[00000000] *** Alice's salary is 425
+[00000000] *** Bob's salary is 350
+\end{urbiscript}
+
+Closures can also change captured variables, as shown below.
+
+% Fixme: these are not actually closures because of the toplevel ...
+\begin{urbiscript}
+var a = 0;
+[00000000] 0
+var b = 0;
+[00000000] 0
+function add(n)
+{
+  // a and b are updated by closure.
+  a += n;
+  b += n;
+  {}
+}|;
+add(25);
+add(25);
+add(1);
+a;
+[00000000] 51
+b;
+[00000000] 51
+\end{urbiscript}
+
+Closure can be really powerful tools in some situations; they are even more
+useful when combined with functional programming, as described in
+\autoref{sec:tut:functional}.
+
+%\section{Conclusion}
+
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-master: "../urbi-sdk"
+%%% ispell-dictionary: "american"
+%%% ispell-personal-dictionary: "../urbi.dict"
+%%% fill-column: 76
+%%% End:

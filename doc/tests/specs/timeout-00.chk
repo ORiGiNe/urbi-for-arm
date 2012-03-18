@@ -1,0 +1,39 @@
+syncline << "doc/specs/timeout.tex:25";
+[01234567:#] "doc/specs/timeout.tex:25"
+//#line 25 "doc/specs/timeout.tex"
+Timeout.new(300ms);
+[00000000] Timeout_0x953c1e0
+Timeout.new(300ms, false);
+[00000000] Timeout_0x953c1e0
+
+syncline << "doc/specs/timeout.tex:36";
+[01234567:#] "doc/specs/timeout.tex:36"
+//#line 36 "doc/specs/timeout.tex"
+var t = Timeout.new(300ms);
+[00000000] Timeout_0x133ec0
+t:{
+  echo("This will be displayed.");
+  sleep(500ms);
+  echo("This will not.");
+};
+[00000000] *** This will be displayed.
+[00000007:error] !!! Timeout_0x133ec0 has timed out.
+
+syncline << "doc/specs/timeout.tex:51";
+[01234567:#] "doc/specs/timeout.tex:51"
+//#line 51 "doc/specs/timeout.tex"
+t: { echo("Open"); sleep(1s); echo("Close"); };
+[00000007] *** Open
+[00000007:error] !!! Timeout_0x133ec0 has timed out.
+t: { echo("Open"); sleep(1s); echo("Close"); };
+[00000007] *** Open
+[00000007:error] !!! Timeout_0x133ec0 has timed out.
+
+syncline << "doc/specs/timeout.tex:76";
+[01234567:#] "doc/specs/timeout.tex:76"
+//#line 76 "doc/specs/timeout.tex"
+t:sleep(500ms);
+[00000007:error] !!! Timeout_0x133ec0 has timed out.
+if (t.timedOut)
+  echo("The Timeout expired.");
+[00000000] *** The Timeout expired.

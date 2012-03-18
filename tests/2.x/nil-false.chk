@@ -1,0 +1,2 @@
+if (nil) echo ("nil is true") else echo ("nil is false");
+[00000001] *** nil is false

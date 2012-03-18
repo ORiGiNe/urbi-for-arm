@@ -1,0 +1,57 @@
+syncline << "doc/specs/output-stream.tex:27";
+[01234567:#] "doc/specs/output-stream.tex:27"
+//#line 27 "doc/specs/output-stream.tex"
+var o1 = OutputStream.new(File.create("file.txt"));
+[00000001] OutputStream_0x827000
+
+var o2 = OutputStream.new(File.new("file.txt"));
+[00000002] OutputStream_0x827000
+
+syncline << "doc/specs/output-stream.tex:42";
+[01234567:#] "doc/specs/output-stream.tex:42"
+//#line 42 "doc/specs/output-stream.tex"
+o1.close;
+o2.close;
+
+syncline << "doc/specs/output-stream.tex:53";
+[01234567:#] "doc/specs/output-stream.tex:53"
+//#line 53 "doc/specs/output-stream.tex"
+var o = OutputStream.new(File.create("fresh.txt"))|;
+o << 1 << "2" << [3, [4]]|;
+o.close;
+assert (File.new("fresh.txt").content.data == "12[3, [4]]");
+o << 1;
+[00000005:error] !!! <<: stream is closed
+
+syncline << "doc/specs/output-stream.tex:67";
+[01234567:#] "doc/specs/output-stream.tex:67"
+//#line 67 "doc/specs/output-stream.tex"
+var s = OutputStream.new(File.create("file.txt"))|
+s.flush;
+s.close;
+s.flush;
+[00039175:error] !!! flush: stream is closed
+
+syncline << "doc/specs/output-stream.tex:78";
+[01234567:#] "doc/specs/output-stream.tex:78"
+//#line 78 "doc/specs/output-stream.tex"
+var f = File.create("put.txt") |
+var os = OutputStream.new(f) |
+
+assert
+{
+  os.put(0)
+    .put(255)
+    .put(72).put(101).put(108).put(108).put(111)
+  === os;
+  f.content.data == "\0\xffHello";
+};
+os.put(12.5);
+[00029816:error] !!! put: argument 1: bad numeric conversion: overflow or non empty fractional part: 12.5
+os.put(-1);
+[00034840:error] !!! put: argument 1: bad numeric conversion: negative overflow: -1
+os.put(256);
+[00039175:error] !!! put: argument 1: bad numeric conversion: positive overflow: 256
+os.close;
+os.put(0);
+[00039179:error] !!! put: stream is closed

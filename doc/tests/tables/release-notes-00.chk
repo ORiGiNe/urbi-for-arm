@@ -1,0 +1,29 @@
+syncline << "doc/tables/release-notes.tex:38";
+[01234567:#] "doc/tables/release-notes.tex:38"
+//#line 38 "doc/tables/release-notes.tex"
+function this.foo() { echo("foo"); }|;
+this.foo();
+[00016170] *** foo
+
+syncline << "doc/tables/release-notes.tex:195";
+[01234567:#] "doc/tables/release-notes.tex:195"
+//#line 195 "doc/tables/release-notes.tex"
+var m = Mutex.new|;
+for& (10)
+  { m.stop | m: { sleep(1) } };
+"done";
+[00016170] "done"
+
+syncline << "doc/tables/release-notes.tex:277";
+[01234567:#] "doc/tables/release-notes.tex:277"
+//#line 277 "doc/tables/release-notes.tex"
+var logger = Logger.new("Category")|;
+
+logger.dump << "Low level debug message"|;
+// Nothing displayed, unless the debug level is set to DUMP.
+
+logger.warn << "something wrong happened, proceeding"|;
+[       Category        ] something wrong happened, proceeding
+
+logger.err << "something really bad happened!"|;
+[       Category        ] something really bad happened!

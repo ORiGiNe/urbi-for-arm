@@ -1,0 +1,86 @@
+syncline << "doc/tutorial/functions.tex:24";
+[01234567:#] "doc/tutorial/functions.tex:24"
+//#line 24 "doc/tutorial/functions.tex"
+// Scopes evaluate to the value of their last expression.
+{ 1; 2; 3; };
+[00000000] 3
+// They are expressions.
+echo({1; 2; 3});
+[00000000] *** 3
+
+syncline << "doc/tutorial/functions.tex:38";
+[01234567:#] "doc/tutorial/functions.tex:38"
+//#line 38 "doc/tutorial/functions.tex"
+var x = 0;   // Define the outer x.
+[00000000] 0
+{
+  var x = 1; // Define an inner x.
+  x = 2;     // These refer to
+  echo(x);   // the inner x
+};
+[00000000] *** 2
+x;           // This is the outer x again.
+[00000000] 0
+{
+  x = 3;     // This is still the outer x.
+  echo(x);
+};
+[00000000] *** 3
+x;
+[00000000] 3
+
+syncline << "doc/tutorial/functions.tex:65";
+[01234567:#] "doc/tutorial/functions.tex:65"
+//#line 65 "doc/tutorial/functions.tex"
+function max3(a, b, c) // Max of three values
+{
+  function max2(a, b)
+  {
+    if (a > b)
+      a
+    else
+      b
+  };
+  max2(a, max2(b, c));
+}|;
+
+syncline << "doc/tutorial/functions.tex:86";
+[01234567:#] "doc/tutorial/functions.tex:86"
+//#line 86 "doc/tutorial/functions.tex"
+function printSalaries(var rate)
+{
+  var charges = 100;
+  function computeSalary(var hours)
+  {
+    // rate and charges are captured from the environment by closure.
+    rate * hours - charges
+  };
+
+  echo("Alice's salary is " + computeSalary(35));
+  echo("Bob's salary is " + computeSalary(30));
+}|;
+printSalaries(15);
+[00000000] *** Alice's salary is 425
+[00000000] *** Bob's salary is 350
+
+syncline << "doc/tutorial/functions.tex:107";
+[01234567:#] "doc/tutorial/functions.tex:107"
+//#line 107 "doc/tutorial/functions.tex"
+var a = 0;
+[00000000] 0
+var b = 0;
+[00000000] 0
+function add(n)
+{
+  // a and b are updated by closure.
+  a += n;
+  b += n;
+  {}
+}|;
+add(25);
+add(25);
+add(1);
+a;
+[00000000] 51
+b;
+[00000000] 51

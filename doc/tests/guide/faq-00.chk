@@ -1,0 +1,244 @@
+syncline << "doc/guide/faq.tex:459";
+[01234567:#] "doc/guide/faq.tex:459"
+//#line 459 "doc/guide/faq.tex"
+var myObject = Object.new;
+[00000001] Object_0x76543210
+
+syncline << "doc/guide/faq.tex:490";
+[01234567:#] "doc/guide/faq.tex:490"
+//#line 490 "doc/guide/faq.tex"
+var mind = 42;
+[00000002] 42
+function get()
+{
+  echo(mind);
+}|;
+get();
+[00000003] *** 42
+function Object.get()
+{
+  echo(mind)
+}|;
+// Where is my mind?
+Object.get;
+[00000004:error] !!! lookup failed: mind
+[00000004:error] !!!    called from: get
+
+syncline << "doc/guide/faq.tex:515";
+[01234567:#] "doc/guide/faq.tex:515"
+//#line 515 "doc/guide/faq.tex"
+// Add an `x' slot in Object, with value 51.
+Object.setSlot("x", 51);
+[00000000] 51
+// This is an equivalent version, for the `y' slot.
+var Object.y = 51;
+[00000000] 51
+
+// We can access these slots with the dot operator.
+Object.x + Object.y;
+[00000000] 102
+
+syncline << "doc/guide/faq.tex:533";
+[01234567:#] "doc/guide/faq.tex:533"
+//#line 533 "doc/guide/faq.tex"
+function foo()
+{
+  // Declare an `x' local variable, with value 51.
+  var x = 51;
+  // `x' isn't stored in any object. It's simply
+  // available until the end of the scope.
+  echo(x);
+}|;
+
+syncline << "doc/guide/faq.tex:551";
+[01234567:#] "doc/guide/faq.tex:551"
+//#line 551 "doc/guide/faq.tex"
+{
+  // Store a `kyle' slot in Object.
+  var Object.kyle = 42;
+  // Declare a local variable, limited to this scope.
+  var kenny = 42;
+}; // End of scope.
+[00000000] 42
+
+// Kyle survived.
+echo(Object.kyle);
+[00000000] *** 42
+
+// Oh my God, they killed Kenny.
+echo(kenny);
+[00000000:error] !!! lookup failed: kenny
+
+syncline << "doc/guide/faq.tex:574";
+[01234567:#] "doc/guide/faq.tex:574"
+//#line 574 "doc/guide/faq.tex"
+// Classical scope.
+{
+  var arm = 64; // Local to the scope.
+};
+[00000000] 64
+
+// Do scope, with target Object
+do (Object)
+{
+  var chocolate = 64; // Stored as a slot in Object.
+};
+[00000000] Object
+
+// No arm...
+echo(arm);
+[00000000:error] !!! lookup failed: arm
+// ... but still chocolate!
+echo(chocolate);
+[00000000] *** 64
+
+syncline << "doc/guide/faq.tex:618";
+[01234567:#] "doc/guide/faq.tex:618"
+//#line 618 "doc/guide/faq.tex"
+// Since we are at the top-level, this stores x in the lobby.
+// It is equivalent to `var lobby.x'.
+var x = "hello";
+[00000000] "hello"
+
+// This is an unqualified call, and is thus
+// equivalent to `this.x'.
+// That is, `lobby.x' would be equivalent.
+x;
+[00000000] "hello"
+
+syncline << "doc/guide/faq.tex:636";
+[01234567:#] "doc/guide/faq.tex:636"
+//#line 636 "doc/guide/faq.tex"
+// This is equivalent to `var lobby.myMind = 42'.
+var myMind = 42;
+[00000001] 42
+// This is equivalent to `function lobby.getMine...'
+function getMine()
+{
+  // This is equivalent to `echo(this.myMind)'
+  echo(myMind);
+}|;
+// This is equivalent to `this.getMine()', i.e. `lobby.getMine()'.
+getMine();
+[00000000] *** 42
+
+syncline << "doc/guide/faq.tex:665";
+[01234567:#] "doc/guide/faq.tex:665"
+//#line 665 "doc/guide/faq.tex"
+// Create the `hisMind' slot in the lobby.
+var hisMind = 42;
+[00000000] 42
+// Define a `getHis' method in `Object'.
+function Object.getHis()
+{
+  // Equivalent to echo(this.hisMind).
+  echo(hisMind)
+}|;
+// Call Object's getHis method.
+Object.getHis;
+[00000000:error] !!! lookup failed: hisMind
+[00000000:error] !!!    called from: getHis
+
+syncline << "doc/guide/faq.tex:704";
+[01234567:#] "doc/guide/faq.tex:704"
+//#line 704 "doc/guide/faq.tex"
+var Object.global = 1664;
+[00000000] 1664
+
+function any_object()
+{
+  // This is equivalent to echo(this.global)
+  echo(global);
+}|;
+
+syncline << "doc/guide/faq.tex:727";
+[01234567:#] "doc/guide/faq.tex:727"
+//#line 727 "doc/guide/faq.tex"
+var Global.g = "I'm global!";
+[00000000] "I'm global!"
+
+syncline << "doc/guide/faq.tex:736";
+[01234567:#] "doc/guide/faq.tex:736"
+//#line 736 "doc/guide/faq.tex"
+// Store all constants here
+class Constants
+{
+  var Pi = 3.14;
+  var Euler = 2.17;
+  var One = 1;
+  // ...
+}|;
+// Make them global by making them accessible from Global.
+Global.addProto(Constants);
+[00000000] Global
+
+// Test it.
+Global.Pi;
+[00000000] 3.14
+Pi;
+[00000000] 3.14
+function Object.testPi() { echo(Pi) }|;
+42.testPi;
+[00000000] *** 3.14
+
+syncline << "doc/guide/faq.tex:764";
+[01234567:#] "doc/guide/faq.tex:764"
+//#line 764 "doc/guide/faq.tex"
+var O2 = Object.new |
+// Syntax...
+var O2.mySlot1 = 42;
+[00000001] 42
+
+// and semantics.
+O2.setSlot("mySlot2", 23);
+[00000001] 23
+
+syncline << "doc/guide/faq.tex:779";
+[01234567:#] "doc/guide/faq.tex:779"
+//#line 779 "doc/guide/faq.tex"
+{
+  // Create a new slot in the current object.
+  var this.bar = 42;
+
+  // Create a local variable, which will not be known anymore
+  // after we exit the current scope.
+  var qux = 23;
+}|
+qux;
+[00000001:error] !!! lookup failed: qux
+bar;
+[00000001] 42
+
+syncline << "doc/guide/faq.tex:799";
+[01234567:#] "doc/guide/faq.tex:799"
+//#line 799 "doc/guide/faq.tex"
+class O
+{
+  var mySlot = 42;
+}|
+// Sugarful.
+O.mySlot = 51;
+[00000001] 51
+
+// Sugar-free.
+O.updateSlot("mySlot", 23);
+[00000001] 23
+
+syncline << "doc/guide/faq.tex:816";
+[01234567:#] "doc/guide/faq.tex:816"
+//#line 816 "doc/guide/faq.tex"
+// In two steps: definition, and initial assignment.
+var myLocalVariable;
+myLocalVariable = "foo";
+[00000001] "foo"
+// In a single step: definition with an initial value.
+var myOtherLocalVariable = "bar";
+[00000001] "bar"
+
+syncline << "doc/guide/faq.tex:972";
+[01234567:#] "doc/guide/faq.tex:972"
+//#line 972 "doc/guide/faq.tex"
+for (var i: [10, 11, 12]) echo (i);
+[00000001] *** 10
+[00000002] *** 11
+[00000003] *** 12

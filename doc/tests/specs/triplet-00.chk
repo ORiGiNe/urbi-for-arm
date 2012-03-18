@@ -1,0 +1,35 @@
+syncline << "doc/specs/triplet.tex:25";
+[01234567:#] "doc/specs/triplet.tex:25"
+//#line 25 "doc/specs/triplet.tex"
+Triplet.new(1, 2, 3);
+[00000001] (1, 2, 3)
+
+Triplet.new(1, 2);
+[00000003:error] !!! new: expected 3 arguments, given 2
+
+Triplet.new(1, 2, 3, 4);
+[00000003:error] !!! new: expected 3 arguments, given 4
+
+syncline << "doc/specs/triplet.tex:40";
+[01234567:#] "doc/specs/triplet.tex:40"
+//#line 40 "doc/specs/triplet.tex"
+assert {
+Triplet.new(1, 2, 3).first == 1;
+Triplet[0] === Triplet.first;
+};
+
+syncline << "doc/specs/triplet.tex:47";
+[01234567:#] "doc/specs/triplet.tex:47"
+//#line 47 "doc/specs/triplet.tex"
+assert {
+Triplet.new(1, 2, 3).second == 2;
+Triplet[1] === Triplet.second;
+};
+
+syncline << "doc/specs/triplet.tex:54";
+[01234567:#] "doc/specs/triplet.tex:54"
+//#line 54 "doc/specs/triplet.tex"
+assert {
+Triplet.new(1, 2, 3).third == 3;
+Triplet[2] === Triplet.third;
+};

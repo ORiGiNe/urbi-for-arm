@@ -1,0 +1,1273 @@
+#! /usr/bin/perl -w
+
+=head1 NAME
+
+check-lib-deps - handle shared-lib dependencies
+
+=head1 SYNOPSIS
+
+check-lib-deps [OPTIONS...] DIR|FILE...
+
+=head1 DESCRIPTION
+
+Traverse all the DIR and FILE... to gather the set of binaries and
+dynamic libraries, and handle there dependencies.
+
+Goes into these steps (in that order):
+
+=over 4
+
+=item complete
+
+Collect all the dependencies that are not part of the package, and
+install them into the package tree at C<$libdir>.  When installing
+DLLs, also install the corresponding C<*.lib> file if present.
+
+This step is performed only if C<--libdir> was provided.
+
+Libraries installed for completion will also be traversed to apply
+these three steps.
+
+=item strip
+
+If C<--strip> was used, run it on all the inner libraries whose RPATH
+does not need to be changes.  Typically used to produce stripped
+packages.  Always run before the relocation, because of known bugs of
+the binutils' strip, which generates broken objects when applied after
+a patchelf run (Read the BUGS section of patchelf:
+http://hydra.nixos.org/build/114505/download/1/README).
+
+=item relocate
+
+Transform every internal (i.e., provided by the package) absolute (in
+the sense of absolute path) dependency, into a relative dependency.
+
+=item check
+
+Every foreign dependency (i.e., not provided by the package, and not
+accepted as system dependencies) is an error.
+
+=back
+
+Exit with failure if invalid dependencies remain.
+
+For interesting input on this topic, see:
+
+  RPATH/RUNPATH issue, equivalent to -headerpad on OSX
+    http://sourceware.org/ml/binutils/2008-01/msg00021.html
+
+To change the RPATH, we use either patchelf or chrpath.  The former is
+preferred, as it has no limitations on the size of the new rpath,
+while the latter requires that the new rpath is no longer than the
+original one.
+
+=head1 OPTIONS
+
+General options:
+
+=over 4
+
+=item B<-h>, B<--help>
+
+Display this message and exit.
+
+=item B<-d>, B<--destdir>=I<destdir>
+
+Specify the installation destination directory.  Anything found under
+this directory is considered to be part of it.  Anything else is a
+foreign dependency.
+
+=item B<-l>, B<--libdir>=I<libdir>
+
+Specify that missing dependencies should be installed in
+C<$destdir$libdir>.  If C<$libdir> is not specified, nothing is
+installed.
+
+=item B<-L>, B<--libpath>=I<dir>
+
+When completing for missing foreign dependencies, add the I<dir> to
+the list of library directory.  Needed only on Windows, on the other
+architectures we know how to find these libraries.
+
+=item B<-o>, B<--host-os>=I<host-os>
+
+Specify the host operating system type, i.e., the type of the machine
+the program will run on.  Expected values are:
+
+=over 4
+
+=item mac
+
+Mac OS X.  Use C<otool> and C<install_name_tool>.
+
+=item linux
+
+GNU/Linux.  Use C<ldd> and C<patchelf> if possible, otherwise
+C<chrpath>.
+
+=item windows
+
+MS Windows.  Use C<cygcheck.exe>.  The support is very incomplete, it
+just does not work yet.
+
+=back
+
+=item B<-q>, B<--quiet>
+
+Be less verbose.  Accumulates.
+
+=item B<-s>, B<--strip>
+
+Strip all the shipped object files.  Use C<strip> on GNU/Linux,
+C<strip -S> on Mac OS X, and does nothing on Windows.
+
+=item B<--strip-command>=I<command>.
+
+Specify the name of the strip utility.  Defaults to C<strip>.
+
+=item B<-v>, B<--verbose>
+
+Be more verbose.  Accumulates.
+
+=back
+
+=cut
+
+BEGIN
+{
+  use File::Basename;
+  unshift @INC, dirname($0) . '/../lib/perl';
+}
+
+use BuildAux::FileUtils;
+use BuildAux::Utils;
+use BuildAux::Verbose;
+use BuildAux::XFile;
+use File::Find ();
+use strict;
+
+sub host_os($);
+sub dependency_foreign($$);
+sub dependency_inner($$);
+sub dependency_system($$);
+
+# The dependencies that are inside our package as `install-name =>
+# full-path'.  The keys are *without* destdir.  So use &installname
+# before to check existence inside %argv.  The values are the
+# full-paths to the file, including $destdir.
+my %argv;
+
+# The files to check.
+my @worklist;
+
+# The tool to get and set the rpath.  Patchelf is preferred, it does
+# not have any limitations on the size of the new rpath.
+my $chrpath;
+
+# The place the installation was made.
+my $destdir;
+
+# The host operating system.
+my $host_os = host_os($^O);
+
+# The libraries installed in libdir for completion.
+# foreign-location => inner-location (in libdir).
+my %installed;
+
+# The directory in $destdir where missing dependencies should be
+# installed.  Typically C<$prefix/lib>.
+my $libdir;
+
+# Where to look for foreign libraries for package completion.
+my @libpath;
+
+# Accepted resolved libraries.
+my %loc;
+
+# Number of errors.
+my $nerrors = 0;
+
+# Foreign, reject libraries as keys, list of dependent as values.
+my %rejected;
+
+# Whether to strip the shipped object files.
+my $strip = 0;
+
+# The strip utility.
+my $strip_command = 'strip';
+
+=head1 FUNCTIONS
+
+=over 4
+
+=item C<host_os($host_os)>
+
+Check thet C<$host_os> is valid, and return its canonicalized name a
+la Perl: darwin, linux, windows.
+
+=cut
+
+sub host_os($)
+{
+  my ($host_os) = @_;
+  my %host_os =
+    (
+     darwin  => 'darwin',
+     linux   => 'linux',
+     mac     => 'darwin',
+     macos   => 'darwin',
+     windows => 'windows',
+    );
+  $host_os = lc $host_os;
+  die "$me: invalid host OS: $host_os\n"
+    unless exists $host_os{$host_os};
+  $host_os{$host_os};
+}
+
+
+=item C<realpath($path)>
+
+Resolve the name of the path to a single unique name.  Resolve the
+symlinks, except on the last name-component, so that we do not resolve
+symlinks in shared-library dependencies (e.g., don't resolve
+/usr/lib/libz.so.1 into /usr/lib/libz.so.1.2.3, but as
+/usr/lib/libz.so.1).
+
+=cut
+
+sub realpath ($)
+{
+  my ($file) = @_;
+  File::Spec->catfile(Cwd::realpath (dirname ($file)),
+                      basename ($file));
+}
+
+
+=item C<repath_unix($path)>
+
+Normalize the C<$path> to a Unix name.
+
+=cut
+
+sub repath_unix ($)
+{
+  my ($path) = @_;
+  my $res = `winepath -u '$path'`;
+  chomp $res;
+  $res = realpath ($res);
+  $res;
+}
+
+=item C<dependencies_darwin($lpath, $lib)>
+
+Return the list of paths file C<$lib> (executable or shared library),
+depends upon.
+
+Run on Mac OS X only.
+
+Use C<otool -L>.  Ignore C<$lpath>.
+
+=cut
+
+sub dependencies_darwin($$)
+{
+  my ($lpath, $lib) = @_;
+  my @res;
+  my $deps = new BuildAux::XFile("otool -L $lib|");
+  while (my $line = $deps->line)
+  {
+    if ($line eq "$lib:")
+    {
+      # Safe to ignore.
+    }
+    elsif ($line =~ /^\t(.*?)\s+\(.*\)$/)
+    {
+      # On OS X, a library appears to depend on itself.
+      push @res, $1
+        unless $1 eq installname($lib);
+    }
+    else
+    {
+      verbose 2, "ignoring the following otool output line:", $line;
+    }
+  }
+  $deps->close;
+  @res;
+}
+
+=item C<dependencies_linux($lpath, $lib)>
+
+Return the list of paths file C<$lib> (executable or shared library),
+depends upon.
+
+Run on GNU/Linux only.
+
+We use C<ldd>.  In order to have it resolve dependencies to foreign
+libraries, pass C<$lpath> in C<$LD_LIBRARY_PATH>.
+
+=cut
+
+sub dependencies_linux($$)
+{
+  my ($lpath, $lib) = @_;
+  my @res;
+  my $cmd = "ldd $lib";
+  $cmd = "LD_LIBRARY_PATH=$lpath $cmd"
+    if $lpath;
+  my $deps = new BuildAux::XFile("$cmd|");
+  while (my $line = $deps->line)
+  {
+    if ($line eq "$lib:")
+    {
+      # Safe to ignore.
+    }
+    elsif ($line =~ /^\t(.*?)\s+=>\s(.*?)\s\(.*\)$/)
+    {
+      my ($dep, $loc) = ($1, $2);
+      push @res, $loc
+        if $loc;
+    }
+    elsif ($line =~ /^\t(.*?)\s+=>\snot found$/)
+    {
+      # Yes, we push "not found" as a dependency.  These are inner
+      # libraries that ldd does not find (we don't have the
+      # LD_LIBRARY_PATH to find it).
+      push @res, "not found: $1";
+    }
+    elsif ($line !~
+           m{^\s*
+             (?:
+               # Ignore loader.
+               (?:/lib/ld-linux\.so\.2
+                 |/lib64/ld-linux-x86-64\.so\.2)
+               [ ]
+               \(0x[[:xdigit:]]+\)
+              |
+               # Ignore message for statically linked objects.
+               statically\ linked
+             )
+             $}x)
+    {
+      # Not recognized: ignore, but say it.
+      verbose 2, "ignoring the following ldd output line:", $line;
+    }
+  }
+  @res;
+}
+
+=item C<dependencies_windows($lpath, $lib)>
+
+Return the list of paths file C<$lib> (executable or shared library),
+depends upon.
+
+Run on Windows only.
+
+We use C<cygcheck>.  Ignore C<$lpath>.
+
+=cut
+
+sub dependencies_windows($$)
+{
+  my ($lpath, $lib) = @_;
+  my @res;
+
+  # For some reason, using an stderr-to-stdout redirection (2>&1)
+  # costs three seconds at the end of the process.  I.e., the output
+  # comes "normally", but EOF takes three additional seconds to come.
+  # This is *very* expensive, and the process for Urbi SDK 2.0 lasts
+  # over three minutes, instead of 15 seconds.  Yes, read again the
+  # figures below:
+  #
+  # real   0m7.458s
+  # user   0m3.911s
+  # sys    0m3.375s
+  #
+  # This appears to be related to wine in some way.
+  #
+  # cygcheck.exe ./urbi.exe 2>&1 | cat
+  #
+  # takes three more seconds to run than without the indirection.
+  # Making the wineserver persistant seems to cure the issue a bit,
+  # but it appears to be unreliable.
+  #
+  # So let's simply use some intermediate file instead.
+  my $tmp = "$$.stderr";
+  my $cmd = join (';',
+                  "cygcheck.exe $lib 2>$tmp",
+                  'sta=$?',
+                  "cat $tmp",
+                  "rm -f $tmp",
+                  'exit $sta');
+
+  my $deps = new BuildAux::XFile("$cmd |");
+  while (my $line = $deps->line)
+  {
+    $line =~ s/\s+$//;
+    verbose 3, "studying line: $line";
+    if ($line =~ /^cygcheck: track_down: could not find (.*\.dll)/)
+    {
+      push @res, $1;
+    }
+    elsif ($line =~ /^\s+(.*\.dll)$/)
+    {
+      my $loc = installname (repath_unix $1);
+      push @res, $loc
+        unless $lib eq $loc;
+    }
+    elsif ($line)
+    {
+      verbose 2, "ignoring the following cygcheck output line:", $line;
+    }
+  }
+  @res;
+}
+
+=item C<dependencies($lib, [$libpath = ''])>
+
+Return the list of paths we depend upon.  C<$lib> can actually be an
+executable or a shared library.
+
+=cut
+
+sub dependencies($;$)
+{
+  my ($lib, $lpath) = @_;
+  $lpath = ''
+    unless defined $lpath;
+
+  my %routine =
+    (
+     'darwin'  => \&dependencies_darwin,
+     'linux'   => \&dependencies_linux,
+     'windows' => \&dependencies_windows,
+    );
+
+  my @res = $routine{$host_os}->($lpath, $lib);
+
+  # If this is really a path (e.g., not using @loader_path), get
+  # rid of symlinks.
+  map
+  {
+    $_ = realpath($_)
+      if -f $_;
+  } @res;
+  @res = unique (@res);
+  @res = sort (@res);
+  verbose (4, "$lib depends on",
+           map { "  $_ (" . dependency_type($_, $lib) . ")" } @res);
+  @res;
+}
+
+=item C<installname($file)>
+
+For a shipped C<$file>, return its name in the install tree.
+
+Make it absolute, and cut the $DESTDIR.  We use realpath instead of
+rel2abs, because the latter does not work when converting a $ORIGIN
+dependencies to an absolute path: it keeps all the "../.."  bits which
+make it uselessly hard for us to check whether a given dependency is
+within our package or not.
+
+=cut
+
+sub installname ($)
+{
+  my ($file) = @_;
+  my $res = realpath($file);
+  $res =~ s/^$destdir//;
+  $res;
+}
+
+
+=item C<rpath_tool()>
+
+Return the name of the tool to use to change the rpath.  Return undef
+if we don't need it (e.g., on OS X).
+
+=cut
+
+sub rpath_tool()
+{
+  if ($host_os eq 'darwin')
+  {
+    return undef;
+  }
+  elsif ($host_os eq 'linux')
+  {
+    my @tools = qw(patchelf chrpath);
+    for my $tool (@tools)
+    {
+      return $tool
+        if system($tool, '--version') == 0;
+    }
+    die ("$me: cannot find tool to change rpath: @tools\n"
+         . "$me: see http://nixos.org/patchelf.html to download PatchELF\n"
+         . "$me: or run common/install/install-patchelf\n");
+  }
+}
+
+
+=item C<rpath_get($lib)>
+
+Return the RPATH of $lib as a list of directories.
+
+=cut
+
+sub rpath_get($)
+{
+  my ($lib) = @_;
+  my $res = '';
+  if ($chrpath eq 'chrpath')
+  {
+    $res = qx($chrpath -l $lib);
+    $res =~ s/.*RPATH=//;
+  }
+  elsif ($chrpath eq 'patchelf')
+  {
+    $res = qx($chrpath --print-rpath $lib);
+  }
+  else
+  {
+    die "$me: unknown chrpath: $chrpath\n";
+  }
+
+  die "$me: $chrpath failed on $lib: $?\n"
+    if $?;
+
+  chomp $res;
+  return wantarray ? split (":", $res) : $res;
+}
+
+=item C<rpath_eq($lib, @rpath)>
+
+Whether C<$lib> has an RPATH equal to C<@rpath>.  In which case
+C<rpath_set> does nothing.
+
+=cut
+
+sub rpath_eq($@)
+{
+  my ($lib, @rpath) = @_;
+  my $lhs = rpath_get($lib);
+  my $rhs = join(':', @rpath);
+  my $res = $lhs eq $rhs;
+  verbose 3, "rpath_eq($lib = $lhs, $rhs) = $res";
+  $res;
+}
+
+=item C<rpath_set($lib, @rpath)>
+
+Set the RPATH of C<$lib> to C<@rpath>, if needed (as computed by
+C<rpath_eq>).
+
+=cut
+
+sub rpath_set($@)
+{
+  my ($lib, @rpath) = @_;
+  if (! rpath_eq($lib, @rpath))
+  {
+    my $newrpath = join(':', @rpath);
+    if ($chrpath eq 'chrpath')
+    {
+      xsystem($chrpath, "-r", $newrpath, $lib)
+    }
+    elsif ($chrpath eq 'patchelf')
+    {
+      xsystem($chrpath, "--set-rpath", $newrpath, $lib)
+    }
+    else
+    {
+      die "$me: unknown chrpath: $chrpath\n";
+    }
+  }
+}
+
+=item C<strip($lib)>
+
+Strip C<$lib>, portably.
+
+When building a release for non-Windows platforms, strip the binaries
+and the libraries.  Pay attention that on OS X strip when given no
+option behaves as "strip -S -x -X":
+
+-S Remove the debugging symbol table entries (those created by
+   the -g option to cc(1) and other compilers).
+
+-X Remove the local symbols whose names begin with `L'.
+
+-x Remove all local symbols (saving only global symbols).
+
+As a result, the build (on Leopard) works on Leopard, but not on Snow
+Leopard (I don't know why exactly).  On Linux, too "strip" does more
+than simply "strip -S", but since it seems to work and it does save
+space, use the fully blown strip:
+
+ 58M libuobject.so     no strip
+7.8M libuobject.2.so   strip -S
+6.4M libuobject.3.so   strip
+
+=cut
+
+sub strip ($)
+{
+  my ($lib) = @_;
+
+  my %strip =
+    (
+     'darwin'  => ["$strip_command", "-S"],
+     'linux'   => ["$strip_command"],
+     'windows' => [],
+    );
+
+  my @strip = @{$strip{$host_os}};
+  if (@strip)
+  {
+    verbose 3, "strip($lib): @strip $lib";
+    xsystem(@strip, $lib);
+  }
+}
+
+=item C<relocate_darwin($lib, $dir)>
+
+Turn absolute dependencies within the package into relative rpaths on
+Darwin. C<$lib> will be installed in C<$dir>.
+
+On OS X, look for all the dependencies that are inside our DESTDIR,
+and make then relative.  It works at the level of each library.
+
+=cut
+
+sub relocate_darwin($$)
+{
+  my ($lib, $dir) = @_;
+
+  # This is not necessary, but it produces a cleaner otool -L
+  # output.  It also helps our check-step (the library no longer has
+  # a name outside of the package).
+  xsystem("install_name_tool",
+          "-id", '@loader_path/' . basename ($lib),
+          $lib);
+  # Handle installed dependencies.
+  for my $dep (grep {exists $installed{$_}} dependencies($lib))
+  {
+    my $new = File::Spec->catfile($libdir, basename $dep);
+    my $rel = File::Spec->abs2rel($new, $dir);
+    xsystem("install_name_tool",
+            "-change", $dep, "\@loader_path/$rel",
+            $lib);
+  }
+  # Handle inner dependencies.
+  for my $dep (grep {exists $argv{$_}} dependencies($lib))
+  {
+    my $rel = File::Spec->abs2rel($dep, $dir);
+    xsystem("install_name_tool",
+            "-change", $dep, "\@loader_path/$rel",
+            $lib);
+  }
+
+  # Strip.
+  strip($lib)
+    if $strip;
+}
+
+=item C<relocate_linux($lib, $dir)>
+
+Turn absolute dependencies within the package into relative rpaths on
+GNU/Linux. C<$lib> will be installed in C<$dir>.
+
+On GNU/Linux, change the rpaths.  I.e., when we depend on an rpath
+which inside the package, make it relative.  It works at the level of
+directories, not libraries.  We use chrpath for two things: to get the
+list of current RPATH, and to change them.
+
+=cut
+
+sub relocate_linux($$)
+{
+  my ($lib, $dir) = @_;
+
+  my @rpath;
+  {
+    my $rel = File::Spec->catdir('$ORIGIN',
+                                 File::Spec->abs2rel($libdir, $dir));
+    verbose 3, "installing $rel in RPATH";
+    push @rpath, $rel;
+  }
+
+  for my $dep (rpath_get($lib))
+  {
+    # Keep paths that are already relative.
+    if ($dep =~ m{\A\$ORIGIN(?:/.*)?\z})
+    {
+      push @rpath, $dep;
+    }
+    elsif (directory_inner($dep))
+    {
+      my $rel = File::Spec->catdir('$ORIGIN',
+                                   File::Spec->abs2rel($dep, $dir));
+      verbose 3, "$dep => $rel"
+        if $dep ne $rel;
+      push @rpath, $rel;
+    }
+  }
+  @rpath = unique @rpath;
+
+  # If we don't have to run relocate, don't strip.  Otherwise we may
+  # try to strip libraries that were already patchelf'ed, in which
+  # case we might trigger the binutils bug.  This happens for instance
+  # when we complete a package that uses an Urbi SDK that was already
+  # made relocatable.
+  #
+  # Alternatively we could try to strip and restore the copy on
+  # errors.  But how do we know for sure that it failed?
+  if (! rpath_eq($lib, @rpath))
+  {
+    strip($lib)
+      if $strip;
+    rpath_set($lib, @rpath);
+  }
+}
+
+
+=item C<relocate($lib)>
+
+Turn absolute dependencies within the package into relative rpaths.
+And strip C<$lib> if possible.
+
+=cut
+
+sub relocate ($)
+{
+  my ($lib) = @_;
+  my $dir = dirname(installname($lib));
+  verbose 3, "relocate($lib) @ $dir";
+  relocate_darwin($lib, $dir) if $host_os eq 'darwin';
+  relocate_linux($lib, $dir)  if $host_os eq 'linux';
+}
+
+=item C<dependency_foreign($lib, $from)>
+
+Whether C<$lib> is a foreign dependence, i.e., neither system nor
+inner.
+
+=cut
+
+sub dependency_foreign($$)
+{
+  my ($lib, $from) = @_;
+  ! dependency_inner ($lib, $from) && ! dependency_system ($lib, $from);
+}
+
+=item C<dependency_inner($lib, $from)>
+
+Whether C<$lib> is an inner dependence, i.e., it is (already) shipped.
+
+=cut
+
+sub dependency_inner($$)
+{
+  my ($lib, $from) = @_;
+
+  # Shipped from the start?
+  my $res = exists $argv{$lib};
+
+  # On Mac OS X, relative rpath dependencies are presented as is.
+  #
+  # FIXME: it might be better and simpler to convert relative
+  # dependencies to absolute inside dependencies_darwin.  But then the
+  # display would be less accurate.
+  if ($host_os eq 'darwin')
+  {
+    # We have to convert them into absolute, and check they are inside
+    # the package.
+    my $abs = $lib;
+    $abs =~ s{^\@loader_path(?=/)}{dirname ($from)}e;
+    # Conversion to absolute gives the real path, including the
+    # DESTDIR.  Use installname to remove it.
+    $abs = installname $abs;
+    $res ||= exists $argv{$abs};
+  }
+
+  # On GNU/Linux, the relative rpath dependencies are resolved and
+  # made absolute.  Accept them only if they are inside our package.
+  $res ||= exists $argv{installname $lib}
+    if $host_os eq 'linux';
+
+  # Under Windows, since we don't have a means to tell cygcheck.exe
+  # how to extend its LD_LIBRARY_PATH, it will complete that, for
+  # instance, we have a dependency on libuobject.dll (without the full
+  # path).  So in this case, just check that we do ship a file that
+  # has this name.
+  $res ||= scalar (grep { basename ($_) eq $lib } keys %argv)
+    if $host_os eq 'windows';
+
+  $res;
+}
+
+=item C<dependency_system($lib, $from)>
+
+Whether C<$lib> is a system dependence, i.e., it is expected to be on
+the host system: it does not need to be shipped.
+
+=cut
+
+sub dependency_system($$)
+{
+  my ($lib, $from) = @_;
+
+  # Recognize a system library.
+  my $system_libs =
+    # On OS X, the relative rpath dependencies are reported
+    # with a relative path starting with @loader_path.
+    $host_os eq 'darwin'
+    ? qr(
+          /System/Library/Frameworks/CoreFoundation\.framework/
+        | /System/Library/Frameworks/IOKit\.framework/
+        | /opt/local/lib/libICE\.
+        | /opt/local/lib/libSM\.
+        | /opt/local/lib/libX11\.
+        | /opt/local/lib/libXau\.
+        | /opt/local/lib/libXdmcp\.
+        | /opt/local/lib/libXext\.
+        | /usr/lib/
+        )x
+    : $host_os eq 'linux'
+    ? qr(
+          /lib/
+        | /usr/lib/gcc/
+        | /usr/lib/libICE\.so
+        | /usr/lib/libSM\.so
+        | /usr/lib/libX11\.so
+        | /usr/lib/libXau\.so
+        | /usr/lib/libXdmcp\.so
+        | /usr/lib/libXext\.so
+        | /usr/lib/libstdc\+\+
+        | /usr/lib/libxcb\.so
+        | /usr/lib/libz\.so
+        | /usr/lib/i686/cmov/libcrypto\.so
+        | /usr/lib/i686/cmov/libssl\.so
+
+        # This is demanded by Jazz.
+        | /usr/lib/libasound\.so\.2
+        | /usr/lib/libdirect-1\.2\.so\.0
+        | /usr/lib/libdirectfb-1\.2\.so\.0
+        | /usr/lib/libfusion-1\.2\.so\.0
+        | /usr/lib/libgnutls\.so\.26
+        | /usr/lib/libgssapi_krb5\.so\.2
+        | /usr/lib/libk5crypto\.so\.3
+        | /usr/lib/libkrb5\.so\.3
+        | /usr/lib/libkrb5support\.so\.0
+        | /usr/lib/liblber-2.4\.so\.2
+        | /usr/lib/libsasl2\.so\.2
+        | /usr/lib/libtasn1\.so\.3
+        )x
+    : $host_os eq 'windows'
+    ? qr(
+          .*Controller.dll # for Webots, shouldn't be global
+        | .*/windows/system32/
+        | msvc[pr][89]0d?\.dll
+          # Boost.Asio 1.44 dependency.
+        | msmpi.dll
+        )ix
+    : ();
+
+  $lib =~ qr{^(?:$system_libs)}o;
+}
+
+
+=item C<dependency_type($lib, $from)>
+
+Return the type of C<$lib> among C<inner>, C<foreign>, and C<system>.
+C<$lib> is used from C<$from> (which we need to know on Mac OS X where
+C<$lib> can have a relative path from C<$from>).
+
+=cut
+
+sub dependency_type($$)
+{
+  my ($lib, $from) = @_;
+  # Designed on purpose to catch errors such as multiple-type
+  # dependencies.
+  my @res;
+  push @res, "foreign"
+    if dependency_foreign ($lib, $from);
+  push @res, "inner"
+    if dependency_inner ($lib, $from);
+  push @res, "system"
+    if dependency_system ($lib, $from);
+  my $res = join '-', @res;
+  verbose 6, "$lib (from $from): $res dependency";
+  $res;
+}
+
+
+=item C<dependencies_type($lib, $type, [$lpath])>
+
+The list of dependencies of C<$lib> that are of type C<$type>
+("inner", "system", "foreign").
+
+=cut
+
+sub dependencies_type($$;$)
+{
+  my ($lib, $type, $lpath) = @_;
+
+  die if $type !~ '^(foreign|inner|system)$';
+
+  my @res;
+  for my $loc (dependencies($lib, $lpath))
+  {
+    my $t = dependency_type($loc, $lib);
+    if ($t eq 'system')
+    {
+      # System library.
+      $loc{$loc} = 1;
+    }
+    if ($t eq $type)
+    {
+      # Foreign library.
+      push @res, $loc;
+    }
+  }
+  @res;
+}
+
+=item C<dependencies_foreign($lib, [$lpath])>
+
+The list of dependencies of C<$lib> that are not part of this package,
+and are not accepted.
+
+=cut
+
+sub dependencies_foreign($;$)
+{
+  my ($lib, $lpath) = @_;
+  dependencies_type($lib, 'foreign', $lpath);
+}
+
+=item C<directory_inner($dir)>
+
+Whether C<$dir> is an inner directory, i.e., a directory inside our
+package.
+
+We used to simply check that C<$prefix> is a prefix of C<$dir>,
+unfortunately if C<$prefix> is C</>, any (absolute) directory is
+"inner".  So rather, see if this place is a directory of one of our
+shipped libraries.
+
+=cut
+
+sub directory_inner($)
+{
+  my ($dir) = @_;
+  my %inner_dirs;
+  map { $inner_dirs{dirname $_} = 1; } keys %argv;
+  exists $inner_dirs{$dir};
+}
+
+=item C<install($file, $dir)>
+
+Install the library C<$file> into C<$dir>, and register that this new
+library is a shipped dependency that needs to be completed/check.
+
+If C<$file> is a path, the library is installed in C<$dir> under its
+basename: the directories of C<$file> are not preserved in C<$dir>.
+
+=cut
+
+sub install($$)
+{
+  my ($file, $dir) = @_;
+  my $new = File::Spec->catfile($dir, basename $file);
+  # Install the file.
+  file_install $file, $new;
+  # We need to be able to modify the imported libraries.
+  file_chmod $new, 0755;
+  # Register where it's been installed.
+  $installed{$file} = $new;
+  # We need to relocate, complete, and check it.
+  push @worklist, $new;
+  # It's a shipped dependency.
+  $argv{installname($new)} = $new;
+}
+
+
+=item C<complete($lib)>
+
+Install the foreign dependencies of C<$lib> in C<$destdir$libdir>, if
+C<$libdir> is defined.
+
+=cut
+
+sub complete($)
+{
+  my ($lib) = @_;
+  verbose 3, "complete($lib) @ $libdir";
+  # If there is a Libtool *.la file there, then fetch its LDFLAGS,
+  # since they should help to find the dependencies (we could also
+  # have passed -Wl,-rpath,<PATH> to the compiler).
+  (my $la = $lib) =~ s/\.[^.]*/.la/;
+  my @deps;
+  if (-f $la)
+  {
+    my $l = contents($la);
+    @deps = grep { s/-L// } split (/\s+/, $1)
+      if $l =~ m{^dependency_libs='\s*(.*)'$}m;
+    verbose 3, "$la: dependencies: @deps";
+  }
+  my $dir = "$destdir$libdir";
+  # Add $dir to the LD_LIBRARY_PATH, since anyway we want to promote
+  # the use of these libraries over the system ones.  This is
+  # especially useful in the case of Boost: in a previous step, we
+  # have installed all the Boost libraries (and headers) in our
+  # package.  If we _don't_ set LD_LIBRARY_PATH here, ldd will report
+  # that we need Boost libraries, and copy them again.  This is
+  # harmless, but useless.
+  my $lpath = join(':', $dir, @libpath, @deps);
+  for my $loc (dependencies_foreign($lib, $lpath))
+  {
+    # On Linux we keep "not found" as the sign that the library
+    # is... not found.  This matters for &check.
+    next
+      if $loc =~ m{^not found:};
+
+    # If the component was already installed, don't do it again.
+    next
+      if defined $installed{$loc};
+
+    # Maybe find it, in which case copy the result in $loc.
+    if ($host_os eq 'windows')
+    {
+      $loc = file_find ($loc, @libpath);
+      next
+        unless -f $loc;
+      # If we install a *.dll, install the corresponding lib if
+      # present.
+      if ($loc =~ /\.dll$/)
+      {
+        (my $l = $loc) =~ s/\.dll$/.lib/;
+        install($l, $dir)
+          if -f $l;
+      }
+    }
+    install($loc, $dir);
+  }
+}
+
+=item C<check($lib)>
+
+Make sure that C<$lib> depends on no foreign library.
+
+=cut
+
+sub check ($)
+{
+  my ($lib) = @_;
+  verbose 3, "check($lib)";
+  my @foreign = dependencies_foreign($lib);
+  if (@foreign)
+  {
+    print STDERR "$me: error: $lib depends on @foreign\n";
+    for my $loc (@foreign)
+    {
+      push @{$rejected{$loc}}, $lib;
+      ++$nerrors;
+    }
+  }
+}
+
+
+=item C<getopt()>
+
+Process the command line arguments.
+
+=cut
+
+sub getopt ()
+{
+  use BuildAux::Getopt qw($message);
+  $message = "Ensure relocatability wrt shared libraries";
+  BuildAux::Getopt::getopt
+    (
+     "d|destdir=s"      => \$destdir,
+     "l|libdir=s"       => \$libdir,
+     "L|libpath=s"      => \@libpath,
+     "o|host-os=s"      => sub { $host_os = host_os ($_[1]) },
+     "s|strip"          => \$strip,
+     "strip-command=s"  => \$strip_command,
+    );
+
+  my %var =
+    (
+     "libdir"  => \$libdir,
+     "destdir" => \$destdir,
+    );
+
+  for my $var (keys %var)
+  {
+    die "$me: passing --$var is mandatory\n"
+      unless defined ${$var{$var}};
+
+    die "$me: $var cannot be empty\n"
+      unless ${$var{$var}};
+  }
+
+  die "$me: destdir is not an existing directory: $destdir\n"
+    unless -d $destdir;
+
+  die "$me: destdir/libdir is not an existing directory: $destdir/$libdir\n"
+    unless -d "$destdir/$libdir";
+
+  # DESTDIR and libdir must not end with slashes.  Also avoid double
+  # slashes and so forth.
+  map { $_ = File::Spec->canonpath($_) } ($destdir, $libdir);
+
+  # Since we use the realpath everywhere else, use it here too.
+  # For instance on OS X, /tmp is actually a symlink to private/tmp.
+  $destdir = realpath($destdir);
+
+  verbose (4,
+           "destdir = $destdir",
+           "host-os = $host_os",
+           "libdir = $libdir",
+           "libpath = @libpath",
+           "strip = $strip",
+    );
+}
+
+=item C<wanted>
+
+Push in C<@worklist> all the files to check, i.e., (binary)
+executables and shared libraries.
+
+Called by C<File::Find::file>, so C<$_> is the base name of the
+candidate, and C<$File::Find::name> is the full path.
+
+=cut
+
+sub wanted
+{
+  # We check the shared lib dependencies on binaries and on shared
+  # libraries.
+  my $wanted;
+  if ($host_os eq 'windows')
+  {
+    $wanted = m{\.(dll|exe)\z}s;
+  }
+  else
+  {
+    my $re =
+      (
+       $host_os   eq 'darwin'  ? qr{\.(dylib|so)\z}s # Our UObjects are *.so.
+       : $host_os eq 'linux'   ? qr{\.so(\..*)?\z}s
+       :                         qr{}s
+      );
+    $wanted = (-f $_
+               && (-x $_ || /$re/)
+               && `file $_` =~ /ELF|Mach-O/)
+  }
+
+  push @worklist, $File::Find::name
+    if $wanted;
+}
+
+=back
+
+=cut
+
+######################################################################
+
+## ------ ##
+## Main.  ##
+## ------ ##
+
+getopt;
+
+# Check that ps works.  On GNU/Linux, if ps is not mounted, ps fails.
+# ldd fails too, but in a different way: it fails to resolve location
+# of libraries, but return a "valid" result.  check-lib-deps then
+# fails stating that there are missing foreign libraries.
+#
+# To be safe, be sure that ps works.
+die "$me: ps does not seem to work, is procfs mounted?\n"
+  unless qx{ps};
+
+$chrpath = rpath_tool;
+verbose 4, "using chrpath = " . ($chrpath || "undef");
+
+# Check that ps works.  On GNU/Linux, if ps is not mounted, ps fails.
+# ldd fails too, but in a different way: it fails to resolve location
+# of libraries, but return a "valid" result.  check-lib-deps then
+# fails stating that there are missing foreign libraries.
+#
+# To be safe, be sure that ps works.
+die "$me: ps does not seem to work, is procfs mounted?\n"
+  unless qx{ps};
+
+# Gather.
+File::Find::find({wanted => \&wanted}, @ARGV);
+map {$argv{installname($_)} = $_} @worklist;
+
+verbose 2, "Shipped deps:", map { "  $_" } sort keys %argv;
+
+# For each library, relocate it, and make sure there are no forbidden
+# dependencies.
+while (@worklist)
+{
+  my $lib = shift @worklist;
+  complete($lib)
+    if defined $libdir;
+  relocate($lib);
+}
+
+# Now check that all the libraries we installed have no foreign
+# dependency.  We used to check this in the above loop (i.e.,
+# complete, then relocate, then check).  But there are cases where
+# this fails.
+#
+# In the following scenario
+#
+# foo.so (inner)
+#   l1.so -> /usr/lib/l1.so (foreign)
+#   l2.so -> /usr/lib/l2.so (foreign)
+#
+# /usr/lib/l1.so (foreign)
+#   l2.so -> /usr/lib/l2.so (foreign)
+#
+# Then, when we complete foo.so and relocate it, it will find the
+# local copy of l1.so, but this l1.so was not made relocatable, so it
+# will load /usr/lib/l2.so instead of the local copy.  And when foo.so
+# arrives to its dependency on l2.so, it will not load our local copy,
+# since l2.so is already loaded.  Therefore we appear to be using the
+# foreign l2.so instead of the local copy.
+#
+# Let's wait for the completion/relocation process to finish, and then
+# check that we did it right.
+map { check($_) } values %argv;
+
+# Report the results.
+verbose 2, "Shipped deps:", map { "  $_" } sort keys %argv;
+verbose 1, "System dependencies:", map { "  $_" } sort keys %loc;
+verbose (1, "Rejected dependencies:",
+         map { ("  $_ dependency of:", map { "    $_ " } @{$rejected{$_}}) }
+         (sort keys %rejected));
+verbose 1, "There were $nerrors errors";
+exit !!$nerrors;
+
+### Setup "Gostai" style for perl-mode and cperl-mode.
+## Local Variables:
+## perl-indent-level: 2
+## perl-continued-statement-offset: 2
+## perl-continued-brace-offset: -2
+## perl-brace-offset: 0
+## perl-brace-imaginary-offset: 0
+## perl-label-offset: -2
+## cperl-indent-level: 2
+## cperl-brace-offset: 0
+## cperl-continued-brace-offset: -2
+## cperl-label-offset: -2
+## cperl-extra-newline-before-brace: t
+## cperl-merge-trailing-else: nil
+## cperl-continued-statement-offset: 2
+## End:

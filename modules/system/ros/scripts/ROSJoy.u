@@ -1,0 +1,83 @@
+/*
+ * Copyright (C) 2010-2011, Gostai S.A.S.
+ *
+ * This software is provided "as is" without warranty of any kind,
+ * either expressed or implied, including but not limited to the
+ * implied warranties of fitness for a particular purpose.
+ *
+ * See the LICENSE file for more information.
+ */
+
+load("scripts/ROSInit.u");
+
+/*********************************************************
+ *          simple joystick demonstration
+ *
+ * Requirements:
+ *   - roscore
+ *   - rosrun joy joy_node
+ *
+ **********************************************************/
+
+var topics = Ros.topics |;
+
+var joy_node;
+if ("/joy" not in topics)
+{
+  joy_node = Process.new("rosrun", ["joy", "joy_node"]) |
+  joy_node.run |
+  while ("/joy" not in topics)
+  {
+    sleep(200ms) |
+    topics = Ros.topics
+  } |
+} |;
+
+var ROSJoy = Object.new() |;
+
+var ROSJoy.init = function(var pl)
+{
+  var new_button_size = pl["buttons"].size |
+  if (s_buttons < new_button_size)
+    for|(var i = s_buttons + 1; i <= new_button_size; i++)
+      UVar.new(this, "button" + i)
+  else if (s_buttons > new_button_size)
+    for|(var i = new_button_size + 1; i <= s_buttons; i++)
+      this.removeSlot("button" + i) |
+
+  var new_axis_size = pl["axes"].size |
+  if (s_axis < new_axis_size)
+    for|(var i = s_axis + 1; i <= new_axis_size; i++)
+      UVar.new(this, "axis" + i)
+  else if (s_axis > new_axis_size)
+    for|(var i = new_axis_size + 1; i <= s_axis; i++)
+      ROSJoy.removeSlot("axis" + i) |
+
+  s_buttons = new_button_size |
+  s_axis = new_axis_size
+}|;
+
+var ROSJoy.update = function(var pl)
+{
+  for|(var i = 1; i <= pl["buttons"].size; i++)
+    this.getSlot("button" + i).update_(pl["buttons"][i-1]);
+
+  for|(var i = 1; i <= pl["axes"].size; i++)
+    this.getSlot("axis" + i).update_(pl["axes"][i-1]);
+}|;
+
+do (ROSJoy)
+{
+  var topic = Ros.Topic.new("/joy");
+  var s_buttons = 0;
+  var s_axis = 0;
+
+  __joy: at(topic.onMessage?(var pl)) {
+    if (pl["buttons"].size != s_buttons || pl["axes"].size != s_axis)
+      this.init(pl) |
+    this.update(pl)
+  };
+
+  topic.subscribe
+};
+
